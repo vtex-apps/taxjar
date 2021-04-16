@@ -28,5 +28,13 @@ namespace Taxjar.Data
         public const string HTTP_FORWARDED_HEADER = "HTTP_X_FORWARDED_FOR";
 
         public const string BUCKET = "Taxjar";
+
+        public class ExemptionType
+        {
+            public const string WHOLESALE = "wholesale";
+            public const string GOVERNMENT = "government";
+            public const string OTHER = "other";
+            public const string NON_EXEMPT = "non_exempt";
+        }
     }
 }

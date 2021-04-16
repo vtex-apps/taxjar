@@ -43,6 +43,12 @@ namespace Taxjar.Models
         [JsonProperty("shipping")]
         public float Shipping { get; set; }
 
+        [JsonProperty("customer_id")]
+        public string CustomerId { get; set; }
+
+        [JsonProperty("exemption_type")]
+        public string ExemptionType { get; set; }
+
         [JsonProperty("line_items")]
         public TaxForOrderLineItem[] LineItems { get; set; }
 

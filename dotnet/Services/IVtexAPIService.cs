@@ -6,5 +6,6 @@ namespace Taxjar.Services
     public interface IVtexAPIService
     {
         Task<TaxForOrder> VtexRequestToTaxjarRequest(VtexTaxRequest vtexTaxRequest);
+        Task<VtexTaxResponse> TaxjarResponseToVtexResponse(TaxResponse taxResponse);
     }
 }

@@ -19,6 +19,10 @@
     "taxjarOrderTaxHandler": {
       "path": "/taxjar/checkout/order-tax",
       "public": true
+    },
+    "processInvoiceHook": {
+      "path": "/taxjar/oms/invoice",
+      "public": true
     }
   },
   "events": {

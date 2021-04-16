@@ -497,7 +497,7 @@ namespace Taxjar.Models
     public class AdditionalInfo
     {
         [JsonProperty("dimension")]
-        public Dimension Dimension { get; set; }
+        public VtexDimension Dimension { get; set; }
 
         [JsonProperty("categoriesIds")]
         public string CategoriesIds { get; set; }
@@ -536,7 +536,7 @@ namespace Taxjar.Models
         public string Name { get; set; }
     }
 
-    public class Dimension
+    public class VtexDimension
     {
         [JsonProperty("cubicweight")]
         public long Cubicweight { get; set; }

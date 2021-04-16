@@ -55,9 +55,38 @@
             if ("post".Equals(HttpContext.Request.Method, StringComparison.OrdinalIgnoreCase))
             {
                 string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-                VtexTaxRequest taxRequest = JsonConvert.DeserializeObject<VtexTaxRequest>(bodyAsText);
-                TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequest);
-                TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
+                if (!string.IsNullOrEmpty(bodyAsText))
+                {
+                    VtexTaxRequest taxRequest = JsonConvert.DeserializeObject<VtexTaxRequest>(bodyAsText);
+                    if (taxRequest != null)
+                    {
+                        TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequest);
+                        if (taxForOrder != null)
+                        {
+                            TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
+                            if (taxResponse != null)
+                            {
+                                vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
+                            }
+                            else
+                            {
+                                Console.WriteLine("Null taxResponse");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Null taxForOrder");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Null taxRequest");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Null body");
+                }
             }
 
             return Json(vtexTaxResponse);
@@ -66,47 +95,15 @@
         public async Task<IActionResult> TaxForOrder()
         {
             Response.Headers.Add("Cache-Control", "private");
-            TaxForOrder taxForOrder = new TaxForOrder
+            TaxResponse taxResponse = null;
+            if ("post".Equals(HttpContext.Request.Method, StringComparison.OrdinalIgnoreCase))
             {
-                Amount = 54.90F,
-                NexusAddresses = new TaxForOrderNexusAddress[]
-                {
-                    new TaxForOrderNexusAddress
-                    {
-                        City = "Williamson",
-                        Country = "US",
-                        Id = "Main",
-                        State = "NY",
-                        Street = "1 Main",
-                        Zip = "14589"
-                    }
-                },
-                FromCity = "Williamson",
-                FromCountry = "US",
-                FromState = "NY",
-                FromStreet = "1 Main",
-                FromZip = "14589",
-                LineItems = new TaxForOrderLineItem[]
-                {
-                    new TaxForOrderLineItem
-                    {
-                        Discount = 0F,
-                        Id = "1",
-                        ProductTaxCode = "20010",
-                        Quantity = 2,
-                        UnitPrice = 25.95F
-                    }
-                },
-                Shipping = 3F,
-                ToCity = "Rochester",
-                ToCountry = "US",
-                ToState = "NY",
-                ToStreet = "10 East",
-                ToZip = "14602"
-            };
+                string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+                TaxForOrder taxForOrder = JsonConvert.DeserializeObject<TaxForOrder>(bodyAsText);
+                taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
+            }
 
-            var response = await _taxjarService.TaxForOrder(taxForOrder);
-            return Json(response);
+            return Json(taxResponse);
         }
     }
 }

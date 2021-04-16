@@ -48,6 +48,9 @@
       "name": "ADMIN_DS"
     },
     {
+      "name": "LogisticsViewer"
+    },
+    {
       "name": "outbound-access",
       "attrs": {
         "host": "{{account}}.vtexcommercestable.com.br",

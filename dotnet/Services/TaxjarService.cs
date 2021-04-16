@@ -130,5 +130,27 @@ namespace Taxjar.Services
 
             return taxResponse;
         }
+
+        public async Task<OrdersResponse> ListOrders()
+        {
+            OrdersResponse ordersResponse = null;
+            string response = await SendRequest($"transactions/orders", null, HttpMethod.Get);
+            if (!string.IsNullOrEmpty(response))
+                ordersResponse = JsonConvert.DeserializeObject<OrdersResponse>(response);
+
+            return ordersResponse;
+        }
+
+        public async Task<OrderResponse> ShowOrder(string transactionId)
+        {
+            OrderResponse orderResponse = null;
+            string response = await SendRequest($"transactions/orders/{transactionId}", null, HttpMethod.Get);
+            if (!string.IsNullOrEmpty(response))
+                orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+
+            return orderResponse;
+        }
+
+        
     }
 }
