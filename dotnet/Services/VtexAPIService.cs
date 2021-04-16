@@ -138,7 +138,13 @@ namespace Taxjar.Services
             {
                 Console.WriteLine("taxResponse is null");
                 return null;
-            }    
+            }
+
+            if (taxResponse.Tax.Breakdown == null)
+            {
+                Console.WriteLine("Breakdown is null");
+                return null;
+            }
 
             VtexTaxResponse vtexTaxResponse = new VtexTaxResponse
             {
@@ -187,6 +193,8 @@ namespace Taxjar.Services
                         },
                     }
                 };
+
+                vtexTaxResponse.ItemTaxResponse[i] = itemTaxResponse;
             };
 
             return vtexTaxResponse;
