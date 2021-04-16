@@ -32,7 +32,7 @@ namespace Taxjar.Models
         public PaymentData PaymentData { get; set; }
     }
 
-    public partial class ClientData
+    public class ClientData
     {
         [JsonProperty("email")]
         public string Email { get; set; }
@@ -47,7 +47,7 @@ namespace Taxjar.Models
         public object StateInscription { get; set; }
     }
 
-    public partial class Item
+    public class Item
     {
         [JsonProperty("id")]
         public string Id { get; set; }
@@ -59,7 +59,7 @@ namespace Taxjar.Models
         public string Ean { get; set; }
 
         [JsonProperty("refId")]
-        public object RefId { get; set; }
+        public string RefId { get; set; }
 
         [JsonProperty("unitMultiplier")]
         public long UnitMultiplier { get; set; }
@@ -68,34 +68,34 @@ namespace Taxjar.Models
         public string MeasurementUnit { get; set; }
 
         [JsonProperty("targetPrice")]
-        public double TargetPrice { get; set; }
+        public decimal TargetPrice { get; set; }
 
         [JsonProperty("itemPrice")]
-        public double ItemPrice { get; set; }
+        public decimal ItemPrice { get; set; }
 
         [JsonProperty("quantity")]
         public long Quantity { get; set; }
 
         [JsonProperty("discountPrice")]
-        public long DiscountPrice { get; set; }
+        public decimal DiscountPrice { get; set; }
 
         [JsonProperty("dockId")]
         public string DockId { get; set; }
 
         [JsonProperty("freightPrice")]
-        public long FreightPrice { get; set; }
+        public decimal FreightPrice { get; set; }
 
         [JsonProperty("brandId")]
         public string BrandId { get; set; }
     }
 
-    public partial class PaymentData
+    public class PaymentData
     {
         [JsonProperty("payments")]
         public Payment[] Payments { get; set; }
     }
 
-    public partial class Payment
+    public class Payment
     {
         [JsonProperty("paymentSystem")]
         public string PaymentSystem { get; set; }
@@ -104,16 +104,16 @@ namespace Taxjar.Models
         public object Bin { get; set; }
 
         [JsonProperty("referenceValue")]
-        public long ReferenceValue { get; set; }
+        public decimal ReferenceValue { get; set; }
 
         [JsonProperty("value")]
-        public long Value { get; set; }
+        public decimal Value { get; set; }
 
         [JsonProperty("installments")]
         public object Installments { get; set; }
     }
 
-    public partial class ShippingDestination
+    public class ShippingDestination
     {
         [JsonProperty("country")]
         public string Country { get; set; }
@@ -134,7 +134,7 @@ namespace Taxjar.Models
         public string Street { get; set; }
     }
 
-    public partial class Total
+    public class Total
     {
         [JsonProperty("id")]
         public string Id { get; set; }
@@ -143,7 +143,7 @@ namespace Taxjar.Models
         public string Name { get; set; }
 
         [JsonProperty("value")]
-        public long Value { get; set; }
+        public decimal Value { get; set; }
     }
 }
 

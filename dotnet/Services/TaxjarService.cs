@@ -75,12 +75,10 @@ namespace Taxjar.Services
 
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
+                responseContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"SendRequest [{httpMethod}] {request.RequestUri}");
+                //Console.WriteLine($"SendRequest [{jsonSerializedData}]");
                 Console.WriteLine($"SendRequest [{response.StatusCode}] {responseContent}");
-                if (response.IsSuccessStatusCode)
-                {
-                    responseContent = await response.Content.ReadAsStringAsync();
-                }
             }
             catch (Exception ex)
             {

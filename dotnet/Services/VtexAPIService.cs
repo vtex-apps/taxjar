@@ -57,27 +57,32 @@ namespace Taxjar.Services
             VtexDockResponse vtexDock = vtexDocks.Where(d => d.Id.Equals(dockId)).FirstOrDefault();
             if(vtexDock == null)
             {
-                Console.WriteLine($"Dock '{vtexDock}' not found.");
+                Console.WriteLine($"Dock '{dockId}' not found.");
+                //foreach(VtexDockResponse dock in vtexDocks)
+                //{
+                //    Console.WriteLine($"    =   '{dock.Id}'");
+                //}
+
                 return null;
             }
 
             TaxForOrder taxForOrder = new TaxForOrder
             {
-                Amount = vtexTaxRequest.Totals.Sum(t => t.Value) / 100,
-                Shipping = vtexTaxRequest.Totals.Where(t => t.Id.Equals("Shipping")).Sum(t => t.Value) / 100,
+                Amount = (float)vtexTaxRequest.Totals.Sum(t => t.Value) / 100,
+                Shipping = (float)vtexTaxRequest.Totals.Where(t => t.Id.Equals("Shipping")).Sum(t => t.Value) / 100,
                 ToCity = vtexTaxRequest.ShippingDestination.City,
-                ToCountry = vtexTaxRequest.ShippingDestination.Country,
+                ToCountry = vtexTaxRequest.ShippingDestination.Country.Substring(0, 2),
                 ToState = vtexTaxRequest.ShippingDestination.State,
                 ToStreet = vtexTaxRequest.ShippingDestination.Street,
                 ToZip = vtexTaxRequest.ShippingDestination.PostalCode,
                 FromCity = vtexDock.PickupStoreInfo.Address.City,
-                FromCountry = vtexDock.PickupStoreInfo.Address.Country.Acronym,
+                FromCountry = vtexDock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2),
                 FromState = vtexDock.PickupStoreInfo.Address.State,
                 FromStreet = vtexDock.PickupStoreInfo.Address.Street,
                 FromZip = vtexDock.PickupStoreInfo.Address.PostalCode,
                 CustomerId = vtexTaxRequest.ClientEmail,
                 LineItems = new TaxForOrderLineItem[vtexTaxRequest.Items.Length],
-                NexusAddresses = new TaxForOrderNexusAddress[vtexDocks.Length]
+                ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT
             };
 
             for (int i = 0; i < vtexTaxRequest.Items.Length; i++)
@@ -91,27 +96,38 @@ namespace Taxjar.Services
 
                 taxForOrder.LineItems[i] = new TaxForOrderLineItem
                 {
-                    Discount = vtexTaxRequest.Items[i].DiscountPrice / 100,
+                    Discount = (float)vtexTaxRequest.Items[i].DiscountPrice,
                     Id = vtexTaxRequest.Items[i].Id,
                     ProductTaxCode = taxCode,
                     Quantity = vtexTaxRequest.Items[i].Quantity,
-                    UnitPrice = (float)(vtexTaxRequest.Items[i].ItemPrice / 100)
+                    UnitPrice = (float)(vtexTaxRequest.Items[i].ItemPrice)
                 };
             }
 
-            int nexusIndex = 0;
+            List<TaxForOrderNexusAddress> nexuses = new List<TaxForOrderNexusAddress>();
             foreach(VtexDockResponse dock in vtexDocks)
             {
-                taxForOrder.NexusAddresses[nexusIndex] = new TaxForOrderNexusAddress
+                if (dock.PickupStoreInfo.Address != null)
                 {
-                    City = dock.PickupStoreInfo.Address.City,
-                    Country = dock.PickupStoreInfo.Address.Country.Acronym,
-                    Id = dock.Id,
-                    State = dock.PickupStoreInfo.Address.State,
-                    Street = dock.PickupStoreInfo.Address.Street,
-                    Zip = dock.PickupStoreInfo.Address.PostalCode
-                };
+                    nexuses.Add(
+                            new TaxForOrderNexusAddress
+                            {
+                                City = dock.PickupStoreInfo.Address.City,
+                                Country = string.IsNullOrEmpty(dock.PickupStoreInfo.Address.Country.Acronym) ? string.Empty : dock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2),
+                                Id = dock.Id,
+                                State = dock.PickupStoreInfo.Address.State,
+                                Street = dock.PickupStoreInfo.Address.Street,
+                                Zip = dock.PickupStoreInfo.Address.PostalCode
+                            }
+                        );
+                }
+                else
+                {
+                    Console.WriteLine($"Dock {dock.Id} missing address");
+                }
             }
+
+            taxForOrder.NexusAddresses = nexuses.ToArray();
 
             return taxForOrder;
         }
