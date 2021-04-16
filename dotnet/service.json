@@ -1,0 +1,30 @@
+{
+  "stack": "dotnet",
+  "memory": 256,
+  "runtimeArgs": [
+  ],
+  "routes": {
+    "ratesForLocation": {
+      "path": "/taxjar/rates/:zip",
+      "public": true
+    },
+    "categories": {
+      "path": "/taxjar/categories",
+      "public": true
+    },
+    "taxForOrder": {
+      "path": "/taxjar/tax-for-order",
+      "public": true
+    },
+    "taxjarOrderTaxHandler": {
+      "path": "/taxjar/checkout/order-tax",
+      "public": true
+    }
+  },
+  "events": {
+    "onAppsLinked": {
+      "sender": "apps",
+      "keys": ["linked"]
+    }
+  }
+}

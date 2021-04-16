@@ -1,0 +1,76 @@
+{
+  "name": "taxjar",
+  "vendor": "vtex",
+  "version": "0.0.1",
+  "title": "",
+  "description": "",
+  "categories": [],
+  "settingsSchema": {
+    "title": "Taxjar",
+    "type": "object",
+    "properties": {
+      "apiToken": {
+        "title": "Api Token",
+        "description": "Api Token",
+        "type": "string"
+      },
+      "isLive": {
+        "title": "Production",
+        "description": "Production",
+        "type": "boolean"
+      }
+    }
+  },
+  "registries": [
+    "smartcheckout"
+  ],
+  "builders": {
+    "dotnet": "2.x"
+  },
+  "mustUpdateAt": "2018-09-05",
+  "scripts": {
+    "postreleasy": "vtex publish --verbose"
+  },
+  "policies": [
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "bnb.data.bl.uk"
+      }
+    },
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "nuget.org"
+      }
+    },
+    {
+      "name": "ADMIN_DS"
+    },
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "{{account}}.vtexcommercestable.com.br",
+        "path": "/api/dataentities/*"
+      }
+    },
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "api.sandbox.taxjar.com",
+        "path": "/v2/*"
+      }
+    },
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "api.taxjar.com",
+        "path": "/v2/*"
+      }
+    },
+    {
+      "name": "vbase-read-write"
+    }
+  ],
+  "$schema": "https://raw.githubusercontent.com/vtex/node-vtex-api/master/gen/manifest.schema"
+}
