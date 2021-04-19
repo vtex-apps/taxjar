@@ -41,6 +41,6 @@ namespace Taxjar.Models
         public string Description { get; set; }
 
         [JsonProperty("value")]
-        public double Value { get; set; }
+        public decimal Value { get; set; }
     }
 }

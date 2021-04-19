@@ -63,7 +63,7 @@ namespace Taxjar.Services
 
             TaxForOrder taxForOrder = new TaxForOrder
             {
-                Amount = (float)vtexTaxRequest.Totals.Sum(t => t.Value) / 100,
+                //Amount = (float)vtexTaxRequest.Totals.Sum(t => t.Value) / 100,
                 Shipping = (float)vtexTaxRequest.Totals.Where(t => t.Id.Equals("Shipping")).Sum(t => t.Value) / 100,
                 ToCity = vtexTaxRequest.ShippingDestination.City,
                 ToCountry = vtexTaxRequest.ShippingDestination.Country.Substring(0, 2),
@@ -163,71 +163,127 @@ namespace Taxjar.Services
             for (int i = 0; i < taxResponse.Tax.Breakdown.LineItems.Count; i++)
             {
                 TaxBreakdownLineItem lineItem = taxResponse.Tax.Breakdown.LineItems[i];
-                double itemTaxPercentofWhole = (double)lineItem.TaxCollectable / totalItemTax;
+                double itemTaxPercentOfWhole = (double)lineItem.TaxCollectable / totalItemTax;
                 ItemTaxResponse itemTaxResponse = new ItemTaxResponse
                 {
-                    Id = lineItem.Id,
-                    Taxes = new VtexTax[]
-                    {
+                    Id = lineItem.Id
+                };
+
+                List<VtexTax> vtexTaxes = new List<VtexTax>();
+                if (lineItem.StateAmount > 0)
+                {
+                    vtexTaxes.Add(
                         new VtexTax
                         {
                             Description = "",
                             Name = $"STATE TAX: {taxResponse.Tax.Jurisdictions.State}", // NY COUNTY TAX: MONROE
-                            Value = (double)lineItem.StateAmount
-                        },
+                            Value = lineItem.StateAmount
+                        }
+                     );
+                }
+
+                if (lineItem.CountyAmount > 0)
+                {
+                    vtexTaxes.Add(
                         new VtexTax
                         {
                             Description = "",
                             Name = $"COUNTY TAX: {taxResponse.Tax.Jurisdictions.County}",
-                            Value = (double)lineItem.CountyAmount
-                        },
+                            Value = lineItem.CountyAmount
+                        }
+                     );
+                }
+
+                if (lineItem.CityAmount > 0)
+                {
+                    vtexTaxes.Add(
                         new VtexTax
                         {
                             Description = "",
                             Name = $"CITY TAX: {taxResponse.Tax.Jurisdictions.City}",
-                            Value = (double)lineItem.CityAmount
-                        },
+                            Value = lineItem.CityAmount
+                        }
+                     );
+                }
+
+                if (lineItem.SpecialDistrictAmount > 0)
+                {
+                    vtexTaxes.Add(
                         new VtexTax
                         {
                             Description = "",
                             Name = "SPECIAL TAX",
-                            Value = (double)lineItem.SpecialDistrictAmount
-                        },
+                            Value = lineItem.SpecialDistrictAmount
+                        }
+                     );
+                }
+
+                if (shippingTaxState > 0)
+                {
+                    vtexTaxes.Add(
                         new VtexTax
                         {
                             Description = "",
                             Name = $"STATE TAX: {taxResponse.Tax.Jurisdictions.State} (SHIPPING)",
-                            Value = shippingTaxState * itemTaxPercentofWhole
-                        },
+                            Value = (decimal)Math.Round(shippingTaxState * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)
+                        }
+                     );
+                }
+
+                if (shippingTaxCounty > 0)
+                {
+                    vtexTaxes.Add(
                         new VtexTax
                         {
                             Description = "",
                             Name = $"COUNTY TAX: {taxResponse.Tax.Jurisdictions.County} (SHIPPING)",
-                            Value = shippingTaxCounty * itemTaxPercentofWhole
-                        },
+                            Value = (decimal)Math.Round(shippingTaxCounty * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)
+                        }
+                     );
+                }
+
+                if (shippingTaxCity > 0)
+                {
+                    vtexTaxes.Add(
                         new VtexTax
                         {
                             Description = "",
                             Name = $"CITY TAX: {taxResponse.Tax.Jurisdictions.City} (SHIPPING)",
-                            Value = shippingTaxCity * itemTaxPercentofWhole
-                        },
+                            Value = (decimal)Math.Round(shippingTaxCity * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)
+                        }
+                     );
+                }
+
+                if (shippingTaxSpecial > 0)
+                {
+                    vtexTaxes.Add(
                         new VtexTax
                         {
                             Description = "",
                             Name = "SPECIAL TAX (SHIPPING)",
-                            Value = shippingTaxSpecial * itemTaxPercentofWhole
+                            Value = (decimal)Math.Round(shippingTaxSpecial * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)
                         }
-                    }
-                };
+                     );
+                }
 
+                itemTaxResponse.Taxes = vtexTaxes.ToArray();
                 vtexTaxResponse.ItemTaxResponse[i] = itemTaxResponse;
             };
 
-            double totalOrderTax = (double)taxResponse.Tax.AmountToCollect;
-            double totalResponseTax = vtexTaxResponse.ItemTaxResponse.SelectMany(t => t.Taxes).Sum(i => i.Value);
+            decimal totalOrderTax = (decimal)taxResponse.Tax.AmountToCollect;
+            decimal totalResponseTax = vtexTaxResponse.ItemTaxResponse.SelectMany(t => t.Taxes).Sum(i => i.Value);
             if(!totalOrderTax.Equals(totalResponseTax))
             {
                 Console.WriteLine($"Order Tax = {totalOrderTax} =/= Response Tax = {totalResponseTax}");
+                decimal adjustmentAmount = Math.Round((totalOrderTax - totalResponseTax),2,MidpointRounding.ToEven);
+                Console.WriteLine($"Adjustment = {adjustmentAmount}");
+                int lastItemIndex = vtexTaxResponse.ItemTaxResponse.Length - 1;
+                int lastTaxIndex = vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes.Length - 1;
+                vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes[lastTaxIndex].Value += adjustmentAmount;
+            }
+            else
+            {
+                Console.WriteLine($"Order Tax = {totalOrderTax} == Response Tax = {totalResponseTax}");
             }
 
             return vtexTaxResponse;
@@ -414,6 +470,35 @@ namespace Taxjar.Services
             }
 
             return getSkuResponse;
+        }
+
+        public async Task<string> InitConfiguration()
+        {
+            string retval = string.Empty;
+            string jsonSerializedOrderConfig = await this._taxjarRepository.GetOrderConfiguration();
+            if (string.IsNullOrEmpty(jsonSerializedOrderConfig))
+            {
+                retval = "Could not load Order Configuration.";
+            }
+            else
+            {
+                dynamic orderConfig = JsonConvert.DeserializeObject(jsonSerializedOrderConfig);
+                VtexOrderformTaxConfiguration taxConfiguration = new VtexOrderformTaxConfiguration
+                {
+                    AllowExecutionAfterErrors = false,
+                    //AppId = "appid",
+                    IntegratedAuthentication = true,
+                    Url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/checkout/order-tax"
+                };
+
+                orderConfig.taxConfiguration = taxConfiguration;
+
+                jsonSerializedOrderConfig = JsonConvert.SerializeObject(orderConfig);
+                bool success = await this._taxjarRepository.SetOrderConfiguration(jsonSerializedOrderConfig);
+                retval = success.ToString();
+            }
+
+            return retval;
         }
     }
 }

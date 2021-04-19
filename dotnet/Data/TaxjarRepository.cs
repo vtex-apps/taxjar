@@ -62,5 +62,60 @@
 
             return JsonConvert.DeserializeObject<MerchantSettings>(responseContent);
         }
+
+        public async Task<string> GetOrderConfiguration()
+        {
+            // https://{{accountName}}.vtexcommercestable.com.br/api/checkout/pvt/configuration/orderForm
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.{TaxjarConstants.ENVIRONMENT}.com.br/api/checkout/pvt/configuration/orderForm"),
+            };
+
+            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            if (authToken != null)
+            {
+                request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+            }
+
+            var client = _clientFactory.CreateClient();
+            var response = await client.SendAsync(request);
+            string responseContent = await response.Content.ReadAsStringAsync();
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            // A helper method is in order for this as it does not return the stack trace etc.
+            response.EnsureSuccessStatusCode();
+
+            return responseContent;
+        }
+
+        public async Task<bool> SetOrderConfiguration(string jsonSerializedOrderConfig)
+        {
+            // https://{{accountName}}.vtexcommercestable.com.br/api/checkout/pvt/configuration/orderForm
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.{TaxjarConstants.ENVIRONMENT}.com.br/api/checkout/pvt/configuration/orderForm"),
+                Content = new StringContent(jsonSerializedOrderConfig, Encoding.UTF8, TaxjarConstants.APPLICATION_JSON)
+            };
+
+            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            if (authToken != null)
+            {
+                request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+            }
+
+            var client = _clientFactory.CreateClient();
+            var response = await client.SendAsync(request);
+            string responseContent = await response.Content.ReadAsStringAsync();
+
+            return response.IsSuccessStatusCode;
+        }
     }
 }

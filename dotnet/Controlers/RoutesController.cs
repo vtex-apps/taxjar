@@ -123,5 +123,11 @@
 
             return Json("Order taxes were commited");
         }
+
+        public async Task<IActionResult> InitConfig()
+        {
+            Response.Headers.Add("Cache-Control", "private");
+            return Json(await _vtexAPIService.InitConfiguration());
+        }
     }
 }

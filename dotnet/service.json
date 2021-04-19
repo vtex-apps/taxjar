@@ -23,6 +23,10 @@
     "processInvoiceHook": {
       "path": "/taxjar/oms/invoice",
       "public": true
+    },
+    "initConfig": {
+      "path": "/taxjar/init-config",
+      "public": true
     }
   },
   "events": {
