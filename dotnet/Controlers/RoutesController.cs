@@ -105,5 +105,23 @@
 
             return Json(taxResponse);
         }
+
+        public async Task<IActionResult> ProcessInvoiceHook()
+        {
+            Response.Headers.Add("Cache-Control", "private");
+            
+            if ("post".Equals(HttpContext.Request.Method, StringComparison.OrdinalIgnoreCase))
+            {
+                string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+                InvoiceHookOrderStatus orderStatus = JsonConvert.DeserializeObject<InvoiceHookOrderStatus>(bodyAsText);
+                if(orderStatus.Status.ToLower().Equals("invoiced"))
+                {
+                    VtexOrder vtexOrder = await _vtexAPIService.GetOrderInformation(orderStatus.OrderId);
+
+                }
+            }
+
+            return Json("Order taxes were commited");
+        }
     }
 }

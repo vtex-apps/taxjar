@@ -149,6 +149,140 @@ namespace Taxjar.Services
             return orderResponse;
         }
 
-        
+        public async Task<OrderResponse> CreateOrder(CreateTaxjarOrder taxjarOrder)
+        {
+            OrderResponse orderResponse = null;
+            string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarOrder);
+            string response = await SendRequest($"transactions/orders", jsonSerialiezedData, HttpMethod.Post);
+            if (!string.IsNullOrEmpty(response))
+                orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+
+            return orderResponse;
+        }
+
+        public async Task<OrderResponse> UpdateOrder(CreateTaxjarOrder taxjarOrder)
+        {
+            OrderResponse orderResponse = null;
+            string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarOrder);
+            string response = await SendRequest($"transactions/orders/{taxjarOrder.TransactionId}", jsonSerialiezedData, HttpMethod.Put);
+            if (!string.IsNullOrEmpty(response))
+                orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+
+            return orderResponse;
+        }
+
+        public async Task<OrderResponse> DeleteOrder(string transactionId)
+        {
+            OrderResponse orderResponse = null;
+            string response = await SendRequest($"transactions/orders/{transactionId}", null, HttpMethod.Delete);
+            if (!string.IsNullOrEmpty(response))
+                orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+
+            return orderResponse;
+        }
+
+        public async Task<RefundsResponse> ListRefunds()
+        {
+            RefundsResponse refundsResponse = null;
+            string response = await SendRequest($"transactions/refunds", null, HttpMethod.Get);
+            if (!string.IsNullOrEmpty(response))
+                refundsResponse = JsonConvert.DeserializeObject<RefundsResponse>(response);
+
+            return refundsResponse;
+        }
+
+        public async Task<RefundResponse> ShowRefund(string transactionId)
+        {
+            RefundResponse refundResponse = null;
+            string response = await SendRequest($"transactions/refunds/{transactionId}", null, HttpMethod.Get);
+            if (!string.IsNullOrEmpty(response))
+                refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+
+            return refundResponse;
+        }
+
+        public async Task<RefundResponse> CreateRefund(CreateTaxjarOrder taxjarOrder)
+        {
+            RefundResponse refundResponse = null;
+            string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarOrder);
+            string response = await SendRequest($"transactions/refunds", jsonSerialiezedData, HttpMethod.Post);
+            if (!string.IsNullOrEmpty(response))
+                refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+
+            return refundResponse;
+        }
+
+        public async Task<RefundResponse> UpdateRefund(CreateTaxjarOrder taxjarOrder)
+        {
+            RefundResponse refundResponse = null;
+            string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarOrder);
+            string response = await SendRequest($"transactions/refunds/{taxjarOrder.TransactionId}", jsonSerialiezedData, HttpMethod.Put);
+            if (!string.IsNullOrEmpty(response))
+                refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+
+            return refundResponse;
+        }
+
+        public async Task<RefundResponse> DeleteRefund(string transactionId)
+        {
+            RefundResponse refundResponse = null;
+            string response = await SendRequest($"transactions/refunds/{transactionId}", null, HttpMethod.Delete);
+            if (!string.IsNullOrEmpty(response))
+                refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+
+            return refundResponse;
+        }
+
+        public async Task<CustomersResponse> ListCustomers()
+        {
+            CustomersResponse customersResponse = null;
+            string response = await SendRequest($"customers", null, HttpMethod.Get);
+            if (!string.IsNullOrEmpty(response))
+                customersResponse = JsonConvert.DeserializeObject<CustomersResponse>(response);
+
+            return customersResponse;
+        }
+
+        public async Task<CustomerResponse> ShowCustomer(string customerId)
+        {
+            CustomerResponse customerResponse = null;
+            string response = await SendRequest($"customers/{customerId}", null, HttpMethod.Get);
+            if (!string.IsNullOrEmpty(response))
+                customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+
+            return customerResponse;
+        }
+
+        public async Task<CustomerResponse> CreateCustomer(Customer taxjarCustomer)
+        {
+            CustomerResponse customerResponse = null;
+            string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarCustomer);
+            string response = await SendRequest($"customers", jsonSerialiezedData, HttpMethod.Post);
+            if (!string.IsNullOrEmpty(response))
+                customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+
+            return customerResponse;
+        }
+
+        public async Task<CustomerResponse> UpdateCustomer(Customer taxjarCustomer)
+        {
+            CustomerResponse customerResponse = null;
+            string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarCustomer);
+            string response = await SendRequest($"customers/{taxjarCustomer.CustomerId}", jsonSerialiezedData, HttpMethod.Put);
+            if (!string.IsNullOrEmpty(response))
+                customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+
+            return customerResponse;
+        }
+
+        public async Task<CustomerResponse> DeleteCustomer(string customerId)
+        {
+            CustomerResponse customerResponse = null;
+            string response = await SendRequest($"customers/{customerId}", null, HttpMethod.Delete);
+            if (!string.IsNullOrEmpty(response))
+                customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+
+            return customerResponse;
+        }
     }
 }

@@ -58,11 +58,6 @@ namespace Taxjar.Services
             if(vtexDock == null)
             {
                 Console.WriteLine($"Dock '{dockId}' not found.");
-                //foreach(VtexDockResponse dock in vtexDocks)
-                //{
-                //    Console.WriteLine($"    =   '{dock.Id}'");
-                //}
-
                 return null;
             }
 
@@ -159,9 +154,16 @@ namespace Taxjar.Services
                 ItemTaxResponse = new ItemTaxResponse[taxResponse.Tax.Breakdown.LineItems.Count]
             };
 
+            double shippingTaxCity = (double)taxResponse.Tax.Breakdown.Shipping.CityAmount;
+            double shippingTaxCounty = (double)taxResponse.Tax.Breakdown.Shipping.CountyAmount;
+            double shippingTaxSpecial = (double)taxResponse.Tax.Breakdown.Shipping.SpecialDistrictAmount;
+            double shippingTaxState = (double)taxResponse.Tax.Breakdown.Shipping.StateAmount;
+            double totalItemTax = (double)taxResponse.Tax.Breakdown.LineItems.Sum(i => i.TaxCollectable);
+
             for (int i = 0; i < taxResponse.Tax.Breakdown.LineItems.Count; i++)
             {
                 TaxBreakdownLineItem lineItem = taxResponse.Tax.Breakdown.LineItems[i];
+                double itemTaxPercentofWhole = (double)lineItem.TaxCollectable / totalItemTax;
                 ItemTaxResponse itemTaxResponse = new ItemTaxResponse
                 {
                     Id = lineItem.Id,
@@ -169,35 +171,79 @@ namespace Taxjar.Services
                     {
                         new VtexTax
                         {
-                            Description = "state",
-                            Name = taxResponse.Tax.Jurisdictions.State,
-                            Value = (double)(lineItem.StateAmount * 100)
+                            Description = "",
+                            Name = $"STATE TAX: {taxResponse.Tax.Jurisdictions.State}", // NY COUNTY TAX: MONROE
+                            Value = (double)lineItem.StateAmount
                         },
                         new VtexTax
                         {
-                            Description = "county",
-                            Name = taxResponse.Tax.Jurisdictions.County,
-                            Value = (double)(lineItem.CountyAmount * 100)
+                            Description = "",
+                            Name = $"COUNTY TAX: {taxResponse.Tax.Jurisdictions.County}",
+                            Value = (double)lineItem.CountyAmount
                         },
                         new VtexTax
                         {
-                            Description = "city",
-                            Name = taxResponse.Tax.Jurisdictions.City,
-                            Value = (double)(lineItem.CityAmount * 100)
+                            Description = "",
+                            Name = $"CITY TAX: {taxResponse.Tax.Jurisdictions.City}",
+                            Value = (double)lineItem.CityAmount
                         },
                         new VtexTax
                         {
-                            Description = "special",
-                            Name = "special",
-                            Value = (double)(lineItem.SpecialDistrictAmount * 100)
+                            Description = "",
+                            Name = "SPECIAL TAX",
+                            Value = (double)lineItem.SpecialDistrictAmount
                         },
+                        new VtexTax
+                        {
+                            Description = "",
+                            Name = $"STATE TAX: {taxResponse.Tax.Jurisdictions.State} (SHIPPING)",
+                            Value = shippingTaxState * itemTaxPercentofWhole
+                        },
+                        new VtexTax
+                        {
+                            Description = "",
+                            Name = $"COUNTY TAX: {taxResponse.Tax.Jurisdictions.County} (SHIPPING)",
+                            Value = shippingTaxCounty * itemTaxPercentofWhole
+                        },
+                        new VtexTax
+                        {
+                            Description = "",
+                            Name = $"CITY TAX: {taxResponse.Tax.Jurisdictions.City} (SHIPPING)",
+                            Value = shippingTaxCity * itemTaxPercentofWhole
+                        },
+                        new VtexTax
+                        {
+                            Description = "",
+                            Name = "SPECIAL TAX (SHIPPING)",
+                            Value = shippingTaxSpecial * itemTaxPercentofWhole
+                        }
                     }
                 };
 
                 vtexTaxResponse.ItemTaxResponse[i] = itemTaxResponse;
             };
 
+            double totalOrderTax = (double)taxResponse.Tax.AmountToCollect;
+            double totalResponseTax = vtexTaxResponse.ItemTaxResponse.SelectMany(t => t.Taxes).Sum(i => i.Value);
+            if(!totalOrderTax.Equals(totalResponseTax))
+            {
+                Console.WriteLine($"Order Tax = {totalOrderTax} =/= Response Tax = {totalResponseTax}");
+            }
+
             return vtexTaxResponse;
+        }
+
+        public async Task<CreateTaxjarOrder> VtexOrderToTaxjarOrder(VtexOrder vtexOrder)
+        {
+            CreateTaxjarOrder taxjarOrder = new CreateTaxjarOrder
+            {
+                TransactionId = vtexOrder.OrderId,
+                TransactionDate = DateTime.Now.ToString(),
+                Provider = vtexOrder.SalesChannel,
+                //FromCountry = vtexOrder.ShippingData.
+            };
+
+            return taxjarOrder;
         }
 
         public async Task<VtexOrder> GetOrderInformation(string orderId)
