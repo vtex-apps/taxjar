@@ -49,6 +49,7 @@ namespace Taxjar.Services
             if(vtexDocks == null)
             {
                 Console.WriteLine("Could not load docks");
+                _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, "Could not load docks.");
                 return null;
             }
 
@@ -59,6 +60,7 @@ namespace Taxjar.Services
             if(vtexDock == null)
             {
                 Console.WriteLine($"Dock '{dockId}' not found.");
+                _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Dock '{dockId}' not found.");
                 return null;
             }
 
@@ -119,11 +121,14 @@ namespace Taxjar.Services
                 }
                 else
                 {
+                    _context.Vtex.Logger.Warn("VtexRequestToTaxjarRequest", null, $"Dock {dock.Id} missing address");
                     Console.WriteLine($"Dock {dock.Id} missing address");
                 }
             }
 
             taxForOrder.NexusAddresses = nexuses.ToArray();
+
+            _context.Vtex.Logger.Info("VtexRequestToTaxjarRequest", null, $"Request: {JsonConvert.SerializeObject(vtexTaxRequest)}\nResponse: {JsonConvert.SerializeObject(taxForOrder)}");
 
             return taxForOrder;
         }
@@ -281,11 +286,14 @@ namespace Taxjar.Services
                 int lastItemIndex = vtexTaxResponse.ItemTaxResponse.Length - 1;
                 int lastTaxIndex = vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes.Length - 1;
                 vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes[lastTaxIndex].Value += adjustmentAmount;
+                _context.Vtex.Logger.Info("TaxjarResponseToVtexResponse", null, $"Applying adjustment: {totalOrderTax} - {totalResponseTax} = {adjustmentAmount}");
             }
             else
             {
                 Console.WriteLine($"Order Tax = {totalOrderTax} == Response Tax = {totalResponseTax}");
             }
+
+            _context.Vtex.Logger.Info("TaxjarResponseToVtexResponse", null, $"Request: {JsonConvert.SerializeObject(taxResponse)}\nResponse: {JsonConvert.SerializeObject(vtexTaxResponse)}");
 
             return vtexTaxResponse;
         }

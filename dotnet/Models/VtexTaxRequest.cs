@@ -30,6 +30,19 @@ namespace Taxjar.Models
 
         [JsonProperty("paymentData")]
         public PaymentData PaymentData { get; set; }
+
+        //public override bool Equals(object obj)
+        //{
+        //    var other = obj as VtexTaxRequest;
+
+        //    if (other == null)
+        //        return false;
+
+        //    if (OrderFormId != other.OrderFormId || SalesChannel != other.SalesChannel)
+        //        return false;
+
+        //    return true;
+        //}
     }
 
     public class ClientData

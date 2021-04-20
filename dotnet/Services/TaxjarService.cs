@@ -82,7 +82,7 @@ namespace Taxjar.Services
             }
             catch (Exception ex)
             {
-                _context.Vtex.Logger.Error("SendRequest", null, $"Error sending to '{endpoint}'", ex);
+                _context.Vtex.Logger.Error("SendRequest", null, $"Error sending '{jsonSerializedData}' to '{endpoint}'", ex);
             }
 
             return responseContent;

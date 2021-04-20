@@ -14,6 +14,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
+    using System.Diagnostics;
 
     public class RoutesController : Controller
     {
@@ -50,8 +51,15 @@
 
         public async Task<IActionResult> TaxjarOrderTaxHandler()
         {
-            VtexTaxResponse vtexTaxResponse = null;
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
+            VtexTaxResponse vtexTaxResponse = new VtexTaxResponse
+            {
+                ItemTaxResponse = new ItemTaxResponse[0]
+            };
+
             Response.Headers.Add("Cache-Control", "private");
+            Response.Headers.Add(TaxjarConstants.CONTENT_TYPE, TaxjarConstants.MINICART);
             if ("post".Equals(HttpContext.Request.Method, StringComparison.OrdinalIgnoreCase))
             {
                 string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
@@ -60,22 +68,101 @@
                     VtexTaxRequest taxRequest = JsonConvert.DeserializeObject<VtexTaxRequest>(bodyAsText);
                     if (taxRequest != null)
                     {
-                        TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequest);
-                        if (taxForOrder != null)
+                        List<string> dockIds = taxRequest.Items.Select(i => i.DockId).Distinct().ToList();
+                        if (dockIds.Count > 1)
                         {
-                            TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
-                            if (taxResponse != null)
+                            Console.WriteLine($" !!! SPLIT SHIPMENT ORDER !!! {dockIds.Count} LOCATIONS !!! ");
+                            List<VtexTaxResponse> taxResponses = new List<VtexTaxResponse>();
+                            decimal itemsTotal = taxRequest.Totals.Where(t => t.Id.Equals("Items")).Select(t => t.Value).FirstOrDefault();
+                            decimal shippingTotal = taxRequest.Totals.Where(t => t.Id.Equals("Items")).Select(t => t.Value).FirstOrDefault();
+                            long itemQuantity = taxRequest.Items.Sum(i => i.Quantity);
+                            decimal itemsTotalSoFar = 0M;
+                            foreach (string dockId in dockIds)
                             {
-                                vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
+                                List<Item> items = taxRequest.Items.Where(i => i.DockId.Equals(dockId)).ToList();
+                                long itemQuantityThisDock = items.Sum(i => i.Quantity);
+                                decimal percentOfWhole = itemQuantityThisDock / itemQuantity;
+                                VtexTaxRequest taxRequestThisDock = taxRequest;
+                                taxRequestThisDock.Items = items.ToArray();
+                                decimal itemsTotalThisDock = 0M;
+                                foreach (Item item in items)
+                                {
+                                    itemsTotalThisDock += item.ItemPrice * item.Quantity;
+                                }
+
+                                taxRequestThisDock.Totals = new Total[]
+                                {
+                                    new Total
+                                    {
+                                        Id = "Items",
+                                        Name = "Items Total",
+                                        Value = itemsTotalThisDock
+                                    },
+                                    new Total
+                                    {
+                                        Id = "Discounts",
+                                        Name = "Discounts Total",
+                                        Value = taxRequest.Totals.Where(t => t.Id.Equals("Discounts")).Select(t => t.Value).FirstOrDefault() * percentOfWhole
+                                    },
+                                    new Total
+                                    {
+                                        Id = "Shipping",
+                                        Name = "Shipping Total",
+                                        Value = taxRequest.Totals.Where(t => t.Id.Equals("Shipping")).Select(t => t.Value).FirstOrDefault() * percentOfWhole
+                                    }
+                                };
+
+                                TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequestThisDock);
+                                if (taxForOrder != null)
+                                {
+                                    TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
+                                    if (taxResponse != null)
+                                    {
+                                        VtexTaxResponse vtexTaxResponseThisDock = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
+                                        taxResponses.Add(vtexTaxResponseThisDock);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Null taxResponse");
+                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Null taxForOrder");
+                                }
+                            }
+
+                            vtexTaxResponse.Hooks = taxResponses.FirstOrDefault().Hooks;
+                            List<ItemTaxResponse> itemTaxResponses = new List<ItemTaxResponse>();
+                            foreach(VtexTaxResponse taxResponse in taxResponses)
+                            {
+                                foreach(ItemTaxResponse itemTaxResponse in taxResponse.ItemTaxResponse)
+                                {
+                                    itemTaxResponses.Add(itemTaxResponse);
+                                }
+                            }
+
+                            vtexTaxResponse.ItemTaxResponse = itemTaxResponses.ToArray();
+                        }   
+                        else
+                        {
+                            TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequest);
+                            if (taxForOrder != null)
+                            {
+                                TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
+                                if (taxResponse != null)
+                                {
+                                    vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Null taxResponse");
+                                }
                             }
                             else
                             {
-                                Console.WriteLine("Null taxResponse");
+                                Console.WriteLine("Null taxForOrder");
                             }
-                        }
-                        else
-                        {
-                            Console.WriteLine("Null taxForOrder");
                         }
                     }
                     else
@@ -89,8 +176,10 @@
                 }
             }
 
-            Console.WriteLine($"TaxjarOrderTaxHandler Response = {JsonConvert.SerializeObject(vtexTaxResponse)}");
-
+            //Console.WriteLine($"TaxjarOrderTaxHandler Response = {JsonConvert.SerializeObject(vtexTaxResponse)}");
+            timer.Stop();
+            //Console.WriteLine($"-> Elapsed Time = '{timer.Elapsed}' <-");
+            
             return Json(vtexTaxResponse);
         }
 

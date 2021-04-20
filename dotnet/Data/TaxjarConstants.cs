@@ -25,6 +25,7 @@ namespace Taxjar.Data
         public const string APP_SETTINGS = "vtex.taxjar";
         public const string ACCEPT = "Accept";
         public const string CONTENT_TYPE = "Content-Type";
+        public const string MINICART = "application/vnd.vtex.checkout.minicart.v1+json";
         public const string HTTP_FORWARDED_HEADER = "HTTP_X_FORWARDED_FOR";
 
         public const string BUCKET = "Taxjar";
