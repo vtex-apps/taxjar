@@ -134,16 +134,16 @@
 
                             vtexTaxResponse.Hooks = taxResponses.FirstOrDefault().Hooks;
                             List<ItemTaxResponse> itemTaxResponses = new List<ItemTaxResponse>();
-                            foreach(VtexTaxResponse taxResponse in taxResponses)
+                            foreach (VtexTaxResponse taxResponse in taxResponses)
                             {
-                                foreach(ItemTaxResponse itemTaxResponse in taxResponse.ItemTaxResponse)
+                                foreach (ItemTaxResponse itemTaxResponse in taxResponse.ItemTaxResponse)
                                 {
                                     itemTaxResponses.Add(itemTaxResponse);
                                 }
                             }
 
                             vtexTaxResponse.ItemTaxResponse = itemTaxResponses.ToArray();
-                        }   
+                        }
                         else
                         {
                             TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequest);
@@ -179,7 +179,7 @@
             //Console.WriteLine($"TaxjarOrderTaxHandler Response = {JsonConvert.SerializeObject(vtexTaxResponse)}");
             timer.Stop();
             //Console.WriteLine($"-> Elapsed Time = '{timer.Elapsed}' <-");
-            
+
             return Json(vtexTaxResponse);
         }
 
@@ -200,12 +200,13 @@
         public async Task<IActionResult> ProcessInvoiceHook()
         {
             Response.Headers.Add("Cache-Control", "private");
-            
+
             if ("post".Equals(HttpContext.Request.Method, StringComparison.OrdinalIgnoreCase))
             {
                 string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+                _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, bodyAsText);
                 InvoiceHookOrderStatus orderStatus = JsonConvert.DeserializeObject<InvoiceHookOrderStatus>(bodyAsText);
-                if(orderStatus.Status.ToLower().Equals("invoiced"))
+                if (orderStatus.Status.ToLower().Equals("invoiced"))
                 {
                     VtexOrder vtexOrder = await _vtexAPIService.GetOrderInformation(orderStatus.OrderId);
 
@@ -219,6 +220,51 @@
         {
             Response.Headers.Add("Cache-Control", "private");
             return Json(await _vtexAPIService.InitConfiguration());
+        }
+
+        public async Task<IActionResult> SummaryRates()
+        {
+            Response.Headers.Add("Cache-Control", "private");
+            SummaryRatesResponse summaryRatesResponse = null;
+            SummaryRatesStorage summaryRatesStorage = await _taxjarRepository.GetSummaryRates();
+            if(summaryRatesStorage != null)
+            {
+                TimeSpan ts = DateTime.Now - summaryRatesStorage.UpdatedAt;
+                if(ts.TotalDays > 1)
+                {
+                    summaryRatesResponse = await _taxjarService.SummaryRates();
+                    if(summaryRatesResponse != null)
+                    {
+                        summaryRatesStorage = new SummaryRatesStorage
+                        {
+                            UpdatedAt = DateTime.Now,
+                            SummaryRatesResponse = summaryRatesResponse
+                        };
+
+                        _taxjarRepository.SetSummaryRates(summaryRatesStorage);
+                    }
+                }
+                else
+                {
+                    summaryRatesResponse = summaryRatesStorage.SummaryRatesResponse;
+                    if (summaryRatesResponse != null)
+                    {
+                        summaryRatesStorage = new SummaryRatesStorage
+                        {
+                            UpdatedAt = DateTime.Now,
+                            SummaryRatesResponse = summaryRatesResponse
+                        };
+
+                        _taxjarRepository.SetSummaryRates(summaryRatesStorage);
+                    }
+                }
+            }
+            else
+            {
+                summaryRatesResponse = await _taxjarService.SummaryRates();
+            }
+
+            return Json(summaryRatesResponse);
         }
     }
 }

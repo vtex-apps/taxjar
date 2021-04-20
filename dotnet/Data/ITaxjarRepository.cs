@@ -10,5 +10,8 @@ namespace Taxjar.Data
         Task<MerchantSettings> GetMerchantSettings();
         Task<string> GetOrderConfiguration();
         Task<bool> SetOrderConfiguration(string jsonSerializedOrderConfig);
+
+        Task<bool> SetSummaryRates(SummaryRatesStorage summaryRatesStorage);
+        Task<SummaryRatesStorage> GetSummaryRates();
     }
 }

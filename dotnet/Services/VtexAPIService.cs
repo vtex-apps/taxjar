@@ -141,6 +141,12 @@ namespace Taxjar.Services
                 return null;
             }
 
+            if (taxResponse.Tax == null)
+            {
+                Console.WriteLine("Tax is null");
+                return null;
+            }
+
             if (taxResponse.Tax.Breakdown == null)
             {
                 Console.WriteLine("Breakdown is null");

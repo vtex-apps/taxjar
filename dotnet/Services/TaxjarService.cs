@@ -78,7 +78,7 @@ namespace Taxjar.Services
                 responseContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"SendRequest [{httpMethod}] {request.RequestUri}");
                 //Console.WriteLine($"SendRequest [{jsonSerializedData}]");
-                Console.WriteLine($"SendRequest [{response.StatusCode}] {responseContent}");
+                //Console.WriteLine($"SendRequest [{response.StatusCode}] {responseContent}");
             }
             catch (Exception ex)
             {
