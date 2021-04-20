@@ -89,6 +89,8 @@
                 }
             }
 
+            Console.WriteLine($"TaxjarOrderTaxHandler Response = {JsonConvert.SerializeObject(vtexTaxResponse)}");
+
             return Json(vtexTaxResponse);
         }
 

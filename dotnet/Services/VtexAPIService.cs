@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Vtex.Api.Context;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace Taxjar.Services
 {
@@ -486,12 +487,11 @@ namespace Taxjar.Services
                 VtexOrderformTaxConfiguration taxConfiguration = new VtexOrderformTaxConfiguration
                 {
                     AllowExecutionAfterErrors = false,
-                    //AppId = "appid",
                     IntegratedAuthentication = true,
-                    Url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/checkout/order-tax"
+                    Url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/checkout/order-tax"
                 };
 
-                orderConfig.taxConfiguration = taxConfiguration;
+                orderConfig["taxConfiguration"] = JToken.FromObject(taxConfiguration);
 
                 jsonSerializedOrderConfig = JsonConvert.SerializeObject(orderConfig);
                 bool success = await this._taxjarRepository.SetOrderConfiguration(jsonSerializedOrderConfig);
