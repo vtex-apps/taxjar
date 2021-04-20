@@ -209,7 +209,11 @@
                 if (orderStatus.Status.ToLower().Equals("invoiced"))
                 {
                     VtexOrder vtexOrder = await _vtexAPIService.GetOrderInformation(orderStatus.OrderId);
-
+                    if(vtexOrder != null)
+                    {
+                        CreateTaxjarOrder taxjarOrder = await _vtexAPIService.VtexOrderToTaxjarOrder(vtexOrder);
+                        OrderResponse orderResponse = await _taxjarService.CreateOrder(taxjarOrder);
+                    }
                 }
             }
 
@@ -224,7 +228,7 @@
 
         public async Task<IActionResult> SummaryRates()
         {
-            Response.Headers.Add("Cache-Control", "private");
+            //Response.Headers.Add("Cache-Control", "private");
             SummaryRatesResponse summaryRatesResponse = null;
             SummaryRatesStorage summaryRatesStorage = await _taxjarRepository.GetSummaryRates();
             if(summaryRatesStorage != null)
@@ -246,22 +250,23 @@
                 }
                 else
                 {
+                    Console.WriteLine("Loaded Rates from Storage");
                     summaryRatesResponse = summaryRatesStorage.SummaryRatesResponse;
-                    if (summaryRatesResponse != null)
-                    {
-                        summaryRatesStorage = new SummaryRatesStorage
-                        {
-                            UpdatedAt = DateTime.Now,
-                            SummaryRatesResponse = summaryRatesResponse
-                        };
-
-                        _taxjarRepository.SetSummaryRates(summaryRatesStorage);
-                    }
                 }
             }
             else
             {
                 summaryRatesResponse = await _taxjarService.SummaryRates();
+                if (summaryRatesResponse != null)
+                {
+                    summaryRatesStorage = new SummaryRatesStorage
+                    {
+                        UpdatedAt = DateTime.Now,
+                        SummaryRatesResponse = summaryRatesResponse
+                    };
+
+                    _taxjarRepository.SetSummaryRates(summaryRatesStorage);
+                }
             }
 
             return Json(summaryRatesResponse);

@@ -311,8 +311,40 @@ namespace Taxjar.Services
                 TransactionId = vtexOrder.OrderId,
                 TransactionDate = DateTime.Now.ToString(),
                 Provider = vtexOrder.SalesChannel,
-                //FromCountry = vtexOrder.ShippingData.
+                //FromCountry = vtexOrder.ShippingData.Address.Country,
+                //FromZip = vtexOrder.ShippingData.Address.Zip,
+                //FromState = vtexOrder.ShippingData.Address.State,
+                //FromCity = vtexOrder.ShippingData.Address.City,
+                //FromStreet = vtexOrder.ShippingData.Address.Street,
+                ToCountry = vtexOrder.ShippingData.Address.Country,
+                ToZip = vtexOrder.ShippingData.Address.Zip,
+                ToState = vtexOrder.ShippingData.Address.State,
+                ToCity = vtexOrder.ShippingData.Address.City,
+                ToStreet = vtexOrder.ShippingData.Address.Street,
+                Amount = vtexOrder.Totals.Where(t => !t.Id.Contains("Tax")).Sum(t => t.Value),
+                Shipping = vtexOrder.Totals.Where(t => t.Id.Contains("Shipping")).Sum(t => t.Value),
+                SalesTax = vtexOrder.Totals.Where(t => t.Id.Contains("Tax")).Sum(t => t.Value),
+                CustomerId = vtexOrder.ClientProfileData.Email,
+                ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT,
+                LineItems = new List<LineItem>()
             };
+
+            foreach(VtexOrderItem vtexOrderItem in vtexOrder.Items)
+            {
+                LineItem taxForOrderLineItem = new LineItem
+                {
+                    Id = vtexOrderItem.Id,
+                    Quantity = (int)vtexOrderItem.Quantity,
+                    ProductIdentifier = vtexOrderItem.SkuName,
+                    Description = vtexOrderItem.Name,
+                    ProductTaxCode = "",
+                    UnitPrice = vtexOrderItem.SellingPrice,
+                    Discount = 0,
+                    SalesTax = vtexOrderItem.Tax
+                };
+
+                taxjarOrder.LineItems.Add(taxForOrderLineItem);
+            }
 
             return taxjarOrder;
         }

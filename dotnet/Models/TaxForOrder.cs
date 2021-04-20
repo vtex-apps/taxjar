@@ -43,6 +43,9 @@ namespace Taxjar.Models
         [JsonProperty("shipping")]
         public float Shipping { get; set; }
 
+        [JsonProperty("sales_tax")]
+        public float SalesTax { get; set; }
+
         [JsonProperty("customer_id")]
         public string CustomerId { get; set; }
 

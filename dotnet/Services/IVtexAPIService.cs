@@ -9,5 +9,6 @@ namespace Taxjar.Services
         Task<VtexTaxResponse> TaxjarResponseToVtexResponse(TaxResponse taxResponse);
         Task<VtexOrder> GetOrderInformation(string orderId);
         Task<string> InitConfiguration();
+        Task<CreateTaxjarOrder> VtexOrderToTaxjarOrder(VtexOrder vtexOrder);
     }
 }

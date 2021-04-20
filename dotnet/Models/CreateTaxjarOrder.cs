@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Taxjar.Models
 {
-    public class CreateTaxjarOrder : TaxForOrder
+    public class CreateTaxjarOrder : Order
     {
         [JsonProperty("transaction_id")]
         public string TransactionId { get; set; }
