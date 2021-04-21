@@ -52,13 +52,22 @@ namespace Taxjar.Services
             string responseContent = null;
 
             MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
+            string baseUrl = string.Empty;
+            if(merchantSettings.IsLive)
+            {
+                baseUrl = "api.taxjar.com";
+            }
+            else
+            {
+                baseUrl = "api.sandbox.taxjar.com";
+            }
 
             try
             {
                 var request = new HttpRequestMessage
                 {
                     Method = httpMethod,
-                    RequestUri = new Uri($"http://api.sandbox.taxjar.com/v2/{endpoint}")
+                    RequestUri = new Uri($"http://{baseUrl}/v2/{endpoint}")
                 };
 
                 if (!string.IsNullOrEmpty(jsonSerializedData))
@@ -79,6 +88,7 @@ namespace Taxjar.Services
                 Console.WriteLine($"SendRequest [{httpMethod}] {request.RequestUri}");
                 //Console.WriteLine($"SendRequest [{jsonSerializedData}]");
                 //Console.WriteLine($"SendRequest [{response.StatusCode}] {responseContent}");
+                _context.Vtex.Logger.Info("SendRequest", null, $"Sending '{jsonSerializedData}'\rto '{endpoint}'\rResponse [{response.StatusCode}] '{responseContent}'");
             }
             catch (Exception ex)
             {

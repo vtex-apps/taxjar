@@ -18,6 +18,11 @@
         "title": "Production",
         "description": "Production",
         "type": "boolean"
+      },
+      "enableTransactionPosting": {
+        "title": "Enable Transaction Posting",
+        "description": "Record invoiced orders in Taxjar",
+        "type": "boolean"
       }
     }
   },
@@ -51,6 +56,9 @@
       "name": "LogisticsViewer"
     },
     {
+      "name": "OMSViewer"
+    },
+    {
       "name": "outbound-access",
       "attrs": {
         "host": "{{account}}.vtexcommercestable.com.br",
@@ -61,7 +69,7 @@
       "name": "outbound-access",
       "attrs": {
         "host": "{{account}}.vtexcommercestable.com.br",
-        "path": "api/checkout/pvt/configuration/orderForm"
+        "path": "/api/checkout/pvt/configuration/orderForm"
       }
     },
     {

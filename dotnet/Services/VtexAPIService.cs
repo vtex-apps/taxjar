@@ -160,7 +160,7 @@ namespace Taxjar.Services
                     new Hook
                     {
                         Major = 1,
-                        Url = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/oms/invoice")
+                        Url = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/oms/invoice")
                     }
                 },
                 ItemTaxResponse = new ItemTaxResponse[taxResponse.Tax.Breakdown.LineItems.Count]
@@ -171,6 +171,8 @@ namespace Taxjar.Services
             double shippingTaxSpecial = (double)taxResponse.Tax.Breakdown.Shipping.SpecialDistrictAmount;
             double shippingTaxState = (double)taxResponse.Tax.Breakdown.Shipping.StateAmount;
             double totalItemTax = (double)taxResponse.Tax.Breakdown.LineItems.Sum(i => i.TaxCollectable);
+            //double itemTaxPercentOfWhole = 1D / (double)taxResponse.Tax.Breakdown.LineItems.Count;
+            //Console.WriteLine($"itemTaxPercentOfWhole = {itemTaxPercentOfWhole}%");
 
             for (int i = 0; i < taxResponse.Tax.Breakdown.LineItems.Count; i++)
             {
@@ -232,6 +234,7 @@ namespace Taxjar.Services
 
                 if (shippingTaxState > 0)
                 {
+                    Console.WriteLine($"item[{i}] shippingTaxState: {shippingTaxState}*{itemTaxPercentOfWhole}={(decimal)Math.Round(shippingTaxState * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)}");
                     vtexTaxes.Add(
                         new VtexTax
                         {
@@ -244,6 +247,7 @@ namespace Taxjar.Services
 
                 if (shippingTaxCounty > 0)
                 {
+                    Console.WriteLine($"item[{i}] shippingTaxCounty: {shippingTaxCounty}*{itemTaxPercentOfWhole}={(decimal)Math.Round(shippingTaxCounty * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)}");
                     vtexTaxes.Add(
                         new VtexTax
                         {
@@ -256,6 +260,7 @@ namespace Taxjar.Services
 
                 if (shippingTaxCity > 0)
                 {
+                    Console.WriteLine($"item[{i}] shippingTaxCity: {shippingTaxCity}*{itemTaxPercentOfWhole}={(decimal)Math.Round(shippingTaxCity * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)}");
                     vtexTaxes.Add(
                         new VtexTax
                         {
@@ -268,6 +273,7 @@ namespace Taxjar.Services
 
                 if (shippingTaxSpecial > 0)
                 {
+                    Console.WriteLine($"item[{i}] shippingTaxSpecial: {shippingTaxSpecial}*{itemTaxPercentOfWhole}={(decimal)Math.Round(shippingTaxSpecial * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)}");
                     vtexTaxes.Add(
                         new VtexTax
                         {

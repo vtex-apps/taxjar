@@ -200,24 +200,59 @@
         public async Task<IActionResult> ProcessInvoiceHook()
         {
             Response.Headers.Add("Cache-Control", "private");
-
+            Console.WriteLine($"{HttpContext.Request.Method} to ProcessInvoiceHook");
             if ("post".Equals(HttpContext.Request.Method, StringComparison.OrdinalIgnoreCase))
             {
-                string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-                _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, bodyAsText);
-                InvoiceHookOrderStatus orderStatus = JsonConvert.DeserializeObject<InvoiceHookOrderStatus>(bodyAsText);
-                if (orderStatus.Status.ToLower().Equals("invoiced"))
+                Console.WriteLine("Reading request body...");
+                try
                 {
-                    VtexOrder vtexOrder = await _vtexAPIService.GetOrderInformation(orderStatus.OrderId);
-                    if(vtexOrder != null)
+                    string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+                    _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, bodyAsText);
+                    InvoiceHookOrderStatus orderStatus = JsonConvert.DeserializeObject<InvoiceHookOrderStatus>(bodyAsText);
+                    if (orderStatus.Status.ToLower().Equals("invoiced"))
                     {
-                        CreateTaxjarOrder taxjarOrder = await _vtexAPIService.VtexOrderToTaxjarOrder(vtexOrder);
-                        OrderResponse orderResponse = await _taxjarService.CreateOrder(taxjarOrder);
+                        MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
+                        if (merchantSettings.EnableTransactionPosting)
+                        {
+                            VtexOrder vtexOrder = await _vtexAPIService.GetOrderInformation(orderStatus.OrderId);
+                            if (vtexOrder != null)
+                            {
+                                CreateTaxjarOrder taxjarOrder = await _vtexAPIService.VtexOrderToTaxjarOrder(vtexOrder);
+                                OrderResponse orderResponse = await _taxjarService.CreateOrder(taxjarOrder);
+                                if (orderResponse != null)
+                                {
+                                    _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, $"Order '{orderStatus.OrderId}' taxes were commited");
+                                    Console.WriteLine($"Order taxes were commited");
+                                    return Ok("Order taxes were commited");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"Null OrderResponse!");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, $"Transaction Posting is not enabled. Order '{orderStatus.OrderId}' ");
+                            Console.WriteLine($"Transaction Posting is not enabled. Order '{orderStatus.OrderId}'");
+                            return Ok("Transaction Posting is not enabled.");
+                        }
                     }
+                    else
+                    {
+                        Console.WriteLine($"Ignoring status '{orderStatus.Status}' for order '{orderStatus.OrderId}'");
+                        return Ok("Ignoring status.");
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine($"Error processing invoice. {ex.Message}");
+                    _context.Vtex.Logger.Error("ProcessInvoiceHook", null, "Error processing invoice.", ex);
                 }
             }
 
-            return Json("Order taxes were commited");
+            //return Json("Order taxes were commited");
+            return BadRequest();
         }
 
         public async Task<IActionResult> InitConfig()
