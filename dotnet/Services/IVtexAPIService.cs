@@ -10,5 +10,6 @@ namespace Taxjar.Services
         Task<VtexOrder> GetOrderInformation(string orderId);
         Task<string> InitConfiguration();
         Task<CreateTaxjarOrder> VtexOrderToTaxjarOrder(VtexOrder vtexOrder);
+        Task<VtexDockResponse[]> ListVtexDocks();
     }
 }

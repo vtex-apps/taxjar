@@ -23,6 +23,7 @@ namespace Vtex
             services.AddSingleton<IVtexEnvironmentVariableProvider, VtexEnvironmentVariableProvider>();
             services.AddHttpContextAccessor();
             services.AddHttpClient();
+            services.AddMemoryCache();
         }
 
         // This method is called inside Startup.Configure() before calling app.UseRouting()

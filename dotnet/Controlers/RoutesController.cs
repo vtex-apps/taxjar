@@ -15,6 +15,7 @@
     using System.Linq;
     using System.Text;
     using System.Diagnostics;
+    using Microsoft.Extensions.Caching.Memory;
 
     public class RoutesController : Controller
     {
@@ -24,8 +25,9 @@
         private readonly ITaxjarService _taxjarService;
         private readonly ITaxjarRepository _taxjarRepository;
         private readonly IVtexAPIService _vtexAPIService;
+        private readonly IMemoryCache _memoryCache;
 
-        public RoutesController(IIOServiceContext context, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, ITaxjarService taxjarService, ITaxjarRepository taxjarRepository, IVtexAPIService vtexAPIService)
+        public RoutesController(IIOServiceContext context, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, ITaxjarService taxjarService, ITaxjarRepository taxjarRepository, IVtexAPIService vtexAPIService, IMemoryCache memoryCache)
         {
             this._context = context ?? throw new ArgumentNullException(nameof(context));
             this._httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
@@ -33,6 +35,7 @@
             this._taxjarService = taxjarService ?? throw new ArgumentNullException(nameof(taxjarService));
             this._taxjarRepository = taxjarRepository ?? throw new ArgumentNullException(nameof(taxjarRepository));
             this._vtexAPIService = vtexAPIService ?? throw new ArgumentNullException(nameof(vtexAPIService));
+            this._memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
         }
 
         public async Task<IActionResult> RatesForLocation(string zip)
@@ -68,30 +71,59 @@
                     VtexTaxRequest taxRequest = JsonConvert.DeserializeObject<VtexTaxRequest>(bodyAsText);
                     if (taxRequest != null)
                     {
-                        List<string> dockIds = taxRequest.Items.Select(i => i.DockId).Distinct().ToList();
-                        if (dockIds.Count > 1)
+                        decimal total = taxRequest.Totals.Sum(t => t.Value);
+                        string cacheKey = $"{taxRequest.ShippingDestination.PostalCode}|{total}";
+                        if (_memoryCache.TryGetValue(cacheKey, out vtexTaxResponse))
                         {
-                            Console.WriteLine($" !!! SPLIT SHIPMENT ORDER !!! {dockIds.Count} LOCATIONS !!! ");
-                            List<VtexTaxResponse> taxResponses = new List<VtexTaxResponse>();
-                            decimal itemsTotal = taxRequest.Totals.Where(t => t.Id.Equals("Items")).Select(t => t.Value).FirstOrDefault();
-                            decimal shippingTotal = taxRequest.Totals.Where(t => t.Id.Equals("Items")).Select(t => t.Value).FirstOrDefault();
-                            long itemQuantity = taxRequest.Items.Sum(i => i.Quantity);
-                            decimal itemsTotalSoFar = 0M;
-                            foreach (string dockId in dockIds)
+                            Console.WriteLine($"Fetched from Cache with key '{cacheKey}'.");
+                            _context.Vtex.Logger.Info("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(vtexTaxResponse)}");
+                        }
+                        else
+                        {
+                            bool inNexus = false;
+                            VtexDockResponse[] vtexDocks = await _vtexAPIService.ListVtexDocks();
+                            //List<string> nexusStates = vtexDocks.Select(d => d.PickupStoreInfo.Address.State).ToList();
+                            List<string> nexusStates = new List<string>();
+                            foreach (VtexDockResponse vtexDock in vtexDocks)
                             {
-                                List<Item> items = taxRequest.Items.Where(i => i.DockId.Equals(dockId)).ToList();
-                                long itemQuantityThisDock = items.Sum(i => i.Quantity);
-                                decimal percentOfWhole = itemQuantityThisDock / itemQuantity;
-                                VtexTaxRequest taxRequestThisDock = taxRequest;
-                                taxRequestThisDock.Items = items.ToArray();
-                                decimal itemsTotalThisDock = 0M;
-                                foreach (Item item in items)
+                                if (vtexDock.PickupStoreInfo != null && vtexDock.PickupStoreInfo.Address != null && vtexDock.PickupStoreInfo.Address.State != null)
                                 {
-                                    itemsTotalThisDock += item.ItemPrice * item.Quantity;
+                                    Console.WriteLine($"Nexus State '{vtexDock.PickupStoreInfo.Address.State}' Destination state '{taxRequest.ShippingDestination.State}' ");
+                                    if (vtexDock.PickupStoreInfo.Address.State.Equals(taxRequest.ShippingDestination.State))
+                                    {
+                                        inNexus = true;
+                                        Console.WriteLine($"Destination state '{taxRequest.ShippingDestination.State}' is in nexus");
+                                        break;
+                                    }
                                 }
+                            }
 
-                                taxRequestThisDock.Totals = new Total[]
+                            if (inNexus)
+                            {
+                                List<string> dockIds = taxRequest.Items.Select(i => i.DockId).Distinct().ToList();
+                                if (dockIds.Count > 1)
                                 {
+                                    Console.WriteLine($" !!! SPLIT SHIPMENT ORDER !!! {dockIds.Count} LOCATIONS !!! ");
+                                    List<VtexTaxResponse> taxResponses = new List<VtexTaxResponse>();
+                                    decimal itemsTotal = taxRequest.Totals.Where(t => t.Id.Equals("Items")).Select(t => t.Value).FirstOrDefault();
+                                    decimal shippingTotal = taxRequest.Totals.Where(t => t.Id.Equals("Items")).Select(t => t.Value).FirstOrDefault();
+                                    long itemQuantity = taxRequest.Items.Sum(i => i.Quantity);
+                                    //decimal itemsTotalSoFar = 0M;
+                                    foreach (string dockId in dockIds)
+                                    {
+                                        List<Item> items = taxRequest.Items.Where(i => i.DockId.Equals(dockId)).ToList();
+                                        long itemQuantityThisDock = items.Sum(i => i.Quantity);
+                                        decimal percentOfWhole = itemQuantityThisDock / itemQuantity;
+                                        VtexTaxRequest taxRequestThisDock = taxRequest;
+                                        taxRequestThisDock.Items = items.ToArray();
+                                        decimal itemsTotalThisDock = 0M;
+                                        foreach (Item item in items)
+                                        {
+                                            itemsTotalThisDock += item.ItemPrice * item.Quantity;
+                                        }
+
+                                        taxRequestThisDock.Totals = new Total[]
+                                        {
                                     new Total
                                     {
                                         Id = "Items",
@@ -110,58 +142,68 @@
                                         Name = "Shipping Total",
                                         Value = taxRequest.Totals.Where(t => t.Id.Equals("Shipping")).Select(t => t.Value).FirstOrDefault() * percentOfWhole
                                     }
-                                };
+                                        };
 
-                                TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequestThisDock);
-                                if (taxForOrder != null)
-                                {
-                                    TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
-                                    if (taxResponse != null)
+                                        TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequestThisDock);
+                                        if (taxForOrder != null)
+                                        {
+                                            TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
+                                            if (taxResponse != null)
+                                            {
+                                                VtexTaxResponse vtexTaxResponseThisDock = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
+                                                taxResponses.Add(vtexTaxResponseThisDock);
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine("Null taxResponse");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("Null taxForOrder");
+                                        }
+                                    }
+
+                                    vtexTaxResponse.Hooks = taxResponses.FirstOrDefault().Hooks;
+                                    List<ItemTaxResponse> itemTaxResponses = new List<ItemTaxResponse>();
+                                    foreach (VtexTaxResponse taxResponse in taxResponses)
                                     {
-                                        VtexTaxResponse vtexTaxResponseThisDock = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
-                                        taxResponses.Add(vtexTaxResponseThisDock);
+                                        foreach (ItemTaxResponse itemTaxResponse in taxResponse.ItemTaxResponse)
+                                        {
+                                            itemTaxResponses.Add(itemTaxResponse);
+                                        }
+                                    }
+
+                                    vtexTaxResponse.ItemTaxResponse = itemTaxResponses.ToArray();
+                                }
+                                else
+                                {
+                                    TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequest);
+                                    if (taxForOrder != null)
+                                    {
+                                        TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
+                                        if (taxResponse != null)
+                                        {
+                                            vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
+                                            var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+                                            _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
+                                            Console.WriteLine($"Response saved to cache with key '{cacheKey}'");
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("Null taxResponse");
+                                        }
                                     }
                                     else
                                     {
-                                        Console.WriteLine("Null taxResponse");
+                                        Console.WriteLine("Null taxForOrder");
                                     }
-                                }
-                                else
-                                {
-                                    Console.WriteLine("Null taxForOrder");
-                                }
-                            }
-
-                            vtexTaxResponse.Hooks = taxResponses.FirstOrDefault().Hooks;
-                            List<ItemTaxResponse> itemTaxResponses = new List<ItemTaxResponse>();
-                            foreach (VtexTaxResponse taxResponse in taxResponses)
-                            {
-                                foreach (ItemTaxResponse itemTaxResponse in taxResponse.ItemTaxResponse)
-                                {
-                                    itemTaxResponses.Add(itemTaxResponse);
-                                }
-                            }
-
-                            vtexTaxResponse.ItemTaxResponse = itemTaxResponses.ToArray();
-                        }
-                        else
-                        {
-                            TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequest);
-                            if (taxForOrder != null)
-                            {
-                                TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
-                                if (taxResponse != null)
-                                {
-                                    vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
-                                }
-                                else
-                                {
-                                    Console.WriteLine("Null taxResponse");
                                 }
                             }
                             else
                             {
-                                Console.WriteLine("Null taxForOrder");
+                                Console.WriteLine($"Destination state '{taxRequest.ShippingDestination.State}' is NOT in nexus");
+                                _context.Vtex.Logger.Info("TaxjarOrderTaxHandler", null, $"Order '{taxRequest.OrderFormId}' Destination state '{taxRequest.ShippingDestination.State}' is NOT in nexus");
                             }
                         }
                     }
