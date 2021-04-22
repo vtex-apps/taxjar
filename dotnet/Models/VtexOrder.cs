@@ -195,6 +195,9 @@ namespace Taxjar.Models
 
         [JsonProperty("authorizedDate")]
         public string AuthorizedDate { get; set; }
+
+        [JsonProperty("invoicedDate")]
+        public string InvoicedDate { get; set; }
     }
 
     public class ClientPreferencesData
@@ -865,7 +868,7 @@ namespace Taxjar.Models
     public class ShippingData
     {
         [JsonProperty("address")]
-        public Address Address { get; set; }
+        public VtexAddress Address { get; set; }
 
         [JsonProperty("logisticsInfo")]
         public List<LogisticsInfo> LogisticsInfo { get; set; }

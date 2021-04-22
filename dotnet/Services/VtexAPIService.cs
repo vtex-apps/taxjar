@@ -315,15 +315,15 @@ namespace Taxjar.Services
             CreateTaxjarOrder taxjarOrder = new CreateTaxjarOrder
             {
                 TransactionId = vtexOrder.OrderId,
-                TransactionDate = DateTime.Now.ToString(),
+                TransactionDate = DateTime.Parse(vtexOrder.InvoicedDate).ToString("yyyy-MM-ddTHH:mm:sszzz"),
                 Provider = vtexOrder.SalesChannel,
                 //FromCountry = vtexOrder.ShippingData.Address.Country,
                 //FromZip = vtexOrder.ShippingData.Address.Zip,
                 //FromState = vtexOrder.ShippingData.Address.State,
                 //FromCity = vtexOrder.ShippingData.Address.City,
                 //FromStreet = vtexOrder.ShippingData.Address.Street,
-                ToCountry = vtexOrder.ShippingData.Address.Country,
-                ToZip = vtexOrder.ShippingData.Address.Zip,
+                ToCountry = vtexOrder.ShippingData.Address.Country.Substring(0, 2),
+                ToZip = vtexOrder.ShippingData.Address.PostalCode,
                 ToState = vtexOrder.ShippingData.Address.State,
                 ToCity = vtexOrder.ShippingData.Address.City,
                 ToStreet = vtexOrder.ShippingData.Address.Street,
