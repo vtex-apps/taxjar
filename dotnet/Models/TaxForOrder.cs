@@ -49,7 +49,7 @@ namespace Taxjar.Models
         [JsonProperty("customer_id")]
         public string CustomerId { get; set; }
 
-        [JsonProperty("exemption_type")]
+        [JsonProperty("exemption_type", NullValueHandling = NullValueHandling.Ignore)]
         public string ExemptionType { get; set; }
 
         [JsonProperty("line_items")]

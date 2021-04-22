@@ -1,0 +1,23 @@
+type Query {
+  listCustomers: CustomerList
+}
+
+type Mutation {
+  createCustomer(customer: CustomerInput!): Boolean
+}
+
+input CustomerInput {
+  customerId: String!
+  exemptionType: String!
+  name: String!
+}
+
+type Customer {
+  customerId: String
+  exemptionType: String
+  name: String
+}
+
+type CustomerList {
+  customers: [Customer]
+}

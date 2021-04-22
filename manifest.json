@@ -30,7 +30,8 @@
     "smartcheckout"
   ],
   "builders": {
-    "dotnet": "2.x"
+    "dotnet": "2.x",
+    "graphql": "1.x"
   },
   "mustUpdateAt": "2018-09-05",
   "scripts": {

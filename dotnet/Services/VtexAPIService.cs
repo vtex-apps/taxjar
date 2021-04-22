@@ -80,7 +80,7 @@ namespace Taxjar.Services
                 FromZip = vtexDock.PickupStoreInfo.Address.PostalCode,
                 CustomerId = vtexTaxRequest.ClientEmail,
                 LineItems = new TaxForOrderLineItem[vtexTaxRequest.Items.Length],
-                ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT
+                //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT
             };
 
             for (int i = 0; i < vtexTaxRequest.Items.Length; i++)
@@ -331,7 +331,7 @@ namespace Taxjar.Services
                 Shipping = vtexOrder.Totals.Where(t => t.Id.Contains("Shipping")).Sum(t => t.Value),
                 SalesTax = vtexOrder.Totals.Where(t => t.Id.Contains("Tax")).Sum(t => t.Value),
                 CustomerId = vtexOrder.ClientProfileData.Email,
-                ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT,
+                //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT,
                 LineItems = new List<LineItem>()
             };
 

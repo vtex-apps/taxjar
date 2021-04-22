@@ -175,6 +175,12 @@
                                     }
 
                                     vtexTaxResponse.ItemTaxResponse = itemTaxResponses.ToArray();
+                                    if (vtexTaxResponse != null)
+                                    {
+                                        var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+                                        _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
+                                        Console.WriteLine($"Split Response saved to cache with key '{cacheKey}'");
+                                    }
                                 }
                                 else
                                 {
@@ -185,9 +191,12 @@
                                         if (taxResponse != null)
                                         {
                                             vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
-                                            var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-                                            _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
-                                            Console.WriteLine($"Response saved to cache with key '{cacheKey}'");
+                                            if (vtexTaxResponse != null)
+                                            {
+                                                var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+                                                _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
+                                                Console.WriteLine($"Response saved to cache with key '{cacheKey}'");
+                                            }
                                         }
                                         else
                                         {
