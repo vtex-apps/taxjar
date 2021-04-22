@@ -54,6 +54,7 @@
 
         public async Task<IActionResult> TaxjarOrderTaxHandler()
         {
+            bool useSummaryRates = false;
             Stopwatch timer = new Stopwatch();
             timer.Start();
             VtexTaxResponse vtexTaxResponse = new VtexTaxResponse
@@ -155,6 +156,7 @@
                                             }
                                             else
                                             {
+                                                useSummaryRates = true;
                                                 Console.WriteLine("Null taxResponse");
                                             }
                                         }
@@ -180,6 +182,7 @@
                                         var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
                                         _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
                                         Console.WriteLine($"Split Response saved to cache with key '{cacheKey}'");
+                                        this.SummaryRates();
                                     }
                                 }
                                 else
@@ -196,16 +199,67 @@
                                                 var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
                                                 _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
                                                 Console.WriteLine($"Response saved to cache with key '{cacheKey}'");
+                                                this.SummaryRates();
                                             }
                                         }
                                         else
                                         {
+                                            useSummaryRates = true;
                                             Console.WriteLine("Null taxResponse");
                                         }
                                     }
                                     else
                                     {
                                         Console.WriteLine("Null taxForOrder");
+                                    }
+                                }
+
+                                if (useSummaryRates)
+                                {
+                                    SummaryRatesStorage summaryRatesStorage = await _taxjarRepository.GetSummaryRates();
+                                    if (summaryRatesStorage != null)
+                                    {
+                                        SummaryRatesResponse summaryRates = summaryRatesStorage.SummaryRatesResponse;
+                                        List<SummaryRate> summaryRatesList = summaryRates.SummaryRates.Where(r => r.CountryCode.Equals(taxRequest.ShippingDestination.Country.Substring(0, 2))).ToList();
+                                        summaryRatesList = summaryRatesList.Where(r => r.RegionCode.Equals(taxRequest.ShippingDestination.State)).ToList();
+                                        decimal taxRate = summaryRatesList.Select(r => r.AverageRate.Rate).FirstOrDefault();
+                                        //decimal orderTotal = taxRequest.Totals.Sum(t => t.Value);
+                                        Console.WriteLine($"Using Summary Tax Rate of {taxRate} ");
+                                        vtexTaxResponse = new VtexTaxResponse
+                                        {
+                                            Hooks = new Hook[]
+                                            {
+                                                new Hook
+                                                {
+                                                    Major = 1,
+                                                    Url = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/oms/invoice")
+                                                }
+                                            },
+                                            ItemTaxResponse = new ItemTaxResponse[taxRequest.Items.Length]
+                                        };
+
+                                        for (int i = 0; i < taxRequest.Items.Length; i++)
+                                        {
+                                            Item item = taxRequest.Items[i];
+                                            ItemTaxResponse itemTaxResponse = new ItemTaxResponse
+                                            {
+                                                Id = item.Id
+                                            };
+
+                                            List<VtexTax> vtexTaxes = new List<VtexTax>();
+                                            vtexTaxes.Add(
+                                                new VtexTax
+                                                {
+                                                    Description = "",
+                                                    Name = "ESTIMATED TAX",
+                                                    Value = item.ItemPrice * taxRate
+                                                }
+                                             );
+
+                                            Console.WriteLine($"[{item.Id}] #{item.Quantity} ${item.ItemPrice} * {taxRate}% = ${item.ItemPrice * taxRate}");
+                                            itemTaxResponse.Taxes = vtexTaxes.ToArray();
+                                            vtexTaxResponse.ItemTaxResponse[i] = itemTaxResponse;
+                                        }
                                     }
                                 }
                             }
@@ -351,6 +405,7 @@
                         SummaryRatesResponse = summaryRatesResponse
                     };
 
+                    Console.WriteLine("Updating Rates...");
                     _taxjarRepository.SetSummaryRates(summaryRatesStorage);
                 }
             }

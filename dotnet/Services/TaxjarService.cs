@@ -89,6 +89,10 @@ namespace Taxjar.Services
                 //Console.WriteLine($"SendRequest [{jsonSerializedData}]");
                 //Console.WriteLine($"SendRequest [{response.StatusCode}] {responseContent}");
                 _context.Vtex.Logger.Info("SendRequest", null, $"Sending '{jsonSerializedData}'\rto '{endpoint}'\rResponse [{response.StatusCode}] '{responseContent}'");
+                if(!response.IsSuccessStatusCode)
+                {
+                    responseContent = null;
+                }
             }
             catch (Exception ex)
             {

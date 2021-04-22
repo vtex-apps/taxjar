@@ -98,7 +98,7 @@ namespace Taxjar.Services
                     Id = vtexTaxRequest.Items[i].Id,
                     ProductTaxCode = taxCode,
                     Quantity = vtexTaxRequest.Items[i].Quantity,
-                    UnitPrice = (float)(vtexTaxRequest.Items[i].ItemPrice)
+                    UnitPrice = (float)(vtexTaxRequest.Items[i].ItemPrice / vtexTaxRequest.Items[i].Quantity)
                 };
             }
 
