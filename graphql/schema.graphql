@@ -1,5 +1,5 @@
 type Query {
-  listCustomers: CustomerList
+  listCustomers: [Customer]
 }
 
 type Mutation {
@@ -10,14 +10,22 @@ input CustomerInput {
   customerId: String!
   exemptionType: String!
   name: String!
+  exemptRegions: [ExemptRegionInput]
 }
 
 type Customer {
   customerId: String
   exemptionType: String
   name: String
+  exemptRegions: [ExemptRegion]
 }
 
-type CustomerList {
-  customers: [Customer]
+type ExemptRegion {
+  country: [String]
+  state: [String]
+}
+
+input ExemptRegionInput {
+  country: [String]
+  state: [String]
 }

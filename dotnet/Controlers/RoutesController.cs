@@ -323,6 +323,7 @@
                             if (vtexOrder != null)
                             {
                                 CreateTaxjarOrder taxjarOrder = await _vtexAPIService.VtexOrderToTaxjarOrder(vtexOrder);
+                                _context.Vtex.Logger.Debug("CreateTaxjarOrder", null, $"{JsonConvert.SerializeObject(taxjarOrder)}");
                                 OrderResponse orderResponse = await _taxjarService.CreateOrder(taxjarOrder);
                                 if (orderResponse != null)
                                 {

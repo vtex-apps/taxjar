@@ -317,39 +317,59 @@ namespace Taxjar.Services
                 TransactionId = vtexOrder.OrderId,
                 TransactionDate = DateTime.Parse(vtexOrder.InvoicedDate).ToString("yyyy-MM-ddTHH:mm:sszzz"),
                 Provider = vtexOrder.SalesChannel,
-                //FromCountry = vtexOrder.ShippingData.Address.Country,
-                //FromZip = vtexOrder.ShippingData.Address.Zip,
-                //FromState = vtexOrder.ShippingData.Address.State,
-                //FromCity = vtexOrder.ShippingData.Address.City,
-                //FromStreet = vtexOrder.ShippingData.Address.Street,
                 ToCountry = vtexOrder.ShippingData.Address.Country.Substring(0, 2),
                 ToZip = vtexOrder.ShippingData.Address.PostalCode,
                 ToState = vtexOrder.ShippingData.Address.State,
                 ToCity = vtexOrder.ShippingData.Address.City,
                 ToStreet = vtexOrder.ShippingData.Address.Street,
-                Amount = vtexOrder.Totals.Where(t => !t.Id.Contains("Tax")).Sum(t => t.Value),
-                Shipping = vtexOrder.Totals.Where(t => t.Id.Contains("Shipping")).Sum(t => t.Value),
-                SalesTax = vtexOrder.Totals.Where(t => t.Id.Contains("Tax")).Sum(t => t.Value),
+                Amount = (decimal)vtexOrder.Totals.Where(t => !t.Id.Contains("Tax")).Sum(t => t.Value) / 100,
+                Shipping = (decimal)vtexOrder.Totals.Where(t => t.Id.Contains("Shipping")).Sum(t => t.Value) / 100,
+                SalesTax = (decimal)vtexOrder.Totals.Where(t => t.Id.Contains("Tax")).Sum(t => t.Value) / 100,
                 CustomerId = vtexOrder.ClientProfileData.Email,
                 //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT,
                 LineItems = new List<LineItem>()
             };
 
-            foreach(VtexOrderItem vtexOrderItem in vtexOrder.Items)
+            Console.WriteLine($"'{taxjarOrder.TransactionId}' Amount: {taxjarOrder.Amount} Shipping: {taxjarOrder.Shipping} SalesTax: {taxjarOrder.SalesTax} ");
+
+            // For now, get the first address - TODO: split order by location
+            LogisticsInfo logisticsInfo = vtexOrder.ShippingData.LogisticsInfo.FirstOrDefault();
+            if (logisticsInfo != null)
             {
+                DeliveryId deliveryId = new DeliveryId();
+                if (logisticsInfo.DeliveryIds != null)
+                {
+                    deliveryId = logisticsInfo.DeliveryIds.FirstOrDefault();
+                    VtexDockResponse vtexDock = await this.ListDockById(deliveryId.DockId);
+                    if (vtexDock != null && vtexDock.PickupStoreInfo != null && vtexDock.PickupStoreInfo.Address != null)
+                    {
+                        taxjarOrder.FromCountry = vtexDock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2);
+                        taxjarOrder.FromZip = vtexDock.PickupStoreInfo.Address.PostalCode;
+                        taxjarOrder.FromState = vtexDock.PickupStoreInfo.Address.State;
+                        taxjarOrder.FromCity = vtexDock.PickupStoreInfo.Address.City;
+                        taxjarOrder.FromStreet = vtexDock.PickupStoreInfo.Address.Street;
+                    }
+                }
+            }
+
+            foreach (VtexOrderItem vtexOrderItem in vtexOrder.Items)
+            {
+                GetSkuContextResponse contextResponse = await this.GetSku(vtexOrderItem.SellerSku);
+
                 LineItem taxForOrderLineItem = new LineItem
                 {
                     Id = vtexOrderItem.Id,
                     Quantity = (int)vtexOrderItem.Quantity,
-                    ProductIdentifier = vtexOrderItem.SkuName,
+                    ProductIdentifier = vtexOrderItem.SellerSku,
                     Description = vtexOrderItem.Name,
-                    ProductTaxCode = "",
-                    UnitPrice = vtexOrderItem.SellingPrice,
-                    Discount = 0,
-                    SalesTax = vtexOrderItem.Tax
+                    ProductTaxCode = contextResponse.TaxCode,
+                    UnitPrice = (decimal)vtexOrderItem.Price / 100,
+                    Discount = Math.Abs((decimal)vtexOrderItem.PriceTags.Where(p => p.Name.Contains("DISCOUNT@")).Sum(p => p.Value) / 100),
+                    SalesTax = (decimal)vtexOrderItem.PriceTags.Where(t => t.Name.Contains("TAX")).Sum(t => t.Value) / 100
                 };
 
                 taxjarOrder.LineItems.Add(taxForOrderLineItem);
+                Console.WriteLine($"'{taxjarOrder.TransactionId}' [{taxForOrderLineItem.Description}] UnitPrice: {taxForOrderLineItem.UnitPrice} Discount: {taxForOrderLineItem.Discount} SalesTax: {taxForOrderLineItem.SalesTax} ");
             }
 
             return taxjarOrder;
