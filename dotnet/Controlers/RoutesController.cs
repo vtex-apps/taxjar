@@ -54,13 +54,20 @@
 
         public async Task<IActionResult> TaxjarOrderTaxHandler()
         {
-            bool useSummaryRates = false;
-            Stopwatch timer = new Stopwatch();
-            timer.Start();
             VtexTaxResponse vtexTaxResponse = new VtexTaxResponse
             {
                 ItemTaxResponse = new ItemTaxResponse[0]
             };
+
+            MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
+            if(!merchantSettings.EnableTaxCalculations)
+            {
+                return Json(vtexTaxResponse);
+            }
+
+            bool useSummaryRates = false;
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
 
             Response.Headers.Add("Cache-Control", "private");
             Response.Headers.Add(TaxjarConstants.CONTENT_TYPE, TaxjarConstants.MINICART);

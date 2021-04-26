@@ -19,6 +19,11 @@
         "description": "Production",
         "type": "boolean"
       },
+      "enableTaxCalculations": {
+        "title": "Enable Tax Calculations",
+        "description": "Enable live tax calculations",
+        "type": "boolean"
+      },
       "enableTransactionPosting": {
         "title": "Enable Transaction Posting",
         "description": "Record invoiced orders in Taxjar",
