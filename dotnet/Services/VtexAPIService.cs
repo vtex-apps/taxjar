@@ -20,9 +20,10 @@ namespace Taxjar.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IHttpClientFactory _clientFactory;
         private readonly ITaxjarRepository _taxjarRepository;
+        private readonly ITaxjarService _taxjarService;
         private readonly string _applicationName;
 
-        public VtexAPIService(IIOServiceContext context, IVtexEnvironmentVariableProvider environmentVariableProvider, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, ITaxjarRepository taxjarRepository)
+        public VtexAPIService(IIOServiceContext context, IVtexEnvironmentVariableProvider environmentVariableProvider, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, ITaxjarRepository taxjarRepository, ITaxjarService taxjarService)
         {
             this._context = context ??
                             throw new ArgumentNullException(nameof(context));
@@ -38,6 +39,9 @@ namespace Taxjar.Services
 
             this._taxjarRepository = taxjarRepository ??
                                throw new ArgumentNullException(nameof(taxjarRepository));
+
+            this._taxjarService = taxjarService ??
+                               throw new ArgumentNullException(nameof(taxjarService));
 
             this._applicationName =
                 $"{this._environmentVariableProvider.ApplicationVendor}.{this._environmentVariableProvider.ApplicationName}";
@@ -618,6 +622,72 @@ namespace Taxjar.Services
             }
 
             return fallbackResponse;
+        }
+
+        public async Task<bool> ProcessNotification(AllStatesNotification allStatesNotification)
+        {
+            bool success = true;
+            VtexOrder vtexOrder = null;
+
+            switch (allStatesNotification.Domain)
+            {
+                case TaxjarConstants.Domain.Fulfillment:
+                    switch (allStatesNotification.CurrentState)
+                    {
+                        case TaxjarConstants.VtexOrderStatus.Invoiced:
+                            success = await this.ProcessInvoice(allStatesNotification.OrderId);
+                            break;
+                        break;
+                        default:
+                            Console.WriteLine($"State {allStatesNotification.CurrentState} not implemeted.");
+                            //_context.Vtex.Logger.Info("ProcessNotification", null, $"State {hookNotification.State} not implemeted.");
+                            break;
+                    }
+                    break;
+                case TaxjarConstants.Domain.Marketplace:
+                    switch (allStatesNotification.CurrentState)
+                    {
+                        default:
+                            Console.WriteLine($"State {allStatesNotification.CurrentState} not implemeted.");
+                            //_context.Vtex.Logger.Info("ProcessNotification", null, $"State {hookNotification.State} not implemeted.");
+                            break;
+                    }
+                    break;
+                default:
+                    Console.WriteLine($"Domain {allStatesNotification.Domain} not implemeted.");
+                    //_context.Vtex.Logger.Info("ProcessNotification", null, $"Domain {hookNotification.Domain} not implemeted.");
+                    break;
+            }
+
+            return success;
+        }
+
+        public async Task<bool> ProcessInvoice(string orderId)
+        {
+            bool success = true;
+            MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
+            if (merchantSettings.EnableTransactionPosting)
+            {
+                VtexOrder vtexOrder = await this.GetOrderInformation(orderId);
+                if (vtexOrder != null)
+                {
+                    CreateTaxjarOrder taxjarOrder = await this.VtexOrderToTaxjarOrder(vtexOrder);
+                    _context.Vtex.Logger.Debug("CreateTaxjarOrder", null, $"{JsonConvert.SerializeObject(taxjarOrder)}");
+                    OrderResponse orderResponse = await _taxjarService.CreateOrder(taxjarOrder);
+                    if (orderResponse != null)
+                    {
+                        _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, $"Order '{orderId}' taxes were commited");
+                        Console.WriteLine($"Order taxes were commited");
+                    }
+                    else
+                    {
+                        success = false;
+                        Console.WriteLine($"Null OrderResponse!");
+                    }
+                }
+            }
+
+            return success;
         }
     }
 }

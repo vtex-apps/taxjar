@@ -12,5 +12,6 @@ namespace Taxjar.Services
         Task<CreateTaxjarOrder> VtexOrderToTaxjarOrder(VtexOrder vtexOrder);
         Task<VtexDockResponse[]> ListVtexDocks();
         Task<TaxFallbackResponse> GetFallbackRate(string country, string postalCode, string provider = "avalara");
+        Task<bool> ProcessNotification(AllStatesNotification allStatesNotification);
     }
 }
