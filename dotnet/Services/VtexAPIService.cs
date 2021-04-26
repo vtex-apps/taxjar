@@ -159,8 +159,8 @@ namespace Taxjar.Services
                 {
                     new Hook
                     {
-                        Major = 1,
-                        Url = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/oms/invoice")
+                        //Major = 1,
+                        //Url = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/oms/invoice")
                     }
                 },
                 ItemTaxResponse = new ItemTaxResponse[taxResponse.Tax.Breakdown.LineItems.Count]
@@ -571,6 +571,53 @@ namespace Taxjar.Services
             }
 
             return retval;
+        }
+
+        public async Task<TaxFallbackResponse> GetFallbackRate(string country, string postalCode, string provider = "avalara")
+        {
+            // GET https://vtexus.myvtex.com/_v/tax-fallback/{country}/{provider}/{postalCode}
+
+            TaxFallbackResponse fallbackResponse = null;
+
+            try
+            {
+                if (country.Length > 2)
+                    country = country.Substring(0, 2);
+
+                var request = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Get,
+                    RequestUri = new Uri($"http://vtexus.myvtex.com/_v/tax-fallback/{country}/{provider}/{postalCode}")
+                };
+
+                request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
+                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+                if (authToken != null)
+                {
+                    request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                    request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+                    request.Headers.Add(TaxjarConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
+                }
+
+                var client = _clientFactory.CreateClient();
+                var response = await client.SendAsync(request);
+                string responseContent = await response.Content.ReadAsStringAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    fallbackResponse = JsonConvert.DeserializeObject<TaxFallbackResponse>(responseContent);
+                    Console.WriteLine($"GetFallbackRate [{response.StatusCode}] '{responseContent}'");
+                }
+                else
+                {
+                    _context.Vtex.Logger.Warn("GetFallbackRate", null, $"Did not get rates for {country} {postalCode} ({provider}) : '{response.Content}'");
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.Vtex.Logger.Error("GetFallbackRate", null, $"Error getting rates for {country} {postalCode} ({provider})", ex);
+            }
+
+            return fallbackResponse;
         }
     }
 }

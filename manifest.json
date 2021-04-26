@@ -93,6 +93,13 @@
       }
     },
     {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "vtexus.myvtex.com",
+        "path": "/_v/tax-fallback/*"
+      }
+    },
+    {
       "name": "vbase-read-write"
     }
   ],

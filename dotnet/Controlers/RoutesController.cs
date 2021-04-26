@@ -65,7 +65,7 @@
                 return Json(vtexTaxResponse);
             }
 
-            bool useSummaryRates = false;
+            bool useFallbackRates = false;
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
@@ -132,24 +132,24 @@
 
                                         taxRequestThisDock.Totals = new Total[]
                                         {
-                                    new Total
-                                    {
-                                        Id = "Items",
-                                        Name = "Items Total",
-                                        Value = itemsTotalThisDock
-                                    },
-                                    new Total
-                                    {
-                                        Id = "Discounts",
-                                        Name = "Discounts Total",
-                                        Value = taxRequest.Totals.Where(t => t.Id.Equals("Discounts")).Select(t => t.Value).FirstOrDefault() * percentOfWhole
-                                    },
-                                    new Total
-                                    {
-                                        Id = "Shipping",
-                                        Name = "Shipping Total",
-                                        Value = taxRequest.Totals.Where(t => t.Id.Equals("Shipping")).Select(t => t.Value).FirstOrDefault() * percentOfWhole
-                                    }
+                                            new Total
+                                            {
+                                                Id = "Items",
+                                                Name = "Items Total",
+                                                Value = itemsTotalThisDock
+                                            },
+                                            new Total
+                                            {
+                                                Id = "Discounts",
+                                                Name = "Discounts Total",
+                                                Value = taxRequest.Totals.Where(t => t.Id.Equals("Discounts")).Select(t => t.Value).FirstOrDefault() * percentOfWhole
+                                            },
+                                            new Total
+                                            {
+                                                Id = "Shipping",
+                                                Name = "Shipping Total",
+                                                Value = taxRequest.Totals.Where(t => t.Id.Equals("Shipping")).Select(t => t.Value).FirstOrDefault() * percentOfWhole
+                                            }
                                         };
 
                                         TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequestThisDock);
@@ -163,7 +163,7 @@
                                             }
                                             else
                                             {
-                                                useSummaryRates = true;
+                                                useFallbackRates = true;
                                                 Console.WriteLine("Null taxResponse");
                                             }
                                         }
@@ -189,7 +189,6 @@
                                         var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
                                         _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
                                         Console.WriteLine($"Split Response saved to cache with key '{cacheKey}'");
-                                        this.SummaryRates();
                                     }
                                 }
                                 else
@@ -206,12 +205,11 @@
                                                 var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
                                                 _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
                                                 Console.WriteLine($"Response saved to cache with key '{cacheKey}'");
-                                                this.SummaryRates();
                                             }
                                         }
                                         else
                                         {
-                                            useSummaryRates = true;
+                                            useFallbackRates = true;
                                             Console.WriteLine("Null taxResponse");
                                         }
                                     }
@@ -221,49 +219,84 @@
                                     }
                                 }
 
-                                if (useSummaryRates)
+                                if (useFallbackRates)
                                 {
-                                    SummaryRatesStorage summaryRatesStorage = await _taxjarRepository.GetSummaryRates();
-                                    if (summaryRatesStorage != null)
+                                    TaxFallbackResponse fallbackResponse = await _vtexAPIService.GetFallbackRate(taxRequest.ShippingDestination.Country, taxRequest.ShippingDestination.PostalCode);
+                                    if (fallbackResponse != null)
                                     {
-                                        SummaryRatesResponse summaryRates = summaryRatesStorage.SummaryRatesResponse;
-                                        List<SummaryRate> summaryRatesList = summaryRates.SummaryRates.Where(r => r.CountryCode.Equals(taxRequest.ShippingDestination.Country.Substring(0, 2))).ToList();
-                                        summaryRatesList = summaryRatesList.Where(r => r.RegionCode.Equals(taxRequest.ShippingDestination.State)).ToList();
-                                        decimal taxRate = summaryRatesList.Select(r => r.AverageRate.Rate).FirstOrDefault();
-                                        //decimal orderTotal = taxRequest.Totals.Sum(t => t.Value);
-                                        Console.WriteLine($"Using Summary Tax Rate of {taxRate} ");
                                         vtexTaxResponse = new VtexTaxResponse
                                         {
                                             Hooks = new Hook[]
                                             {
-                                                new Hook
-                                                {
-                                                    Major = 1,
-                                                    Url = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/oms/invoice")
-                                                }
+                                                //new Hook
+                                                //{
+                                                //    Major = 1,
+                                                //    Url = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/oms/invoice")
+                                                //}
                                             },
                                             ItemTaxResponse = new ItemTaxResponse[taxRequest.Items.Length]
                                         };
 
+                                        long totalQuantity = taxRequest.Items.Sum(i => i.Quantity);
                                         for (int i = 0; i < taxRequest.Items.Length; i++)
                                         {
                                             Item item = taxRequest.Items[i];
+                                            double itemTaxPercentOfWhole = (double)item.Quantity / totalQuantity;
                                             ItemTaxResponse itemTaxResponse = new ItemTaxResponse
                                             {
                                                 Id = item.Id
                                             };
 
                                             List<VtexTax> vtexTaxes = new List<VtexTax>();
-                                            vtexTaxes.Add(
+                                            if (fallbackResponse.StateSalesTax > 0)
+                                            {
+                                                vtexTaxes.Add(
+                                                    new VtexTax
+                                                    {
+                                                        Description = "",
+                                                        Name = $"STATE TAX: {fallbackResponse.StateAbbrev}",
+                                                        Value = item.ItemPrice * fallbackResponse.StateSalesTax
+                                                    }
+                                                 );
+                                            }
+
+                                            if (fallbackResponse.CountySalesTax > 0)
+                                            {
+                                                vtexTaxes.Add(
                                                 new VtexTax
                                                 {
                                                     Description = "",
-                                                    Name = "ESTIMATED TAX",
-                                                    Value = item.ItemPrice * taxRate
+                                                    Name = $"COUNTY TAX: {fallbackResponse.CountyName}",
+                                                    Value = item.ItemPrice * fallbackResponse.CountySalesTax
                                                 }
                                              );
+                                            }
 
-                                            Console.WriteLine($"[{item.Id}] #{item.Quantity} ${item.ItemPrice} * {taxRate}% = ${item.ItemPrice * taxRate}");
+                                            if (fallbackResponse.CitySalesTax > 0)
+                                            {
+                                                vtexTaxes.Add(
+                                                new VtexTax
+                                                {
+                                                    Description = "",
+                                                    Name = $"CITY TAX: {fallbackResponse.CityName}",
+                                                    Value = item.ItemPrice * fallbackResponse.CitySalesTax
+                                                }
+                                             );
+                                            }
+
+                                            if (fallbackResponse.TaxShippingAlone || fallbackResponse.TaxShippingAndHandlingTogether)
+                                            {
+                                                decimal shippingTotal = (decimal)taxRequest.Totals.Where(t => t.Id.Contains("Shipping")).Sum(t => t.Value) / 100;
+                                                vtexTaxes.Add(
+                                                new VtexTax
+                                                {
+                                                    Description = "",
+                                                    Name = $"TAX: (SHIPPING)",
+                                                    Value = (decimal)Math.Round((double)shippingTotal * (double)fallbackResponse.TotalSalesTax * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)
+                                                }
+                                              );
+                                            }
+
                                             itemTaxResponse.Taxes = vtexTaxes.ToArray();
                                             vtexTaxResponse.ItemTaxResponse[i] = itemTaxResponse;
                                         }
