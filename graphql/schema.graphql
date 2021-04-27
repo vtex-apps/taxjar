@@ -1,5 +1,6 @@
 type Query {
   listCustomers: [Customer]
+  findProductCode(searchTerm: String): [Category]
 }
 
 type Mutation {
@@ -28,4 +29,10 @@ type ExemptRegion {
 input ExemptRegionInput {
   country: [String]
   state: [String]
+}
+
+type Category {
+  description: String
+  name: String
+  productTaxCode: String
 }

@@ -31,6 +31,21 @@ namespace Taxjar.GraphQL
                     return customerList;
                 }
             );
+
+            FieldAsync<ListGraphType<CategoryType>>(
+                "findProductCode",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "searchTerm", Description = "Search term" }
+                    ),
+                resolve: async context =>
+                {
+                    string searchTerm = context.GetArgument<string>("searchTerm");
+                    var categoriesAll = await taxjarService.Categories();
+                    List<Category> categories  = categoriesAll.Categories.Where(c => c.Name.Contains(searchTerm)).ToList();
+
+                    return categories;
+                }
+            );
         }
     }
 }
