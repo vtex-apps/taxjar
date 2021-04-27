@@ -27,6 +27,8 @@ namespace Taxjar.Data
         public const string CONTENT_TYPE = "Content-Type";
         public const string MINICART = "application/vnd.vtex.checkout.minicart.v1+json";
         public const string HTTP_FORWARDED_HEADER = "HTTP_X_FORWARDED_FOR";
+        public const string API_VERSION_HEADER = "'x-api-version";
+        public const string TAXJAR_API_VERSION = "2020-08-07";
 
         public const string BUCKET = "Taxjar";
 

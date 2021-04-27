@@ -90,10 +90,16 @@ namespace Taxjar.Services
             for (int i = 0; i < vtexTaxRequest.Items.Length; i++)
             {
                 string taxCode = null;
-                GetSkuContextResponse skuContextResponse = await this.GetSku(vtexTaxRequest.Items[i].Id);
+                GetSkuContextResponse skuContextResponse = await this.GetSku(vtexTaxRequest.Items[i].Sku);
                 if(skuContextResponse != null)
                 {
                     taxCode = skuContextResponse.TaxCode;
+                    Console.WriteLine($"GetSkuContextResponse taxcode: '{taxCode}'");
+                }
+                else
+                {
+                    Console.WriteLine("GetSkuContextResponse is NULL!");
+                    _context.Vtex.Logger.Warn($"GetSkuContextResponse was NULL for sku '{vtexTaxRequest.Items[i].Sku}' from order '{vtexTaxRequest.OrderFormId}'");
                 }
 
                 taxForOrder.LineItems[i] = new TaxForOrderLineItem

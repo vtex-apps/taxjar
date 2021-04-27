@@ -75,6 +75,7 @@ namespace Taxjar.Services
 
                 request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, $"Bearer {merchantSettings.ApiToken}");
                 request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
+                request.Headers.Add(TaxjarConstants.API_VERSION_HEADER, TaxjarConstants.TAXJAR_API_VERSION);
                 string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
                 if (authToken != null)
                 {

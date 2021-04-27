@@ -6,12 +6,12 @@
   "description": "",
   "categories": [],
   "settingsSchema": {
-    "title": "Taxjar",
+    "title": "TaxJar",
     "type": "object",
     "properties": {
       "apiToken": {
         "title": "Api Token",
-        "description": "Api Token",
+        "description": "Api Token - https://app.taxjar.com/api_sign_up",
         "type": "string"
       },
       "isLive": {
@@ -22,12 +22,14 @@
       "enableTaxCalculations": {
         "title": "Enable Tax Calculations",
         "description": "Enable live tax calculations",
-        "type": "boolean"
+        "type": "boolean",
+        "default": true
       },
       "enableTransactionPosting": {
         "title": "Enable Transaction Posting",
-        "description": "Record invoiced orders in Taxjar",
-        "type": "boolean"
+        "description": "Record invoiced orders in TaxJar",
+        "type": "boolean",
+        "default": true
       }
     }
   },
@@ -36,7 +38,8 @@
   ],
   "builders": {
     "dotnet": "2.x",
-    "graphql": "1.x"
+    "graphql": "1.x",
+    "docs": "0.x"
   },
   "mustUpdateAt": "2018-09-05",
   "scripts": {
