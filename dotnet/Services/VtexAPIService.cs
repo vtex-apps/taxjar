@@ -180,6 +180,9 @@ namespace Taxjar.Services
             double shippingTaxCounty = (double)taxResponse.Tax.Breakdown.Shipping.CountyAmount;
             double shippingTaxSpecial = (double)taxResponse.Tax.Breakdown.Shipping.SpecialDistrictAmount;
             double shippingTaxState = (double)taxResponse.Tax.Breakdown.Shipping.StateAmount;
+            double shippingTaxGST = (double)taxResponse.Tax.Breakdown.Shipping.GST;
+            double shippingTaxPST = (double)taxResponse.Tax.Breakdown.Shipping.PST;
+            double shippingTaxQST = (double)taxResponse.Tax.Breakdown.Shipping.QST;
             double totalItemTax = (double)taxResponse.Tax.Breakdown.LineItems.Sum(i => i.TaxCollectable);
             //double itemTaxPercentOfWhole = 1D / (double)taxResponse.Tax.Breakdown.LineItems.Count;
             //Console.WriteLine($"itemTaxPercentOfWhole = {itemTaxPercentOfWhole}%");
@@ -290,6 +293,78 @@ namespace Taxjar.Services
                             Description = "",
                             Name = "SPECIAL TAX (SHIPPING)",
                             Value = (decimal)Math.Round(shippingTaxSpecial * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)
+                        }
+                     );
+                }
+
+                if (lineItem.GST > 0)
+                {
+                    vtexTaxes.Add(
+                        new VtexTax
+                        {
+                            Description = "",
+                            Name = $"GST",
+                            Value = lineItem.GST
+                        }
+                     );
+                }
+
+                if (lineItem.PST > 0)
+                {
+                    vtexTaxes.Add(
+                        new VtexTax
+                        {
+                            Description = "",
+                            Name = $"PST",
+                            Value = lineItem.PST
+                        }
+                     );
+                }
+
+                if (lineItem.QST > 0)
+                {
+                    vtexTaxes.Add(
+                        new VtexTax
+                        {
+                            Description = "",
+                            Name = $"QST",
+                            Value = lineItem.QST
+                        }
+                     );
+                }
+
+                if (shippingTaxGST > 0)
+                {
+                    vtexTaxes.Add(
+                        new VtexTax
+                        {
+                            Description = "",
+                            Name = $"GST (SHIPPING)",
+                            Value = (decimal)Math.Round(shippingTaxGST * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)
+                        }
+                     );
+                }
+
+                if (shippingTaxPST > 0)
+                {
+                    vtexTaxes.Add(
+                        new VtexTax
+                        {
+                            Description = "",
+                            Name = $"PST (SHIPPING)",
+                            Value = (decimal)Math.Round(shippingTaxPST * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)
+                        }
+                     );
+                }
+
+                if (shippingTaxQST > 0)
+                {
+                    vtexTaxes.Add(
+                        new VtexTax
+                        {
+                            Description = "",
+                            Name = $"QST (SHIPPING)",
+                            Value = (decimal)Math.Round(shippingTaxQST * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)
                         }
                      );
                 }

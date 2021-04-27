@@ -14,8 +14,8 @@ The TaxJar app uses the TaxJar API to calculate taxes.  Optionally, invoiced ord
 
 ### Step 1 - Create API Token in TaxJar
 
-[Sign up for TaxJar](https://app.taxjar.com/api_sign_up) 
-[How do I get a TaxJar sales tax API token?](https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token)
+- [Sign up for TaxJar](https://app.taxjar.com/api_sign_up) 
+- [How do I get a TaxJar sales tax API token?](https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token)
 
 ### Step 2 - Install the TaxJar app
 
@@ -35,9 +35,9 @@ Using your terminal, log in to the desired VTEX account and run the following co
 
 ### Notes
 
-Warehouse locations are used to determine nexus addresses.
-Product tax codes are entered in Catalog -> Products and SKUs -> Tax Code
-An order transaction is created in TaxJar when an order is invoiced.
+- Warehouse locations are used to determine nexus addresses.
+- Product tax codes are entered in Catalog -> Products and SKUs -> Tax Code.
+- An order transaction is created in TaxJar when an order is invoiced.
 
 ## Contributors ✨
 

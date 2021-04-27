@@ -173,22 +173,29 @@
                                         }
                                     }
 
-                                    vtexTaxResponse.Hooks = taxResponses.FirstOrDefault().Hooks;
-                                    List<ItemTaxResponse> itemTaxResponses = new List<ItemTaxResponse>();
-                                    foreach (VtexTaxResponse taxResponse in taxResponses)
+                                    if (taxResponses != null && taxResponses.Count > 0)
                                     {
-                                        foreach (ItemTaxResponse itemTaxResponse in taxResponse.ItemTaxResponse)
+                                        vtexTaxResponse.Hooks = taxResponses.FirstOrDefault().Hooks;
+                                        List<ItemTaxResponse> itemTaxResponses = new List<ItemTaxResponse>();
+                                        foreach (VtexTaxResponse taxResponse in taxResponses)
                                         {
-                                            itemTaxResponses.Add(itemTaxResponse);
+                                            foreach (ItemTaxResponse itemTaxResponse in taxResponse.ItemTaxResponse)
+                                            {
+                                                itemTaxResponses.Add(itemTaxResponse);
+                                            }
+                                        }
+
+                                        vtexTaxResponse.ItemTaxResponse = itemTaxResponses.ToArray();
+                                        if (vtexTaxResponse != null)
+                                        {
+                                            var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+                                            _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
+                                            Console.WriteLine($"Split Response saved to cache with key '{cacheKey}'");
                                         }
                                     }
-
-                                    vtexTaxResponse.ItemTaxResponse = itemTaxResponses.ToArray();
-                                    if (vtexTaxResponse != null)
+                                    else
                                     {
-                                        var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-                                        _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
-                                        Console.WriteLine($"Split Response saved to cache with key '{cacheKey}'");
+                                        Console.WriteLine($"No tax response.");
                                     }
                                 }
                                 else
