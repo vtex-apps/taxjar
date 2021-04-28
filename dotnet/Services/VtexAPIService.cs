@@ -85,6 +85,7 @@ namespace Taxjar.Services
                 CustomerId = vtexTaxRequest.ClientEmail,
                 LineItems = new TaxForOrderLineItem[vtexTaxRequest.Items.Length],
                 //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT
+                PlugIn = TaxjarConstants.PLUGIN
             };
 
             for (int i = 0; i < vtexTaxRequest.Items.Length; i++)
@@ -412,7 +413,8 @@ namespace Taxjar.Services
                 SalesTax = (decimal)vtexOrder.Totals.Where(t => t.Id.Contains("Tax")).Sum(t => t.Value) / 100,
                 CustomerId = vtexOrder.ClientProfileData.Email,
                 //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT,
-                LineItems = new List<LineItem>()
+                LineItems = new List<LineItem>(),
+                PlugIn = TaxjarConstants.PLUGIN
             };
 
             Console.WriteLine($"'{taxjarOrder.TransactionId}' Amount: {taxjarOrder.Amount} Shipping: {taxjarOrder.Shipping} SalesTax: {taxjarOrder.SalesTax} ");

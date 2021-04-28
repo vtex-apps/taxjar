@@ -57,6 +57,9 @@ namespace Taxjar.Models
 
         [JsonProperty("nexus_addresses")]
         public TaxForOrderNexusAddress[] NexusAddresses { get; set; }
+
+        [JsonProperty("plugin")]
+        public string PlugIn { get; set; }
     }
 
     public class TaxForOrderLineItem

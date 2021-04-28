@@ -33,6 +33,8 @@ namespace Taxjar.Data
         public const string BUCKET = "Taxjar";
         public const string CACHE_BUCKET = "TaxjarCache";
 
+        public const string PLUGIN = "vtex";
+
         public class ExemptionType
         {
             public const string WHOLESALE = "wholesale";
