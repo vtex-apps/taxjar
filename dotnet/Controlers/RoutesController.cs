@@ -80,8 +80,15 @@
                     if (taxRequest != null)
                     {
                         decimal total = taxRequest.Totals.Sum(t => t.Value);
-                        string cacheKey = $"{taxRequest.ShippingDestination.PostalCode}|{total}";
-                        if (_memoryCache.TryGetValue(cacheKey, out vtexTaxResponse))
+                        // accountname+app+appversion+ 2021-04-23-4-20 + skuid+skuquantity+zipcode => turn this into a HASH
+                        //string cacheKey = $"{_context.Vtex.App.Version}{taxRequest.ShippingDestination.PostalCode}{total}";
+                        int cacheKey = $"{_context.Vtex.App.Version}{taxRequest.ShippingDestination.PostalCode}{total}".GetHashCode();
+                        //if (_memoryCache.TryGetValue(cacheKey, out vtexTaxResponse))
+                        //{
+                        //    Console.WriteLine($"Fetched from Cache with key '{cacheKey}'.");
+                        //    _context.Vtex.Logger.Info("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(vtexTaxResponse)}");
+                        //}
+                        if(_taxjarRepository.TryGetCache(cacheKey, out vtexTaxResponse))
                         {
                             Console.WriteLine($"Fetched from Cache with key '{cacheKey}'.");
                             _context.Vtex.Logger.Info("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(vtexTaxResponse)}");
@@ -188,8 +195,9 @@
                                         vtexTaxResponse.ItemTaxResponse = itemTaxResponses.ToArray();
                                         if (vtexTaxResponse != null)
                                         {
-                                            var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-                                            _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
+                                            //var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
+                                            //_memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
+                                            await _taxjarRepository.SetCache(cacheKey, vtexTaxResponse);
                                             Console.WriteLine($"Split Response saved to cache with key '{cacheKey}'");
                                         }
                                     }
@@ -209,8 +217,9 @@
                                             vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
                                             if (vtexTaxResponse != null)
                                             {
-                                                var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-                                                _memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
+                                                //var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
+                                                //_memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
+                                                await _taxjarRepository.SetCache(cacheKey, vtexTaxResponse);
                                                 Console.WriteLine($"Response saved to cache with key '{cacheKey}'");
                                             }
                                         }
@@ -327,6 +336,7 @@
                     Console.WriteLine("Null body");
                 }
             }
+
 
             //Console.WriteLine($"TaxjarOrderTaxHandler Response = {JsonConvert.SerializeObject(vtexTaxResponse)}");
             timer.Stop();

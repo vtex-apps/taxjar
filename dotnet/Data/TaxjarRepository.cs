@@ -20,9 +20,10 @@
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IHttpClientFactory _clientFactory;
         private readonly IIOServiceContext _context;
+        private readonly ICachedKeys _cachedKeys;
         private readonly string _applicationName;
 
-        public TaxjarRepository(IVtexEnvironmentVariableProvider environmentVariableProvider, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, IIOServiceContext context)
+        public TaxjarRepository(IVtexEnvironmentVariableProvider environmentVariableProvider, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, IIOServiceContext context, ICachedKeys cachedKeys)
         {
             this._environmentVariableProvider = environmentVariableProvider ??
                                                 throw new ArgumentNullException(nameof(environmentVariableProvider));
@@ -35,6 +36,9 @@
 
             this._context = context ??
                                throw new ArgumentNullException(nameof(context));
+
+            this._cachedKeys = cachedKeys ??
+                               throw new ArgumentNullException(nameof(cachedKeys));
 
             this._applicationName =
                 $"{this._environmentVariableProvider.ApplicationVendor}.{this._environmentVariableProvider.ApplicationName}";
@@ -69,9 +73,10 @@
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Get,
-                RequestUri = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.{TaxjarConstants.ENVIRONMENT}.com.br/api/checkout/pvt/configuration/orderForm"),
+                RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.{TaxjarConstants.ENVIRONMENT}.com.br/api/checkout/pvt/configuration/orderForm"),
             };
 
+            request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
             string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
             if (authToken != null)
             {
@@ -82,7 +87,7 @@
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
-
+            Console.WriteLine($"GetOrderConfiguration [{response.StatusCode}] '{responseContent}' ");
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return null;
@@ -104,6 +109,7 @@
                 Content = new StringContent(jsonSerializedOrderConfig, Encoding.UTF8, TaxjarConstants.APPLICATION_JSON)
             };
 
+            request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
             string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
             if (authToken != null)
             {
@@ -168,6 +174,103 @@
             }
 
             return summaryRatesStorage;
+        }
+
+        public async Task<bool> CacheTaxResponse(VtexTaxResponse vtexTaxResponse, int cacheKey)
+        {
+            var jsonSerializedProducReviews = JsonConvert.SerializeObject(vtexTaxResponse);
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Put,
+                RequestUri = new Uri($"http://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}/buckets/{this._applicationName}/{TaxjarConstants.CACHE_BUCKET}/files/{cacheKey}"),
+                Content = new StringContent(jsonSerializedProducReviews, Encoding.UTF8, TaxjarConstants.APPLICATION_JSON)
+            };
+
+            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            if (authToken != null)
+            {
+                request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+            }
+
+            var client = _clientFactory.CreateClient();
+            var response = await client.SendAsync(request);
+            string responseContent = await response.Content.ReadAsStringAsync();
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<VtexTaxResponse> GetCachedTaxResponse(int cacheKey)
+        {
+            VtexTaxResponse vtexTaxResponse = null;
+
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri($"http://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}/buckets/{this._applicationName}/{TaxjarConstants.CACHE_BUCKET}/files/{cacheKey}")
+            };
+
+            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            if (authToken != null)
+            {
+                request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+            }
+
+            var client = _clientFactory.CreateClient();
+            var response = await client.SendAsync(request);
+            string responseContent = await response.Content.ReadAsStringAsync();
+            if (response.IsSuccessStatusCode)
+            {
+                vtexTaxResponse = JsonConvert.DeserializeObject<VtexTaxResponse>(responseContent);
+            }
+
+            return vtexTaxResponse;
+        }
+
+        public bool TryGetCache(int cacheKey, out VtexTaxResponse vtexTaxResponse)
+        {
+            bool success = false;
+            vtexTaxResponse = null;
+            try
+            {
+                vtexTaxResponse = GetCachedTaxResponse(cacheKey).Result;
+                success = vtexTaxResponse != null;
+            }
+            catch(Exception ex)
+            {
+                _context.Vtex.Logger.Error("TryGetCache", null, "Error getting cache", ex);
+            }
+
+            return success;
+        }
+
+        public async Task<bool> SetCache(int cacheKey, VtexTaxResponse vtexTaxResponse)
+        {
+            bool success = false;
+
+            try
+            {
+                success = await CacheTaxResponse(vtexTaxResponse, cacheKey);
+                if(success)
+                {
+                    _cachedKeys.AddCacheKey(cacheKey);
+                }
+
+                List<int> keysToRemove = await _cachedKeys.ListExpiredKeys();
+                foreach (int cacheKeyToRemove in keysToRemove)
+                {
+                    Console.WriteLine($"REMOVING CACHED ITEM {cacheKey}");
+                    CacheTaxResponse(null, cacheKey);
+                    _cachedKeys.RemoveCacheKey(cacheKey);
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.Vtex.Logger.Error("TryGetCache", null, "Error setting cache", ex);
+            }
+
+            return success;
         }
     }
 }

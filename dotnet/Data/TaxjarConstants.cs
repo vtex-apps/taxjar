@@ -31,6 +31,7 @@ namespace Taxjar.Data
         public const string TAXJAR_API_VERSION = "2020-08-07";
 
         public const string BUCKET = "Taxjar";
+        public const string CACHE_BUCKET = "TaxjarCache";
 
         public class ExemptionType
         {

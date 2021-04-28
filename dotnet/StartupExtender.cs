@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
 using Taxjar.Data;
 using Taxjar.Services;
 
@@ -24,6 +26,7 @@ namespace Vtex
             services.AddHttpContextAccessor();
             services.AddHttpClient();
             services.AddMemoryCache();
+            services.AddSingleton<ICachedKeys, CachedKeys>();
         }
 
         // This method is called inside Startup.Configure() before calling app.UseRouting()

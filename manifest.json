@@ -68,6 +68,9 @@
       "name": "OMSViewer"
     },
     {
+      "name": "SaveOrderFormConfiguration"
+    },
+    {
       "name": "outbound-access",
       "attrs": {
         "host": "{{account}}.vtexcommercestable.com.br",

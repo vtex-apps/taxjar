@@ -13,5 +13,8 @@ namespace Taxjar.Data
 
         Task<bool> SetSummaryRates(SummaryRatesStorage summaryRatesStorage);
         Task<SummaryRatesStorage> GetSummaryRates();
+
+        bool TryGetCache(int cacheKey, out VtexTaxResponse vtexTaxResponse);
+        Task<bool> SetCache(int cacheKey, VtexTaxResponse vtexTaxResponse);
     }
 }
