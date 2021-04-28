@@ -33,6 +33,17 @@
       }
     }
   },
+  "billingOptions": {
+    "termsURL": "https://compliance.vtex.com/gdpr/policies/vtex-privacy-policy",
+    "support": {
+      "url": "https://help-tickets.vtex.com/en/support?app=vtex.taxjar"
+    },
+    "free": true,
+    "type": "free",
+    "availableCountries": [
+      "*"
+    ]
+  },
   "registries": [
     "smartcheckout"
   ],

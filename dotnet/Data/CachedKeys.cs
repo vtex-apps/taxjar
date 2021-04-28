@@ -18,16 +18,23 @@ namespace Taxjar.Data
         public async Task AddCacheKey(int cacheKey)
         {
             this._cacheKeys.Add(cacheKey, DateTime.Now);
+            Console.WriteLine($"CachedKeys AddCacheKey {cacheKey} {DateTime.Now}");
         }
 
         public async Task RemoveCacheKey(int cacheKey)
         {
-            this._cacheKeys.Remove(cacheKey);
+            bool removed = this._cacheKeys.Remove(cacheKey);
+            Console.WriteLine($"CachedKeys RemoveCacheKey {cacheKey} {removed}");
         }
 
         public async Task<List<int>> ListExpiredKeys()
         {
             Dictionary<int, DateTime> keysToRemove = this._cacheKeys.Where(k => k.Value <= DateTime.Now.AddMinutes(-10)).ToDictionary(c => c.Key, c => c.Value);
+            foreach(int key in keysToRemove.Keys)
+            {
+                Console.WriteLine($"CachedKeys ListExpiredKeys {key} {keysToRemove[key]}");
+            }
+
             return keysToRemove.Select(k => k.Key).ToList();
         }
     }
