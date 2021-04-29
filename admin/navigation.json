@@ -1,0 +1,10 @@
+{
+  "section": "products",
+  "subSection": "discount",
+  "subSectionItems": [
+    {
+      "labelId": "admin/taxjar.title",
+      "path": "/admin/taxjar/"
+    }
+  ]
+}

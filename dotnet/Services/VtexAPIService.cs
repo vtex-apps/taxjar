@@ -83,7 +83,7 @@ namespace Taxjar.Services
                 FromState = vtexDock.PickupStoreInfo.Address.State,
                 FromStreet = vtexDock.PickupStoreInfo.Address.Street,
                 FromZip = vtexDock.PickupStoreInfo.Address.PostalCode,
-                CustomerId = vtexTaxRequest.ClientEmail,
+                CustomerId = vtexTaxRequest.ClientData.Email,
                 LineItems = new TaxForOrderLineItem[vtexTaxRequest.Items.Length],
                 //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT
                 PlugIn = TaxjarConstants.PLUGIN

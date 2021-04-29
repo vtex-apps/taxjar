@@ -1,0 +1,6 @@
+{
+  "admin/taxjar.title": "TaxJar",
+  "admin/taxjar.setup.title": "Setup",
+  "admin/taxjar.setup.description": "Please click the button below to activate TaxJar.",
+  "admin/taxjar.setup.button": "Activate"
+}
