@@ -103,15 +103,16 @@
                         else
                         {
                             bool inNexus = false;
-                            VtexDockResponse[] vtexDocks = await _vtexAPIService.ListVtexDocks();
+                            //VtexDockResponse[] vtexDocks = await _vtexAPIService.ListVtexDocks();
                             //List<string> nexusStates = vtexDocks.Select(d => d.PickupStoreInfo.Address.State).ToList();
+                            PickupPoints pickupPoints = await _vtexAPIService.ListPickupPoints();
                             List<string> nexusStates = new List<string>();
-                            foreach (VtexDockResponse vtexDock in vtexDocks)
+                            foreach (PickupPointItem pickupPoint in pickupPoints.Items)
                             {
-                                if (vtexDock.PickupStoreInfo != null && vtexDock.PickupStoreInfo.Address != null && vtexDock.PickupStoreInfo.Address.State != null)
+                                if (pickupPoint != null && pickupPoint.Address != null && pickupPoint.Address.State != null)
                                 {
-                                    Console.WriteLine($"Nexus State '{vtexDock.PickupStoreInfo.Address.State}' Destination state '{taxRequest.ShippingDestination.State}' ");
-                                    if (vtexDock.PickupStoreInfo.Address.State.Equals(taxRequest.ShippingDestination.State))
+                                    Console.WriteLine($"Nexus State '{pickupPoint.Address.State}' Destination state '{taxRequest.ShippingDestination.State}' ");
+                                    if (pickupPoint.Address.State.Equals(taxRequest.ShippingDestination.State))
                                     {
                                         inNexus = true;
                                         Console.WriteLine($"Destination state '{taxRequest.ShippingDestination.State}' is in nexus");

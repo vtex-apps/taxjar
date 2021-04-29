@@ -50,6 +50,7 @@ namespace Taxjar.Services
         public async Task<TaxForOrder> VtexRequestToTaxjarRequest(VtexTaxRequest vtexTaxRequest)
         {
             VtexDockResponse[] vtexDocks = await this.ListVtexDocks();
+            PickupPoints pickupPoints = await this.ListPickupPoints();
             if(vtexDocks == null)
             {
                 Console.WriteLine("Could not load docks");
@@ -114,26 +115,26 @@ namespace Taxjar.Services
             }
 
             List<TaxForOrderNexusAddress> nexuses = new List<TaxForOrderNexusAddress>();
-            foreach(VtexDockResponse dock in vtexDocks)
+            foreach(PickupPointItem pickupPoint in pickupPoints.Items)
             {
-                if (dock.PickupStoreInfo.Address != null)
+                if (pickupPoint.Address != null)
                 {
                     nexuses.Add(
                             new TaxForOrderNexusAddress
                             {
-                                City = dock.PickupStoreInfo.Address.City,
-                                Country = string.IsNullOrEmpty(dock.PickupStoreInfo.Address.Country.Acronym) ? string.Empty : dock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2),
-                                Id = dock.Id,
-                                State = dock.PickupStoreInfo.Address.State,
-                                Street = dock.PickupStoreInfo.Address.Street,
-                                Zip = dock.PickupStoreInfo.Address.PostalCode
+                                City = pickupPoint.Address.City,
+                                Country = string.IsNullOrEmpty(pickupPoint.Address.Country.Acronym) ? string.Empty : pickupPoint.Address.Country.Acronym.Substring(0, 2),
+                                Id = pickupPoint.PickupPointId,
+                                State = pickupPoint.Address.State,
+                                Street = pickupPoint.Address.Street,
+                                Zip = pickupPoint.Address.PostalCode
                             }
                         );
                 }
                 else
                 {
-                    _context.Vtex.Logger.Warn("VtexRequestToTaxjarRequest", null, $"Dock {dock.Id} missing address");
-                    Console.WriteLine($"Dock {dock.Id} missing address");
+                    _context.Vtex.Logger.Warn("VtexRequestToTaxjarRequest", null, $"PickupPoint {pickupPoint.PickupPointId} missing address");
+                    Console.WriteLine($"PickupPoint {pickupPoint.PickupPointId} missing address");
                 }
             }
 
@@ -589,6 +590,41 @@ namespace Taxjar.Services
             return dockResponse;
         }
 
+        public async Task<PickupPoints> ListPickupPoints()
+        {
+            PickupPoints pickupPoints = null;
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri($"http://logistics.vtexcommercestable.com.br/api/logistics/pvt/configuration/pickuppoints/_search?an={this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}&pageSize=100")
+            };
+
+            request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
+            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            if (authToken != null)
+            {
+                request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+                request.Headers.Add(TaxjarConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
+            }
+
+            //MerchantSettings merchantSettings = await _shipStationRepository.GetMerchantSettings();
+            //request.Headers.Add(TaxjarConstants.APP_KEY, merchantSettings.AppKey);
+            //request.Headers.Add(TaxjarConstants.APP_TOKEN, merchantSettings.AppToken);
+
+            var client = _clientFactory.CreateClient();
+            var response = await client.SendAsync(request);
+            string responseContent = await response.Content.ReadAsStringAsync();
+            //Console.WriteLine($"ListPickupPoints [{response.StatusCode}] {responseContent}");
+            Console.WriteLine($"ListPickupPoints [{response.StatusCode}] ");
+            if (response.IsSuccessStatusCode)
+            {
+                pickupPoints = JsonConvert.DeserializeObject<PickupPoints>(responseContent);
+            }
+
+            return pickupPoints;
+        }
+
         public async Task<GetSkuContextResponse> GetSku(string skuId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/sku/stockkeepingunitbyid/skuId
@@ -635,6 +671,7 @@ namespace Taxjar.Services
         public async Task<string> InitConfiguration()
         {
             string retval = string.Empty;
+            MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
             string jsonSerializedOrderConfig = await this._taxjarRepository.GetOrderConfiguration();
             if (string.IsNullOrEmpty(jsonSerializedOrderConfig))
             {
@@ -647,7 +684,7 @@ namespace Taxjar.Services
                 {
                     AllowExecutionAfterErrors = false,
                     IntegratedAuthentication = true,
-                    Url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/checkout/order-tax"
+                    Url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/checkout/order-tax"
                 };
 
                 orderConfig["taxConfiguration"] = JToken.FromObject(taxConfiguration);

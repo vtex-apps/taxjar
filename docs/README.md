@@ -35,7 +35,7 @@ Using your terminal, log in to the desired VTEX account and run the following co
 
 ### Notes
 
-- Warehouse locations are used to determine nexus addresses.
+- Pickup points are used to determine nexus addresses.
 - Product tax codes are entered in Catalog -> Products and SKUs -> Tax Code.
 - An order transaction is created in TaxJar when an order is invoiced.
 

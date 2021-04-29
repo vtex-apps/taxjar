@@ -13,5 +13,6 @@ namespace Taxjar.Services
         Task<VtexDockResponse[]> ListVtexDocks();
         Task<TaxFallbackResponse> GetFallbackRate(string country, string postalCode, string provider = "avalara");
         Task<bool> ProcessNotification(AllStatesNotification allStatesNotification);
+        Task<PickupPoints> ListPickupPoints();
     }
 }

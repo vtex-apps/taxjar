@@ -29,7 +29,12 @@ namespace Taxjar.Data
 
         public async Task<List<int>> ListExpiredKeys()
         {
-            Dictionary<int, DateTime> keysToRemove = this._cacheKeys.Where(k => k.Value <= DateTime.Now.AddMinutes(-10)).ToDictionary(c => c.Key, c => c.Value);
+            foreach (int key in this._cacheKeys.Keys)
+            {
+                Console.WriteLine($"CachedKeys ListKeys {key} {this._cacheKeys[key]}");
+            }
+
+            Dictionary<int, DateTime> keysToRemove = this._cacheKeys.Where(k => k.Value < DateTime.Now.AddMinutes(-10)).ToDictionary(c => c.Key, c => c.Value);
             foreach(int key in keysToRemove.Keys)
             {
                 Console.WriteLine($"CachedKeys ListExpiredKeys {key} {keysToRemove[key]}");
