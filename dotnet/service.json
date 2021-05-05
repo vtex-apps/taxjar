@@ -1,6 +1,8 @@
 {
   "stack": "dotnet",
-  "memory": 256,
+  "memory": 512,
+  "ttl": 43200,
+  "timeout": 300,
   "runtimeArgs": [
   ],
   "routes": {

@@ -14,5 +14,6 @@ namespace Taxjar.Services
         Task<TaxFallbackResponse> GetFallbackRate(string country, string postalCode, string provider = "avalara");
         Task<bool> ProcessNotification(AllStatesNotification allStatesNotification);
         Task<PickupPoints> ListPickupPoints();
+        Task<string> GetShopperIdByEmail(string email);
     }
 }

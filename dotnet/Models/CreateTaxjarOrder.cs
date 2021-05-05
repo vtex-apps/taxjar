@@ -21,5 +21,8 @@ namespace Taxjar.Models
 
         [JsonProperty("plugin")]
         public string PlugIn { get; set; }
+
+        [JsonProperty("transaction_reference_id", NullValueHandling = NullValueHandling.Ignore)]
+        public string TransactionReferenceId { get; set; }
     }
 }

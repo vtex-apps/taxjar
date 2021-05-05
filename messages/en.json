@@ -1,6 +1,6 @@
 {
   "admin/taxjar.title": "TaxJar",
-  "admin/taxjar.setup.title": "Setup",
-  "admin/taxjar.setup.description": "Please click the button below to activate TaxJar.",
-  "admin/taxjar.setup.button": "Activate"
+  "admin/taxjar.init-config.title": "Set Tax Service",
+  "admin/taxjar.init-config.description": "Please click the button below to set tax service to TaxJar.",
+  "admin/taxjar.init-config.button": "Activate"
 }

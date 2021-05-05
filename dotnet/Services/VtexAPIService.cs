@@ -83,7 +83,7 @@ namespace Taxjar.Services
                 FromState = vtexDock.PickupStoreInfo.Address.State,
                 FromStreet = vtexDock.PickupStoreInfo.Address.Street,
                 FromZip = vtexDock.PickupStoreInfo.Address.PostalCode,
-                CustomerId = vtexTaxRequest.ClientData.Email,
+                CustomerId = await this.GetShopperIdByEmail(vtexTaxRequest.ClientData.Email),
                 LineItems = new TaxForOrderLineItem[vtexTaxRequest.Items.Length],
                 //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT
                 PlugIn = TaxjarConstants.PLUGIN
@@ -412,7 +412,7 @@ namespace Taxjar.Services
                 Amount = (decimal)vtexOrder.Totals.Where(t => !t.Id.Contains("Tax")).Sum(t => t.Value) / 100,
                 Shipping = (decimal)vtexOrder.Totals.Where(t => t.Id.Contains("Shipping")).Sum(t => t.Value) / 100,
                 SalesTax = (decimal)vtexOrder.Totals.Where(t => t.Id.Contains("Tax")).Sum(t => t.Value) / 100,
-                CustomerId = vtexOrder.ClientProfileData.Email,
+                CustomerId = await this.GetShopperIdByEmail(vtexOrder.ClientProfileData.Email),
                 //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT,
                 LineItems = new List<LineItem>(),
                 PlugIn = TaxjarConstants.PLUGIN
@@ -420,7 +420,74 @@ namespace Taxjar.Services
 
             Console.WriteLine($"'{taxjarOrder.TransactionId}' Amount: {taxjarOrder.Amount} Shipping: {taxjarOrder.Shipping} SalesTax: {taxjarOrder.SalesTax} ");
 
-            // For now, get the first address - TODO: split order by location
+            LogisticsInfo logisticsInfo = vtexOrder.ShippingData.LogisticsInfo.FirstOrDefault();
+            if (logisticsInfo != null)
+            {
+                DeliveryId deliveryId = new DeliveryId();
+                if (logisticsInfo.DeliveryIds != null)
+                {
+                    deliveryId = logisticsInfo.DeliveryIds.FirstOrDefault();
+                    VtexDockResponse vtexDock = await this.ListDockById(deliveryId.DockId);
+                    if (vtexDock != null && vtexDock.PickupStoreInfo != null && vtexDock.PickupStoreInfo.Address != null)
+                    {
+                        taxjarOrder.FromCountry = vtexDock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2);
+                        taxjarOrder.FromZip = vtexDock.PickupStoreInfo.Address.PostalCode;
+                        taxjarOrder.FromState = vtexDock.PickupStoreInfo.Address.State;
+                        taxjarOrder.FromCity = vtexDock.PickupStoreInfo.Address.City;
+                        taxjarOrder.FromStreet = vtexDock.PickupStoreInfo.Address.Street;
+                    }
+                }
+            }
+
+            foreach (VtexOrderItem vtexOrderItem in vtexOrder.Items)
+            {
+                GetSkuContextResponse contextResponse = await this.GetSku(vtexOrderItem.SellerSku);
+
+                LineItem taxForOrderLineItem = new LineItem
+                {
+                    Id = vtexOrderItem.Id,
+                    Quantity = (int)vtexOrderItem.Quantity,
+                    ProductIdentifier = vtexOrderItem.SellerSku,
+                    Description = vtexOrderItem.Name,
+                    ProductTaxCode = contextResponse.TaxCode,
+                    UnitPrice = (decimal)vtexOrderItem.Price / 100,
+                    Discount = Math.Abs((decimal)vtexOrderItem.PriceTags.Where(p => p.Name.Contains("DISCOUNT@")).Sum(p => p.Value) / 100),
+                    SalesTax = (decimal)vtexOrderItem.PriceTags.Where(t => t.Name.Contains("TAX")).Sum(t => t.Value) / 100
+                };
+
+                taxjarOrder.LineItems.Add(taxForOrderLineItem);
+                Console.WriteLine($"'{taxjarOrder.TransactionId}' [{taxForOrderLineItem.Description}] UnitPrice: {taxForOrderLineItem.UnitPrice} Discount: {taxForOrderLineItem.Discount} SalesTax: {taxForOrderLineItem.SalesTax} ");
+            }
+
+            return taxjarOrder;
+        }
+
+        public async Task<CreateTaxjarOrder> VtexPackageToTaxjarRefund(VtexOrder vtexOrder, Package package)
+        {
+            //var refunds = vtexOrder.PackageAttachment.Packages.Where(p => p.Type.Equals("Input"));
+
+            CreateTaxjarOrder taxjarOrder = new CreateTaxjarOrder
+            {
+                TransactionId = vtexOrder.OrderId,
+                TransactionReferenceId = package.InvoiceNumber,
+                TransactionDate = DateTime.Parse(package.IssuanceDate).ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                Provider = vtexOrder.SalesChannel,
+                ToCountry = vtexOrder.ShippingData.Address.Country.Substring(0, 2),
+                ToZip = vtexOrder.ShippingData.Address.PostalCode,
+                ToState = vtexOrder.ShippingData.Address.State,
+                ToCity = vtexOrder.ShippingData.Address.City,
+                ToStreet = vtexOrder.ShippingData.Address.Street,
+                Amount = (decimal)package.Restitutions.Refund.Items.Sum(r => r.Price) / 100, //vtexOrder.Totals.Where(t => !t.Id.Contains("Tax")).Sum(t => t.Value) / 100,
+                Shipping = (decimal)vtexOrder.Totals.Where(t => t.Id.Contains("Shipping")).Sum(t => t.Value) / 100,
+                SalesTax = (decimal)vtexOrder.Totals.Where(t => t.Id.Contains("Tax")).Sum(t => t.Value) / 100,
+                CustomerId = await this.GetShopperIdByEmail(vtexOrder.ClientProfileData.Email),
+                //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT,
+                //LineItems = new List<LineItem>(),
+                PlugIn = TaxjarConstants.PLUGIN
+            };
+
+            Console.WriteLine($"'{taxjarOrder.TransactionId}' Amount: {taxjarOrder.Amount} Shipping: {taxjarOrder.Shipping} SalesTax: {taxjarOrder.SalesTax} ");
+
             LogisticsInfo logisticsInfo = vtexOrder.ShippingData.LogisticsInfo.FirstOrDefault();
             if (logisticsInfo != null)
             {
@@ -808,6 +875,61 @@ namespace Taxjar.Services
             }
 
             return success;
+        }
+
+        public async Task<VtexUser[]> GetShopperByEmail(string email)
+        {
+            // GET https://{accountName}.{environment}.com.br/api/dataentities/CL/search?email=
+
+            VtexUser[] vtexUser = null;
+
+            try
+            {
+                var request = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Get,
+                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.{TaxjarConstants.ENVIRONMENT}.com.br/api/dataentities/CL/search?email={email}")
+                };
+
+                request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
+                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+                if (authToken != null)
+                {
+                    request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                    request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+                    request.Headers.Add(TaxjarConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
+                }
+
+                var client = _clientFactory.CreateClient();
+                var response = await client.SendAsync(request);
+                string responseContent = await response.Content.ReadAsStringAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    vtexUser = JsonConvert.DeserializeObject<VtexUser[]>(responseContent);
+                }
+                else
+                {
+                    _context.Vtex.Logger.Warn("GetShopperByEmail", null, $"Did not get shopper for email '{email}'");
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.Vtex.Logger.Error("GetShopperByEmail", null, $"Error getting shopper for email '{email}'", ex);
+            }
+
+            return vtexUser;
+        }
+
+        public async Task<string> GetShopperIdByEmail(string email)
+        {
+            string id = string.Empty;
+            VtexUser[] vtexUsers = await this.GetShopperByEmail(email);
+            if(vtexUsers.Length > 0)
+            {
+                id = vtexUsers[0].Id;
+            }
+
+            return id;
         }
     }
 }
