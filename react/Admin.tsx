@@ -19,6 +19,9 @@ import { useMutation } from 'react-apollo'
 import M_INIT_CONFIG from './mutations/InitConfiguration.gql'
 //import M_CREATE_CUSTOMER from './mutations/CreateCustomer.gql'
 
+//-[Sign up for TaxJar](https://app.taxjar.com/api_sign_up) 
+//-[How do I get a TaxJar sales tax API token ?](https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token)
+
 const Admin: FC<WrappedComponentProps & any> = ({ intl }) => {
     //const { account, pages } = useRuntime()
 
