@@ -28,6 +28,7 @@ namespace Taxjar.GraphQL
                         CustomerResponse customerResponse = await taxjarService.ShowCustomer(customer);
                         if (customerResponse != null)
                         {
+                            customerResponse.Customer.CustomerId = vtexAPIService.GetShopperEmailById(customerResponse.Customer.CustomerId).Result;
                             customerList.Add(customerResponse.Customer);
                         }
                         else

@@ -15,5 +15,6 @@ namespace Taxjar.Services
         Task<bool> ProcessNotification(AllStatesNotification allStatesNotification);
         Task<PickupPoints> ListPickupPoints();
         Task<string> GetShopperIdByEmail(string email);
+        Task<string> GetShopperEmailById(string userId);
     }
 }

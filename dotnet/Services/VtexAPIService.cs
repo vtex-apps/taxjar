@@ -931,5 +931,59 @@ namespace Taxjar.Services
 
             return id;
         }
+
+        public async Task<VtexUser[]> GetShopperById(string userId)
+        {
+
+            VtexUser[] vtexUser = null;
+
+            try
+            {
+                var request = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Get,
+                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.{TaxjarConstants.ENVIRONMENT}.com.br/api/dataentities/CL/search?id={userId}")
+                };
+
+                request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
+                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+                if (authToken != null)
+                {
+                    request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                    request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+                    request.Headers.Add(TaxjarConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
+                }
+
+                var client = _clientFactory.CreateClient();
+                var response = await client.SendAsync(request);
+                string responseContent = await response.Content.ReadAsStringAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    vtexUser = JsonConvert.DeserializeObject<VtexUser[]>(responseContent);
+                }
+                else
+                {
+                    _context.Vtex.Logger.Warn("GetShopperById", null, $"Did not get shopper for id '{userId}'");
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.Vtex.Logger.Error("GetShopperById", null, $"Error getting shopper for id '{userId}'", ex);
+            }
+
+            return vtexUser;
+        }
+
+        public async Task<string> GetShopperEmailById(string userId)
+        {
+            string email = string.Empty;
+            VtexUser[] vtexUsers = await this.GetShopperById(userId);
+            if (vtexUsers.Length > 0)
+            {
+                email = vtexUsers[0].Email;
+            }
+
+            return email;
+        }
     }
 }

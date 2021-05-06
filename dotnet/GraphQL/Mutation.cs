@@ -23,10 +23,12 @@ namespace Taxjar.GraphQL
                 resolve: context =>
                 {
                     bool created = false;
-                    Console.WriteLine($"Getting Customer...");
                     Customer customer = context.GetArgument<Customer>("customer");
-                    Console.WriteLine($"Customer null? {customer == null}");
-                    customer.CustomerId = vtexAPIService.GetShopperIdByEmail(customer.CustomerId).Result;
+                    if (customer.CustomerId.Contains("@"))
+                    {
+                        customer.CustomerId = vtexAPIService.GetShopperIdByEmail(customer.CustomerId).Result;
+                    }
+
                     CustomerResponse taxjarResponse = taxjarService.CreateCustomer(customer).Result;
                     if (taxjarResponse != null)
                         created = true;
@@ -43,7 +45,11 @@ namespace Taxjar.GraphQL
                 {
                     bool deleted = false;
                     string customerId = context.GetArgument<string>("customerId");
-                    customerId = vtexAPIService.GetShopperIdByEmail(customerId).Result;
+                    if (customerId.Contains("@"))
+                    {
+                        customerId = vtexAPIService.GetShopperIdByEmail(customerId).Result;
+                    }
+
                     CustomerResponse taxjarResponse = taxjarService.DeleteCustomer(customerId).Result;
                     if (taxjarResponse != null)
                         deleted = true;
