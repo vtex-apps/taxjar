@@ -16,6 +16,7 @@ import { useQuery, useLazyQuery, useMutation } from 'react-apollo'
 import { Link } from 'vtex.render-runtime'
 
 import M_INIT_CONFIG from './mutations/InitConfiguration.gql'
+import RemoveConfiguration from './mutations/RemoveConfiguration.gql'
 import ConnectionTest from './queries/connectionTest.graphql'
 import AppSettings from './queries/appSettings.graphql'
 import SaveAppSettings from './mutations/saveAppSettings.graphql'
@@ -59,6 +60,7 @@ const Admin: FC = () => {
 
   const [saveSettings] = useMutation(SaveAppSettings)
   const [initConfig] = useMutation(M_INIT_CONFIG)
+  const [removeConfig] = useMutation(RemoveConfiguration)
 
   useEffect(() => {
     if (!data?.appSettings?.message) return
@@ -75,6 +77,8 @@ const Admin: FC = () => {
     try {
       if (settingsState.enableTaxCalculation) {
         await initConfig()
+      } else {
+        await removeConfig()
       }
 
       await saveSettings({

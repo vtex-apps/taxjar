@@ -5,34 +5,6 @@
   "title": "TaxJar",
   "description": "",
   "categories": [],
-  "settingsSchema": {
-    "title": "TaxJar",
-    "type": "object",
-    "properties": {
-      "apiToken": {
-        "title": "Api Token",
-        "description": "Api Token - https://app.taxjar.com/api_sign_up",
-        "type": "string"
-      },
-      "isLive": {
-        "title": "Production",
-        "description": "Production",
-        "type": "boolean"
-      },
-      "enableTaxCalculations": {
-        "title": "Enable Tax Calculations",
-        "description": "Enable live tax calculations",
-        "type": "boolean",
-        "default": true
-      },
-      "enableTransactionPosting": {
-        "title": "Enable Transaction Posting",
-        "description": "Record invoiced orders in TaxJar",
-        "type": "boolean",
-        "default": true
-      }
-    }
-  },
   "billingOptions": {
     "termsURL": "https://compliance.vtex.com/gdpr/policies/vtex-privacy-policy",
     "support": {
