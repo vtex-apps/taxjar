@@ -9,6 +9,7 @@ namespace Taxjar.Services
         Task<VtexTaxResponse> TaxjarResponseToVtexResponse(TaxResponse taxResponse);
         Task<VtexOrder> GetOrderInformation(string orderId);
         Task<string> InitConfiguration();
+        Task<string> RemoveConfiguration();
         Task<CreateTaxjarOrder> VtexOrderToTaxjarOrder(VtexOrder vtexOrder);
         Task<VtexDockResponse[]> ListVtexDocks();
         Task<TaxFallbackResponse> GetFallbackRate(string country, string postalCode, string provider = "avalara");
