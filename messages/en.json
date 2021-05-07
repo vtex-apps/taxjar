@@ -1,6 +1,18 @@
 {
   "admin/taxjar.title": "TaxJar",
-  "admin/taxjar.init-config.title": "Set Tax Service",
-  "admin/taxjar.init-config.description": "Please click the button below to set tax service to TaxJar.",
-  "admin/taxjar.init-config.button": "Activate"
+  "admin/taxjar.saveSettings.success": "Settings saved successfully",
+  "admin/taxjar.saveSettings.failure": "Settings could not be saved, see console for details",
+  "admin/taxjar.settings.introduction": "If you have a TaxJar account, visit this link to learn how to get an API token: {tokenLink}{lineBreak}If you want to sign up for TaxJar, visit this link: {signupLink}",
+  "admin/taxjar.settings.apiToken.label": "TaxJar API token",
+  "admin/taxjar.settings.apiToken.helpText": "This field is required",
+  "admin/taxjar.settings.isLive.label": "Production mode",
+  "admin/taxjar.settings.isLive.helpText": "Disable this toggle if using a sandbox API key.",
+  "admin/taxjar.settings.enableTaxCalculation.label": "Enable TaxJar in checkout",
+  "admin/taxjar.settings.enableTaxCalculation.helpText": "WARNING: Changing this setting may break your checkout. Make sure to test.",
+  "admin/taxjar.settings.enableTransactionPosting.label": "Post completed transactions to TaxJar",
+  "admin/taxjar.settings.enableTransactionPosting.helpText": "If this toggle is enabled, any invoiced orders where this account acts as the seller will be posted to TaxJar.",
+  "admin/taxjar.saveSettings.buttonText": "Save settings",
+  "admin/taxjar.testConnection.buttonText": "Test connection",
+  "admin/taxjar.testConnection.success": "Connected successfully",
+  "admin/taxjar.testConnection.failure": "Connection failed"
 }

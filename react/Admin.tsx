@@ -1,84 +1,287 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { FC } from 'react'
-//import { useRuntime } from 'vtex.render-runtime'
+import type { FC } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
-    Layout,
-    PageHeader,
-    Card,
-    Button,
-    //ButtonPlain,
-    //Spinner,
-    //Divider,
+  Layout,
+  PageHeader,
+  PageBlock,
+  Button,
+  Input,
+  Spinner,
+  Toggle,
+  ToastConsumer,
+  ToastProvider,
 } from 'vtex.styleguide'
-import { injectIntl, FormattedMessage, WrappedComponentProps } from 'react-intl'
-//import { compose, graphql, useQuery, useMutation } from 'react-apollo'
-import { useMutation } from 'react-apollo'
+import { useIntl, FormattedMessage } from 'react-intl'
+import { useQuery, useLazyQuery, useMutation } from 'react-apollo'
+import { Link } from 'vtex.render-runtime'
 
-//import styles from './styles.css'
-//import Q_LIST_CUSTOMERS from './queries/ListCustomers.gql'
 import M_INIT_CONFIG from './mutations/InitConfiguration.gql'
-//import M_CREATE_CUSTOMER from './mutations/CreateCustomer.gql'
+import ConnectionTest from './queries/connectionTest.graphql'
+import AppSettings from './queries/appSettings.graphql'
+import SaveAppSettings from './mutations/saveAppSettings.graphql'
+// import Q_LIST_CUSTOMERS from './queries/ListCustomers.gql'
+// import M_CREATE_CUSTOMER from './mutations/CreateCustomer.gql'
 
-//-[Sign up for TaxJar](https://app.taxjar.com/api_sign_up) 
-//-[How do I get a TaxJar sales tax API token ?](https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token)
+// -[Sign up for TaxJar](https://app.taxjar.com/api_sign_up)
+// -[How do I get a TaxJar sales tax API token ?](https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token)
 
-const Admin: FC<WrappedComponentProps & any> = ({ intl }) => {
-    //const { account, pages } = useRuntime()
+const Admin: FC = () => {
+  const { formatMessage } = useIntl()
+  const [settingsState, setSettingsState] = useState({
+    apiToken: '',
+    isLive: false,
+    enableTaxCalculation: false,
+    enableTransactionPosting: false,
+  })
 
-    const [
-        initConfig,
-        { loading: initializingConfig },
-    ] = useMutation(M_INIT_CONFIG)
+  const [testAllowed, setTestAllowed] = useState(false)
+  const [testComplete, setTestComplete] = useState(false)
+  const [settingsLoading, setSettingsLoading] = useState(false)
 
-    //const [
-    //    createCustomer,
-    //    { loading: creatingCustomer, data: createdCustomer },
-    //] = useMutation(M_CREATE_CUSTOMER)
+  const { data } = useQuery(AppSettings, {
+    variables: {
+      version: process.env.VTEX_APP_VERSION,
+    },
+    ssr: false,
+  })
 
+  const [
+    testConnection,
+    {
+      loading: connectionTestLoading,
+      data: connectionTestData,
+      refetch: connectionTestRefetch,
+    },
+  ] = useLazyQuery(ConnectionTest, {
+    onError: () => setTestComplete(true),
+    onCompleted: () => setTestComplete(true),
+  })
+
+  const [saveSettings] = useMutation(SaveAppSettings)
+  const [initConfig] = useMutation(M_INIT_CONFIG)
+
+  useEffect(() => {
+    if (!data?.appSettings?.message) return
+
+    const parsedSettings = JSON.parse(data.appSettings.message)
+
+    if (parsedSettings.apiToken) setTestAllowed(true)
+    setSettingsState(parsedSettings)
+  }, [data])
+
+  const handleSaveSettings = async (showToast: any) => {
+    setSettingsLoading(true)
+
+    try {
+      if (settingsState.enableTaxCalculation) {
+        await initConfig()
+      }
+
+      await saveSettings({
+        variables: {
+          version: process.env.VTEX_APP_VERSION,
+          settings: JSON.stringify(settingsState),
+        },
+      }).then(() => {
+        showToast({
+          message: formatMessage({
+            id: 'admin/taxjar.saveSettings.success',
+          }),
+          duration: 5000,
+        })
+        setTestAllowed(true)
+        setTestComplete(false)
+        setSettingsLoading(false)
+      })
+    } catch (error) {
+      console.error(error)
+      showToast({
+        message: formatMessage({
+          id: 'admin/taxjar.saveSettings.failure',
+        }),
+        duration: 5000,
+      })
+      setTestAllowed(false)
+      setTestComplete(false)
+      setSettingsLoading(false)
+    }
+  }
+
+  const handleTestConnection = () => {
+    if (connectionTestData) {
+      connectionTestRefetch()
+
+      return
+    }
+
+    testConnection()
+  }
+
+  if (!data) {
     return (
-        <Layout
+      <Layout
+        pageHeader={
+          <PageHeader title={<FormattedMessage id="admin/taxjar.title" />} />
+        }
+        fullWidth
+      >
+        <PageBlock>
+          <Spinner />
+        </PageBlock>
+      </Layout>
+    )
+  }
+
+  return (
+    <ToastProvider positioning="window">
+      <ToastConsumer>
+        {({ showToast }: { showToast: any }) => (
+          <Layout
             pageHeader={
-                <div className="flex justify-center">
-                    <div className="w-100 mw-reviews-header">
-                        <PageHeader
-                            title={intl.formatMessage({
-                                id: 'admin/taxjar.title',
-                            })}
-                        >
-                        </PageHeader>
-                    </div>
-                </div>
+              <PageHeader
+                title={<FormattedMessage id="admin/taxjar.title" />}
+              />
             }
             fullWidth
-        >
-                <div>
-                        <div>
-                            <Card>
-                                <h2>
-                            <FormattedMessage id="admin/taxjar.init-config.title" />
-                                </h2>
-                                <p>
-                                    <div className="mt4">
-                                <Button
-                                    variation="primary"
-                                    size="regular"
-                                    isLoading={initializingConfig}
-                                    onClick={() => {
-                                        initConfig()
-                                    }}
-                                    collapseLeft
-                                >
-                                    <FormattedMessage id="admin/taxjar.init-config.description" />{' '}
-                                </Button>
-                                    </div>
-                                </p>
-                            </Card>
-                        </div>
-                </div>
-        </Layout>
-    )
+          >
+            <PageBlock
+              subtitle={
+                <FormattedMessage
+                  id="admin/taxjar.settings.introduction"
+                  values={{
+                    tokenLink: (
+                      // eslint-disable-next-line react/jsx-no-target-blank
+                      <Link
+                        to="https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token"
+                        target="_blank"
+                      >
+                        https://support.taxjar.com/ar[...]-api-token
+                      </Link>
+                    ),
+                    signupLink: (
+                      // eslint-disable-next-line react/jsx-no-target-blank
+                      <Link
+                        to="https://app.taxjar.com/api_sign_up"
+                        target="_blank"
+                      >
+                        https://app.taxjar.com/api_sign_up
+                      </Link>
+                    ),
+                    lineBreak: <br />,
+                  }}
+                />
+              }
+            >
+              <section className="pb4">
+                <Input
+                  label={formatMessage({
+                    id: 'admin/taxjar.settings.apiToken.label',
+                  })}
+                  value={settingsState.apiToken}
+                  onChange={(e: React.FormEvent<HTMLInputElement>) =>
+                    setSettingsState({
+                      ...settingsState,
+                      apiToken: e.currentTarget.value,
+                    })
+                  }
+                  helpText={formatMessage({
+                    id: 'admin/taxjar.settings.apiToken.helpText',
+                  })}
+                  token
+                />
+              </section>
+              <section className="pv4">
+                <Toggle
+                  semantic
+                  label={formatMessage({
+                    id: 'admin/taxjar.settings.isLive.label',
+                  })}
+                  size="large"
+                  checked={settingsState.isLive}
+                  onChange={() => {
+                    setSettingsState({
+                      ...settingsState,
+                      isLive: !settingsState.isLive,
+                    })
+                  }}
+                  helpText={formatMessage({
+                    id: 'admin/taxjar.settings.isLive.helpText',
+                  })}
+                />
+              </section>
+              <section className="pv4">
+                <Toggle
+                  semantic
+                  label={formatMessage({
+                    id: 'admin/taxjar.settings.enableTaxCalculation.label',
+                  })}
+                  size="large"
+                  checked={settingsState.enableTaxCalculation}
+                  onChange={() => {
+                    setSettingsState({
+                      ...settingsState,
+                      enableTaxCalculation: !settingsState.enableTaxCalculation,
+                    })
+                  }}
+                  helpText={formatMessage({
+                    id: 'admin/taxjar.settings.enableTaxCalculation.helpText',
+                  })}
+                />
+              </section>
+              <section className="pv4">
+                <Toggle
+                  semantic
+                  label={formatMessage({
+                    id: 'admin/taxjar.settings.enableTransactionPosting.label',
+                  })}
+                  size="large"
+                  checked={settingsState.enableTransactionPosting}
+                  onChange={() => {
+                    setSettingsState({
+                      ...settingsState,
+                      enableTransactionPosting: !settingsState.enableTransactionPosting,
+                    })
+                  }}
+                  helpText={formatMessage({
+                    id:
+                      'admin/taxjar.settings.enableTransactionPosting.helpText',
+                  })}
+                />
+              </section>
+              <section className="pt4">
+                <Button
+                  variation="primary"
+                  onClick={() => handleSaveSettings(showToast)}
+                  isLoading={settingsLoading}
+                  disabled={!settingsState.apiToken}
+                >
+                  <FormattedMessage id="admin/taxjar.saveSettings.buttonText" />
+                </Button>
+              </section>
+              <section className="pt4">
+                <Button
+                  variation="secondary"
+                  onClick={() => handleTestConnection()}
+                  isLoading={connectionTestLoading}
+                  disabled={!testAllowed}
+                >
+                  <FormattedMessage id="admin/taxjar.testConnection.buttonText" />
+                </Button>
+                {` `}
+                {testComplete ? (
+                  connectionTestData?.findProductCode?.length ? (
+                    <FormattedMessage id="admin/taxjar.testConnection.success" />
+                  ) : (
+                    <FormattedMessage id="admin/taxjar.testConnection.failure" />
+                  )
+                ) : null}
+              </section>
+            </PageBlock>
+          </Layout>
+        )}
+      </ToastConsumer>
+    </ToastProvider>
+  )
 }
 
-export default injectIntl(
-    Admin
-)
+export default Admin

@@ -2,7 +2,7 @@
   "name": "taxjar",
   "vendor": "vtex",
   "version": "0.0.1",
-  "title": "",
+  "title": "TaxJar",
   "description": "",
   "categories": [],
   "settingsSchema": {
@@ -40,22 +40,24 @@
     },
     "free": true,
     "type": "free",
-    "availableCountries": [
-      "*"
-    ]
+    "availableCountries": ["*"]
   },
-  "registries": [
-    "smartcheckout"
-  ],
+  "registries": ["smartcheckout"],
   "builders": {
+    "admin": "0.x",
     "dotnet": "2.x",
     "graphql": "1.x",
     "messages": "1.x",
+    "react": "3.x",
     "docs": "0.x"
   },
   "mustUpdateAt": "2018-09-05",
   "scripts": {
     "postreleasy": "vtex publish --verbose"
+  },
+  "dependencies": {
+    "vtex.styleguide": "9.x",
+    "vtex.apps-graphql": "2.x"
   },
   "policies": [
     {

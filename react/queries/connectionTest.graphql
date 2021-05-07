@@ -1,0 +1,5 @@
+query ConnectionTest {
+  findProductCode(searchTerm: "") {
+    name
+  }
+}

@@ -1,10 +1,6 @@
 {
-  "section": "products",
-  "subSection": "discount",
-  "subSectionItems": [
-    {
-      "labelId": "admin/taxjar.title",
-      "path": "/admin/taxjar/"
-    }
-  ]
+  "section": "other",
+  "path": "/admin/taxjar",
+  "icon": "extensions-ic",
+  "titleId": "admin/taxjar.title"
 }
