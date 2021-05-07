@@ -764,6 +764,35 @@ namespace Taxjar.Services
             return retval;
         }
 
+        public async Task<string> RemoveConfiguration()
+        {
+            string retval = string.Empty;
+            MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
+            string jsonSerializedOrderConfig = await this._taxjarRepository.GetOrderConfiguration();
+            if (string.IsNullOrEmpty(jsonSerializedOrderConfig))
+            {
+                retval = "Could not load Order Configuration.";
+            }
+            else
+            {
+                dynamic orderConfig = JsonConvert.DeserializeObject(jsonSerializedOrderConfig);
+                VtexOrderformTaxConfiguration taxConfiguration = new VtexOrderformTaxConfiguration
+                {
+                    AllowExecutionAfterErrors = false,
+                    IntegratedAuthentication = true,
+                    Url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/checkout/order-tax"
+                };
+
+                orderConfig["taxConfiguration"] = "[]";
+
+                jsonSerializedOrderConfig = JsonConvert.SerializeObject(orderConfig);
+                bool success = await this._taxjarRepository.SetOrderConfiguration(jsonSerializedOrderConfig);
+                retval = success.ToString();
+            }
+
+            return retval;
+        }
+
         public async Task<TaxFallbackResponse> GetFallbackRate(string country, string postalCode, string provider = "avalara")
         {
             // GET https://vtexus.myvtex.com/_v/tax-fallback/{country}/{provider}/{postalCode}

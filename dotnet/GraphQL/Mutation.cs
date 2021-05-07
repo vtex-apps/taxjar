@@ -63,6 +63,13 @@ namespace Taxjar.GraphQL
                 {
                     return vtexAPIService.InitConfiguration();
                 });
+
+            Field<StringGraphType>(
+                "removeConfiguration",
+                resolve: context =>
+                {
+                    return vtexAPIService.RemoveConfiguration();
+                });
         }
     }
 }
