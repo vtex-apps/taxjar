@@ -6,6 +6,7 @@ using GraphQL.Types;
 using System.Linq;
 using Taxjar.GraphQL.Types;
 using System.Collections.Generic;
+using System;
 
 namespace Taxjar.GraphQL
 {
@@ -25,7 +26,15 @@ namespace Taxjar.GraphQL
                     foreach(string customer in customersResponse.Customers)
                     {
                         CustomerResponse customerResponse = await taxjarService.ShowCustomer(customer);
-                        customerList.Add(customerResponse.Customer);
+                        if (customerResponse != null)
+                        {
+                            customerResponse.Customer.CustomerId = vtexAPIService.GetShopperEmailById(customerResponse.Customer.CustomerId).Result;
+                            customerList.Add(customerResponse.Customer);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Could not load customer '{customer}'");
+                        }
                     }
 
                     return customerList;

@@ -5,6 +5,9 @@ type Query {
 
 type Mutation {
   createCustomer(customer: CustomerInput!): Boolean
+  initConfiguration: String
+  removeConfiguration: String
+  deleteCustomer(customerId: String!): Boolean
 }
 
 input CustomerInput {

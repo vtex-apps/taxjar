@@ -89,10 +89,11 @@ namespace Taxjar.Services
                 Console.WriteLine($"SendRequest [{httpMethod}] {request.RequestUri}");
                 //Console.WriteLine($"SendRequest [{jsonSerializedData}]");
                 //Console.WriteLine($"SendRequest [{response.StatusCode}] {responseContent}");
-                _context.Vtex.Logger.Info("SendRequest", null, $"Sending '{jsonSerializedData}'\rto '{endpoint}'\rResponse [{response.StatusCode}] '{responseContent}'");
+                _context.Vtex.Logger.Info("SendRequest", null, $"[{httpMethod}] '{jsonSerializedData}'\rto '{endpoint}'\rResponse [{response.StatusCode}] '{responseContent}'");
                 if(!response.IsSuccessStatusCode)
                 {
                     responseContent = null;
+                    Console.WriteLine($"SendRequest [{response.StatusCode}] {responseContent}");
                 }
             }
             catch (Exception ex)
@@ -261,6 +262,7 @@ namespace Taxjar.Services
         public async Task<CustomerResponse> ShowCustomer(string customerId)
         {
             CustomerResponse customerResponse = null;
+            //string response = await SendRequest($"customers/{HttpUtility.UrlEncode(customerId)}", null, HttpMethod.Get);
             string response = await SendRequest($"customers/{customerId}", null, HttpMethod.Get);
             if (!string.IsNullOrEmpty(response))
                 customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
@@ -283,6 +285,7 @@ namespace Taxjar.Services
         {
             CustomerResponse customerResponse = null;
             string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarCustomer);
+            //string response = await SendRequest($"customers/{HttpUtility.UrlEncode(taxjarCustomer.CustomerId)}", jsonSerialiezedData, HttpMethod.Put);
             string response = await SendRequest($"customers/{taxjarCustomer.CustomerId}", jsonSerialiezedData, HttpMethod.Put);
             if (!string.IsNullOrEmpty(response))
                 customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
@@ -293,6 +296,7 @@ namespace Taxjar.Services
         public async Task<CustomerResponse> DeleteCustomer(string customerId)
         {
             CustomerResponse customerResponse = null;
+            //string response = await SendRequest($"customers/{HttpUtility.UrlEncode(customerId)}", null, HttpMethod.Delete);
             string response = await SendRequest($"customers/{customerId}", null, HttpMethod.Delete);
             if (!string.IsNullOrEmpty(response))
                 customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);

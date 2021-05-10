@@ -638,7 +638,7 @@ namespace Taxjar.Models
         public object InvoiceUrl { get; set; }
 
         [JsonProperty("issuanceDate")]
-        public DateTimeOffset IssuanceDate { get; set; }
+        public string IssuanceDate { get; set; }
 
         [JsonProperty("trackingNumber")]
         public string TrackingNumber { get; set; }
@@ -662,7 +662,7 @@ namespace Taxjar.Models
         public object Cfop { get; set; }
 
         [JsonProperty("restitutions")]
-        public Content Restitutions { get; set; }
+        public Restitutions Restitutions { get; set; }
 
         [JsonProperty("volumes")]
         public object Volumes { get; set; }
@@ -688,6 +688,39 @@ namespace Taxjar.Models
 
     public class Content
     {
+    }
+
+    public class Restitutions
+    {
+        [JsonProperty("Refund", NullValueHandling = NullValueHandling.Ignore)]
+        public RefundRestitution Refund { get; set; }
+    }
+
+    public class RefundRestitution
+    {
+        [JsonProperty("value")]
+        public long Value { get; set; }
+
+        [JsonProperty("giftCardData")]
+        public object GiftCardData { get; set; }
+
+        [JsonProperty("items")]
+        public RefundItem[] Items { get; set; }
+    }
+
+    public class RefundItem
+    {
+        [JsonProperty("id")]
+        public string Id { get; set; }
+
+        [JsonProperty("quantity")]
+        public long Quantity { get; set; }
+
+        [JsonProperty("price")]
+        public long Price { get; set; }
+
+        [JsonProperty("description")]
+        public object Description { get; set; }
     }
 
     public class Transaction
@@ -1264,6 +1297,6 @@ namespace Taxjar.Models
         public string OrderId { get; set; }
 
         [JsonProperty("receipt")]
-        public Guid ReceiptReceipt { get; set; }
+        public string ReceiptReceipt { get; set; }
     }
 }

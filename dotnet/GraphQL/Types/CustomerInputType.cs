@@ -17,7 +17,8 @@ namespace Taxjar.GraphQL.Types
             Field(c => c.ExemptionType);
             Field(c => c.Name);
             //Field(c => c.ExemptRegions);
-            Field<ListGraphType<ExemptRegionsType>>("ExemptRegions");
+            //Field<ListGraphType<ExemptRegionsType>>("ExemptRegions");
+            Field(c => c.ExemptRegions, type: typeof(ListGraphType<ExemptRegionsType>)).Description("Exempt Regions");
         }
     }
 }

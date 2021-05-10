@@ -1,0 +1,6 @@
+mutation SaveAppSettings($version: String, $settings: String) {
+  saveAppSettings(app: "vtex.taxjar", version: $version, settings: $settings)
+    @context(provider: "vtex.apps-graphql") {
+    message
+  }
+}

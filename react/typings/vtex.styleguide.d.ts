@@ -39,4 +39,6 @@ declare module 'vtex.styleguide' {
   export const Layout
   export const Tabs
   export const Divider
+  export const PageBlock
+  export const Toggle
 }
