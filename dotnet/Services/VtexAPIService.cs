@@ -106,7 +106,7 @@ namespace Taxjar.Services
 
                 taxForOrder.LineItems[i] = new TaxForOrderLineItem
                 {
-                    Discount = (float)vtexTaxRequest.Items[i].DiscountPrice,
+                    Discount = (float)Math.Abs(vtexTaxRequest.Items[i].DiscountPrice),
                     Id = vtexTaxRequest.Items[i].Id,
                     ProductTaxCode = taxCode,
                     Quantity = vtexTaxRequest.Items[i].Quantity,
@@ -165,6 +165,12 @@ namespace Taxjar.Services
                 return null;
             }
 
+            //if (taxResponse.Tax.Breakdown.Shipping == null)
+            //{
+            //    Console.WriteLine("Shipping is null");
+            //    return null;
+            //}
+
             VtexTaxResponse vtexTaxResponse = new VtexTaxResponse
             {
                 Hooks = new Hook[]
@@ -178,13 +184,29 @@ namespace Taxjar.Services
                 ItemTaxResponse = new ItemTaxResponse[taxResponse.Tax.Breakdown.LineItems.Count]
             };
 
-            double shippingTaxCity = (double)taxResponse.Tax.Breakdown.Shipping.CityAmount;
-            double shippingTaxCounty = (double)taxResponse.Tax.Breakdown.Shipping.CountyAmount;
-            double shippingTaxSpecial = (double)taxResponse.Tax.Breakdown.Shipping.SpecialDistrictAmount;
-            double shippingTaxState = (double)taxResponse.Tax.Breakdown.Shipping.StateAmount;
-            double shippingTaxGST = (double)taxResponse.Tax.Breakdown.Shipping.GST;
-            double shippingTaxPST = (double)taxResponse.Tax.Breakdown.Shipping.PST;
-            double shippingTaxQST = (double)taxResponse.Tax.Breakdown.Shipping.QST;
+            double shippingTaxCity = 0d;
+            double shippingTaxCounty = 0d;
+            double shippingTaxSpecial = 0d;
+            double shippingTaxState = 0d;
+            double shippingTaxGST = 0d;
+            double shippingTaxPST = 0d;
+            double shippingTaxQST = 0d;
+
+            if(taxResponse.Tax.Breakdown.Shipping != null)
+            {
+                shippingTaxCity = (double)taxResponse.Tax.Breakdown.Shipping.CityAmount;
+                shippingTaxCounty = (double)taxResponse.Tax.Breakdown.Shipping.CountyAmount;
+                shippingTaxSpecial = (double)taxResponse.Tax.Breakdown.Shipping.SpecialDistrictAmount;
+                shippingTaxState = (double)taxResponse.Tax.Breakdown.Shipping.StateAmount;
+                shippingTaxGST = (double)taxResponse.Tax.Breakdown.Shipping.GST;
+                shippingTaxPST = (double)taxResponse.Tax.Breakdown.Shipping.PST;
+                shippingTaxQST = (double)taxResponse.Tax.Breakdown.Shipping.QST;
+            }
+            else
+            {
+                Console.WriteLine("Shipping is null!!!");
+            }
+
             double totalItemTax = (double)taxResponse.Tax.Breakdown.LineItems.Sum(i => i.TaxCollectable);
             //double itemTaxPercentOfWhole = 1D / (double)taxResponse.Tax.Breakdown.LineItems.Count;
             //Console.WriteLine($"itemTaxPercentOfWhole = {itemTaxPercentOfWhole}%");
