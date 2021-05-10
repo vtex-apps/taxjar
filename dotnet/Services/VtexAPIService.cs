@@ -778,17 +778,17 @@ namespace Taxjar.Services
                 dynamic orderConfig = JsonConvert.DeserializeObject(jsonSerializedOrderConfig);
                 VtexOrderformTaxConfiguration taxConfiguration = new VtexOrderformTaxConfiguration
                 {
-                    AllowExecutionAfterErrors = false,
-                    IntegratedAuthentication = true,
-                    Url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/checkout/order-tax"
+
                 };
 
-                orderConfig["taxConfiguration"] = "[]";
+                orderConfig["taxConfiguration"] = JToken.FromObject(taxConfiguration);
 
                 jsonSerializedOrderConfig = JsonConvert.SerializeObject(orderConfig);
                 bool success = await this._taxjarRepository.SetOrderConfiguration(jsonSerializedOrderConfig);
                 retval = success.ToString();
             }
+
+            Console.WriteLine($"RemoveConfiguration = {retval}");
 
             return retval;
         }

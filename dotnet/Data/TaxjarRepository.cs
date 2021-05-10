@@ -87,7 +87,7 @@
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"GetOrderConfiguration [{response.StatusCode}] '{responseContent}' ");
+            //Console.WriteLine($"GetOrderConfiguration [{response.StatusCode}] '{responseContent}' ");
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return null;
@@ -120,6 +120,7 @@
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
+            _context.Vtex.Logger.Info("SetOrderConfiguration", null, $"Request:\r{jsonSerializedOrderConfig}\rResponse: [{response.StatusCode}]\r{responseContent}");
 
             return response.IsSuccessStatusCode;
         }
