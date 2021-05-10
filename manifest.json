@@ -1,7 +1,7 @@
 {
   "name": "taxjar",
   "vendor": "vtex",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "title": "TaxJar",
   "description": "",
   "categories": [],
@@ -12,9 +12,13 @@
     },
     "free": true,
     "type": "free",
-    "availableCountries": ["*"]
+    "availableCountries": [
+      "*"
+    ]
   },
-  "registries": ["smartcheckout"],
+  "registries": [
+    "smartcheckout"
+  ],
   "builders": {
     "admin": "0.x",
     "dotnet": "2.x",
