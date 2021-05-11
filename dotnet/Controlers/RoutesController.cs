@@ -63,11 +63,11 @@
                 ItemTaxResponse = new ItemTaxResponse[0]
             };
 
-            MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
-            if(!merchantSettings.EnableTaxCalculations)
-            {
-                return Json(vtexTaxResponse);
-            }
+            //MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
+            //if(!merchantSettings.EnableTaxCalculations)
+            //{
+            //    return Json(vtexTaxResponse);
+            //}
 
             bool useFallbackRates = false;
             Stopwatch timer = new Stopwatch();
