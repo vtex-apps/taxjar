@@ -23,15 +23,14 @@ Using your terminal, log in to the desired VTEX account and run the following co
 `vtex install vtex.taxjar`
 
 ### Step 3 - Defining the app settings
-
-1. In the VTEX admin, under Account Settings, choose Apps, then My Apps
-2. On the TaxJar app, choose Settings
-3. Enter the API Token.
-4. Choose optional settings
-- **Production** - The entered API Token is a Live token.
-- **Enable Tax Calculations** - Request tax calculations.
-- **Enable Transaction Posting** - Record invoiced orders in TaxJar
-5. Save Settings
+![image](https://user-images.githubusercontent.com/47258865/118002998-2b2db400-b316-11eb-9f09-13df44be8086.png)
+1. Enter the API Token.
+2. Choose optional settings
+- **Production Mode** - The entered API Token is a Live token.
+- **Enable TaxJar inb checkout** - Request tax calculations.
+- **Post completed transactions to TaxJar** - Record invoiced orders in TaxJar
+3. Save Settings.
+4. Test Connection.
 
 ### Notes
 
