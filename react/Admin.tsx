@@ -33,6 +33,7 @@ const Admin: FC = () => {
     isLive: false,
     enableTaxCalculation: false,
     enableTransactionPosting: false,
+    useTaxJarNexus: false,
   })
 
   const [testAllowed, setTestAllowed] = useState(false)
@@ -249,6 +250,26 @@ const Admin: FC = () => {
                   helpText={formatMessage({
                     id:
                       'admin/taxjar.settings.enableTransactionPosting.helpText',
+                  })}
+                />
+              </section>
+              <section className="pv4">
+                <Toggle
+                  semantic
+                  label={formatMessage({
+                    id: 'admin/taxjar.settings.useTaxJarNexus.label',
+                  })}
+                  size="large"
+                  checked={settingsState.useTaxJarNexus}
+                  onChange={() => {
+                    setSettingsState({
+                      ...settingsState,
+                      useTaxJarNexus: !settingsState.useTaxJarNexus,
+                    })
+                  }}
+                  helpText={formatMessage({
+                    id:
+                      'admin/taxjar.settings.useTaxJarNexus.helpText',
                   })}
                 />
               </section>

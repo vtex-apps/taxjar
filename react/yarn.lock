@@ -4939,10 +4939,6 @@ verror@1.10.0:
   version "8.128.4"
   resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.render-runtime@8.128.4/public/@types/vtex.render-runtime#63491782d44910c4edc8528bc645c7c335c33128"
 
-"vtex.taxjar@https://taxjar--sandboxusdev.myvtex.com/_v/private/typings/linked/v1/vtex.taxjar@0.0.1+build1620402961/public/@types/vtex.taxjar":
-  version "0.0.1"
-  resolved "https://taxjar--sandboxusdev.myvtex.com/_v/private/typings/linked/v1/vtex.taxjar@0.0.1+build1620402961/public/@types/vtex.taxjar#ea85924ae43a4772592f4f64c591bf26c0ea57ea"
-
 w3c-hr-time@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/w3c-hr-time/-/w3c-hr-time-1.0.2.tgz#0a89cdf5cc15822df9c360543676963e0cc308cd"

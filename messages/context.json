@@ -14,5 +14,7 @@
   "admin/taxjar.saveSettings.buttonText": "Save settings",
   "admin/taxjar.testConnection.buttonText": "Test connection",
   "admin/taxjar.testConnection.success": "Connected successfully",
-  "admin/taxjar.testConnection.failure": "Connection failed"
+  "admin/taxjar.testConnection.failure": "Connection failed",
+  "admin/taxjar.settings.useTaxJarNexus.label": "Use TaxJar nexus regions",
+  "admin/taxjar.settings.useTaxJarNexus.helpText": "Enable to use nexus region settings from TaxJar."
 }

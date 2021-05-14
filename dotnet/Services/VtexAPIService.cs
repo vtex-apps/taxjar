@@ -69,6 +69,12 @@ namespace Taxjar.Services
                 return null;
             }
 
+            if(vtexDock.PickupStoreInfo == null)
+            {
+                vtexDock.PickupStoreInfo = new DockPickupStoreInfo();
+                _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Missing address for Dock {dockId}");
+            }
+
             TaxForOrder taxForOrder = new TaxForOrder
             {
                 //Amount = (float)vtexTaxRequest.Totals.Sum(t => t.Value) / 100,

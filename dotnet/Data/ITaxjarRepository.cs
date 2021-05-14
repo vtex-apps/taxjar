@@ -16,5 +16,8 @@ namespace Taxjar.Data
 
         bool TryGetCache(int cacheKey, out VtexTaxResponse vtexTaxResponse);
         Task<bool> SetCache(int cacheKey, VtexTaxResponse vtexTaxResponse);
+
+        Task<bool> SetNexusRegions(NexusRegionsStorage nexusRegionsStorage);
+        Task<NexusRegionsStorage> GetNexusRegions();
     }
 }

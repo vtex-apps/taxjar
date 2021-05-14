@@ -276,5 +276,57 @@
 
             return success;
         }
+
+        public async Task<bool> SetNexusRegions(NexusRegionsStorage nexusRegionsStorage)
+        {
+            var jsonSerializedProducReviews = JsonConvert.SerializeObject(nexusRegionsStorage);
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Put,
+                RequestUri = new Uri($"http://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}/buckets/{this._applicationName}/{TaxjarConstants.BUCKET}/files/NexusRegions"),
+                Content = new StringContent(jsonSerializedProducReviews, Encoding.UTF8, TaxjarConstants.APPLICATION_JSON)
+            };
+
+            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            if (authToken != null)
+            {
+                request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+            }
+
+            var client = _clientFactory.CreateClient();
+            var response = await client.SendAsync(request);
+            string responseContent = await response.Content.ReadAsStringAsync();
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<NexusRegionsStorage> GetNexusRegions()
+        {
+            NexusRegionsStorage nexusRegionsStorage = null;
+
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri($"http://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}/buckets/{this._applicationName}/{TaxjarConstants.BUCKET}/files/NexusRegions")
+            };
+
+            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            if (authToken != null)
+            {
+                request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+            }
+
+            var client = _clientFactory.CreateClient();
+            var response = await client.SendAsync(request);
+            string responseContent = await response.Content.ReadAsStringAsync();
+            if(response.IsSuccessStatusCode)
+            {
+                nexusRegionsStorage = JsonConvert.DeserializeObject<NexusRegionsStorage>(responseContent);
+            }
+
+            return nexusRegionsStorage;
+        }
     }
 }
