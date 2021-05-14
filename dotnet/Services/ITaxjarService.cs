@@ -27,5 +27,7 @@ namespace Taxjar.Services
         Task<CustomerResponse> CreateCustomer(Customer taxjarCustomer);
         Task<CustomerResponse> UpdateCustomer(Customer taxjarCustomer);
         Task<CustomerResponse> DeleteCustomer(string customerId);
+
+        Task<NexusRegionsResponse> ListNexusRegions();
     }
 }

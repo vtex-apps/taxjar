@@ -102,24 +102,7 @@
                         }
                         else
                         {
-                            bool inNexus = false;
-                            //VtexDockResponse[] vtexDocks = await _vtexAPIService.ListVtexDocks();
-                            //List<string> nexusStates = vtexDocks.Select(d => d.PickupStoreInfo.Address.State).ToList();
-                            PickupPoints pickupPoints = await _vtexAPIService.ListPickupPoints();
-                            List<string> nexusStates = new List<string>();
-                            foreach (PickupPointItem pickupPoint in pickupPoints.Items)
-                            {
-                                if (pickupPoint != null && pickupPoint.Address != null && pickupPoint.Address.State != null)
-                                {
-                                    Console.WriteLine($"Nexus State '{pickupPoint.Address.State}' Destination state '{taxRequest.ShippingDestination.State}' ");
-                                    if (pickupPoint.Address.State.Equals(taxRequest.ShippingDestination.State))
-                                    {
-                                        inNexus = true;
-                                        Console.WriteLine($"Destination state '{taxRequest.ShippingDestination.State}' is in nexus");
-                                        break;
-                                    }
-                                }
-                            }
+                            bool inNexus = await this.InNexus(taxRequest.ShippingDestination.State, taxRequest.ShippingDestination.Country);
 
                             if (inNexus)
                             {
@@ -478,6 +461,101 @@
             }
 
             return Json(summaryRatesResponse);
+        }
+
+        public async Task<NexusRegionsResponse> NexusRegions()
+        {
+            //Response.Headers.Add("Cache-Control", "private");
+            NexusRegionsResponse nexusRegionsResponse = null;
+            NexusRegionsStorage nexusRegionsStorage = await _taxjarRepository.GetNexusRegions();
+            if(nexusRegionsStorage != null)
+            {
+                TimeSpan ts = DateTime.Now - nexusRegionsStorage.UpdatedAt;
+                if(ts.Minutes > 10)
+                {
+                    nexusRegionsResponse = await _taxjarService.ListNexusRegions();
+                    if(nexusRegionsResponse != null)
+                    {
+                        nexusRegionsStorage = new NexusRegionsStorage
+                        {
+                            UpdatedAt = DateTime.Now,
+                            NexusRegionsResponse = nexusRegionsResponse
+                        };
+
+                        _taxjarRepository.SetNexusRegions(nexusRegionsStorage);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Loaded Nexus from Storage");
+                    nexusRegionsResponse = nexusRegionsStorage.NexusRegionsResponse;
+                }
+            }
+            else
+            {
+                nexusRegionsResponse = await _taxjarService.ListNexusRegions();
+                if (nexusRegionsResponse != null)
+                {
+                    nexusRegionsStorage = new NexusRegionsStorage
+                    {
+                        UpdatedAt = DateTime.Now,
+                        NexusRegionsResponse = nexusRegionsResponse
+                    };
+
+                    Console.WriteLine("Updating Nexus...");
+                    _taxjarRepository.SetNexusRegions(nexusRegionsStorage);
+                }
+            }
+
+            return nexusRegionsResponse;
+        }
+
+        public async Task<bool> InNexus(string state, string country)
+        {
+            bool inNexus = false;
+            if(country.Length > 2)
+            {
+                country = country.Substring(0, 2);
+            }
+
+            MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
+            if(merchantSettings.UseTaxJarNexus)
+            {
+                NexusRegionsResponse nexusRegionsResponse = await this.NexusRegions();
+                foreach (NexusRegion nexusRegion in nexusRegionsResponse.Regions)
+                {
+                    if (nexusRegion != null && !string.IsNullOrEmpty(nexusRegion.CountryCode) && !string.IsNullOrEmpty(nexusRegion.RegionCode))
+                    {
+                        Console.WriteLine($"Nexus '{nexusRegion.RegionCode},{nexusRegion.CountryCode}' Destination '{state},{country}' ");
+                        if (nexusRegion.RegionCode.Equals(state) && nexusRegion.CountryCode.Equals(country))
+                        {
+                            inNexus = true;
+                            Console.WriteLine($"Destination '{nexusRegion.Region},{nexusRegion.Country}' is in nexus");
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                PickupPoints pickupPoints = await _vtexAPIService.ListPickupPoints();
+                List<string> nexusStates = new List<string>();
+                foreach (PickupPointItem pickupPoint in pickupPoints.Items)
+                {
+                    if (pickupPoint != null && pickupPoint.Address != null && pickupPoint.Address.State != null && pickupPoint.Address.Country != null)
+                    {
+                        Console.WriteLine($"Nexus '{pickupPoint.Address.State},{pickupPoint.Address.Country.Acronym}' Destination '{state},{country}' ");
+                        if (pickupPoint.Address.State.Equals(state) && pickupPoint.Address.Country.Acronym.Substring(0, 2).Equals(country))
+                        {
+                            inNexus = true;
+                            Console.WriteLine($"Destination '{state},{country}' is in nexus");
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return inNexus;
         }
     }
 }

@@ -303,5 +303,15 @@ namespace Taxjar.Services
 
             return customerResponse;
         }
+
+        public async Task<NexusRegionsResponse> ListNexusRegions()
+        {
+            NexusRegionsResponse nexusRegionsResponse = null;
+            string response = await SendRequest($"nexus/regions", null, HttpMethod.Get);
+            if (!string.IsNullOrEmpty(response))
+                nexusRegionsResponse = JsonConvert.DeserializeObject<NexusRegionsResponse>(response);
+
+            return nexusRegionsResponse;
+        }
     }
 }

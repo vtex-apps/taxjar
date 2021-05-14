@@ -10,5 +10,6 @@ namespace Taxjar.Models
         public bool IsLive { get; set; }
         //public bool EnableTaxCalculations { get; set; }
         public bool EnableTransactionPosting { get; set; }
+        public bool UseTaxJarNexus { get; set; }
     }
 }
