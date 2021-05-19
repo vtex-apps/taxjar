@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Default use nexus settings from TaxJar
+
 ## [0.0.5] - 2021-05-14
 
 ### Added

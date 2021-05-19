@@ -17,5 +17,6 @@ namespace Taxjar.Services
         Task<PickupPoints> ListPickupPoints();
         Task<string> GetShopperIdByEmail(string email);
         Task<string> GetShopperEmailById(string userId);
+        Task<NexusRegionsResponse> NexusRegions();
     }
 }

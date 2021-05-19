@@ -463,53 +463,6 @@
             return Json(summaryRatesResponse);
         }
 
-        public async Task<NexusRegionsResponse> NexusRegions()
-        {
-            //Response.Headers.Add("Cache-Control", "private");
-            NexusRegionsResponse nexusRegionsResponse = null;
-            NexusRegionsStorage nexusRegionsStorage = await _taxjarRepository.GetNexusRegions();
-            if(nexusRegionsStorage != null)
-            {
-                TimeSpan ts = DateTime.Now - nexusRegionsStorage.UpdatedAt;
-                if(ts.Minutes > 10)
-                {
-                    nexusRegionsResponse = await _taxjarService.ListNexusRegions();
-                    if(nexusRegionsResponse != null)
-                    {
-                        nexusRegionsStorage = new NexusRegionsStorage
-                        {
-                            UpdatedAt = DateTime.Now,
-                            NexusRegionsResponse = nexusRegionsResponse
-                        };
-
-                        _taxjarRepository.SetNexusRegions(nexusRegionsStorage);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Loaded Nexus from Storage");
-                    nexusRegionsResponse = nexusRegionsStorage.NexusRegionsResponse;
-                }
-            }
-            else
-            {
-                nexusRegionsResponse = await _taxjarService.ListNexusRegions();
-                if (nexusRegionsResponse != null)
-                {
-                    nexusRegionsStorage = new NexusRegionsStorage
-                    {
-                        UpdatedAt = DateTime.Now,
-                        NexusRegionsResponse = nexusRegionsResponse
-                    };
-
-                    Console.WriteLine("Updating Nexus...");
-                    _taxjarRepository.SetNexusRegions(nexusRegionsStorage);
-                }
-            }
-
-            return nexusRegionsResponse;
-        }
-
         public async Task<bool> InNexus(string state, string country)
         {
             bool inNexus = false;
@@ -521,7 +474,7 @@
             MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
             if(merchantSettings.UseTaxJarNexus)
             {
-                NexusRegionsResponse nexusRegionsResponse = await this.NexusRegions();
+                NexusRegionsResponse nexusRegionsResponse = await _vtexAPIService.NexusRegions();
                 foreach (NexusRegion nexusRegion in nexusRegionsResponse.Regions)
                 {
                     if (nexusRegion != null && !string.IsNullOrEmpty(nexusRegion.CountryCode) && !string.IsNullOrEmpty(nexusRegion.RegionCode))

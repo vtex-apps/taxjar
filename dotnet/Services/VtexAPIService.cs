@@ -121,26 +121,34 @@ namespace Taxjar.Services
             }
 
             List<TaxForOrderNexusAddress> nexuses = new List<TaxForOrderNexusAddress>();
-            foreach(PickupPointItem pickupPoint in pickupPoints.Items)
+            MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
+            if(merchantSettings.UseTaxJarNexus)
             {
-                if (pickupPoint.Address != null)
+                _context.Vtex.Logger.Debug("VtexRequestToTaxjarRequest", null, "Using TaxJar for nexus.");
+            }
+            else
+            {
+                foreach(PickupPointItem pickupPoint in pickupPoints.Items)
                 {
-                    nexuses.Add(
-                            new TaxForOrderNexusAddress
-                            {
-                                City = pickupPoint.Address.City,
-                                Country = string.IsNullOrEmpty(pickupPoint.Address.Country.Acronym) ? string.Empty : pickupPoint.Address.Country.Acronym.Substring(0, 2),
-                                Id = pickupPoint.PickupPointId,
-                                State = pickupPoint.Address.State,
-                                Street = pickupPoint.Address.Street,
-                                Zip = pickupPoint.Address.PostalCode
-                            }
-                        );
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("VtexRequestToTaxjarRequest", null, $"PickupPoint {pickupPoint.PickupPointId} missing address");
-                    Console.WriteLine($"PickupPoint {pickupPoint.PickupPointId} missing address");
+                    if (pickupPoint.Address != null)
+                    {
+                        nexuses.Add(
+                                new TaxForOrderNexusAddress
+                                {
+                                    City = pickupPoint.Address.City,
+                                    Country = string.IsNullOrEmpty(pickupPoint.Address.Country.Acronym) ? string.Empty : pickupPoint.Address.Country.Acronym.Substring(0, 2),
+                                    Id = pickupPoint.PickupPointId,
+                                    State = pickupPoint.Address.State,
+                                    Street = pickupPoint.Address.Street,
+                                    Zip = pickupPoint.Address.PostalCode
+                                }
+                            );
+                    }
+                    else
+                    {
+                        _context.Vtex.Logger.Warn("VtexRequestToTaxjarRequest", null, $"PickupPoint {pickupPoint.PickupPointId} missing address");
+                        Console.WriteLine($"PickupPoint {pickupPoint.PickupPointId} missing address");
+                    }
                 }
             }
 
@@ -1041,6 +1049,53 @@ namespace Taxjar.Services
             }
 
             return email;
+        }
+
+        public async Task<NexusRegionsResponse> NexusRegions()
+        {
+            //Response.Headers.Add("Cache-Control", "private");
+            NexusRegionsResponse nexusRegionsResponse = null;
+            NexusRegionsStorage nexusRegionsStorage = await _taxjarRepository.GetNexusRegions();
+            if(nexusRegionsStorage != null)
+            {
+                TimeSpan ts = DateTime.Now - nexusRegionsStorage.UpdatedAt;
+                if(ts.Minutes > 10)
+                {
+                    nexusRegionsResponse = await _taxjarService.ListNexusRegions();
+                    if(nexusRegionsResponse != null)
+                    {
+                        nexusRegionsStorage = new NexusRegionsStorage
+                        {
+                            UpdatedAt = DateTime.Now,
+                            NexusRegionsResponse = nexusRegionsResponse
+                        };
+
+                        _taxjarRepository.SetNexusRegions(nexusRegionsStorage);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Loaded Nexus from Storage");
+                    nexusRegionsResponse = nexusRegionsStorage.NexusRegionsResponse;
+                }
+            }
+            else
+            {
+                nexusRegionsResponse = await _taxjarService.ListNexusRegions();
+                if (nexusRegionsResponse != null)
+                {
+                    nexusRegionsStorage = new NexusRegionsStorage
+                    {
+                        UpdatedAt = DateTime.Now,
+                        NexusRegionsResponse = nexusRegionsResponse
+                    };
+
+                    Console.WriteLine("Updating Nexus...");
+                    _taxjarRepository.SetNexusRegions(nexusRegionsStorage);
+                }
+            }
+
+            return nexusRegionsResponse;
         }
     }
 }
