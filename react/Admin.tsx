@@ -33,7 +33,7 @@ const Admin: FC = () => {
     isLive: false,
     enableTaxCalculation: false,
     enableTransactionPosting: false,
-    useTaxJarNexus: false,
+    useTaxJarNexus: true,
   })
 
   const [testAllowed, setTestAllowed] = useState(false)
