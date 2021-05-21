@@ -50,7 +50,7 @@ namespace Taxjar.Models
         public PickupPointBusinessHour[] BusinessHours { get; set; }
 
         [JsonProperty("tagsLabel")]
-        public object[] TagsLabel { get; set; }
+        public string[] TagsLabel { get; set; }
 
         [JsonProperty("pickupHolidays")]
         public object[] PickupHolidays { get; set; }

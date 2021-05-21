@@ -34,7 +34,8 @@ Using your terminal, log in to the desired VTEX account and run the following co
 
 ### Notes
 
-- Pickup points are used to determine nexus addresses.
+- Pickup points are used to determine nexus addresses.  Must be tagged with 'TaxJar'
+![image](https://user-images.githubusercontent.com/47258865/119150454-759ce800-ba1c-11eb-84cb-d1386380e3ca.png)
 - Product tax codes are entered in Catalog -> Products and SKUs -> Tax Code.
 - An order transaction is created in TaxJar when an order is invoiced.
 

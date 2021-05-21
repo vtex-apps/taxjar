@@ -30,10 +30,12 @@ namespace Taxjar.Data
         public const string API_VERSION_HEADER = "'x-api-version";
         public const string TAXJAR_API_VERSION = "2020-08-07";
 
-        public const string BUCKET = "Taxjar";
-        public const string CACHE_BUCKET = "TaxjarCache";
+        public const string BUCKET = "TaxJar";
+        public const string CACHE_BUCKET = "TaxJarCache";
 
         public const string PLUGIN = "vtex";
+
+        public const string PICKUP_TAG = "TaxJar";
 
         public class ExemptionType
         {
