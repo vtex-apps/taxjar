@@ -23,7 +23,7 @@ import SaveAppSettings from './mutations/saveAppSettings.graphql'
 // import Q_LIST_CUSTOMERS from './queries/ListCustomers.gql'
 // import M_CREATE_CUSTOMER from './mutations/CreateCustomer.gql'
 
-// -[Sign up for TaxJar](https://app.taxjar.com/api_sign_up)
+// -[Sign up for TaxJar](https://partners.taxjar.com/English)
 // -[How do I get a TaxJar sales tax API token ?](https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token)
 
 const Admin: FC = () => {
@@ -166,10 +166,10 @@ const Admin: FC = () => {
                     signupLink: (
                       // eslint-disable-next-line react/jsx-no-target-blank
                       <Link
-                        to="https://app.taxjar.com/api_sign_up"
+                        to="https://partners.taxjar.com/English"
                         target="_blank"
                       >
-                        https://app.taxjar.com/api_sign_up
+                        https://partners.taxjar.com/English
                       </Link>
                     ),
                     lineBreak: <br />,
