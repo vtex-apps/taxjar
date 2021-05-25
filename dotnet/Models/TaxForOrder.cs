@@ -37,7 +37,7 @@ namespace Taxjar.Models
         [JsonProperty("to_street")]
         public string ToStreet { get; set; }
 
-        [JsonProperty("amount")]
+        [JsonProperty("amount", NullValueHandling = NullValueHandling.Ignore)]
         public float Amount { get; set; }
 
         [JsonProperty("shipping")]

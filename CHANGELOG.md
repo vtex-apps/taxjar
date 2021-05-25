@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Changed sign up link to affiliate link
+- removed 'amount' field
+
 ## [0.0.7] - 2021-05-21
 
 ### Changed

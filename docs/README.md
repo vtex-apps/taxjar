@@ -14,7 +14,7 @@ The TaxJar app uses the TaxJar API to calculate taxes.  Optionally, invoiced ord
 
 ### Step 1 - Create API Token in TaxJar
 
-- [Sign up for TaxJar](https://app.taxjar.com/api_sign_up) 
+- [Sign up for TaxJar](https://partners.taxjar.com/English)
 - [How do I get a TaxJar sales tax API token?](https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token)
 
 ### Step 2 - Install the TaxJar app
