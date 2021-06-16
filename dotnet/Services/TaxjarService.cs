@@ -313,5 +313,17 @@ namespace Taxjar.Services
 
             return nexusRegionsResponse;
         }
+
+        public async Task<AddressValidationResponse> ValidateAddress(Address address)
+        {
+            // POST https://api.taxjar.com/v2/addresses/validate
+            AddressValidationResponse addressValidationResponse = null;
+            string jsonSerialiezedData = JsonConvert.SerializeObject(address);
+            string response = await SendRequest($"addresses/validate", jsonSerialiezedData, HttpMethod.Post);
+            if (!string.IsNullOrEmpty(response))
+                addressValidationResponse = JsonConvert.DeserializeObject<AddressValidationResponse>(response);
+
+            return addressValidationResponse;
+        }
     }
 }

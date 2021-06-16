@@ -410,6 +410,53 @@
             return BadRequest();
         }
 
+        public async Task<IActionResult> ProcessRefundHook()
+        {
+            Response.Headers.Add("Cache-Control", "private");
+            Console.WriteLine($"{HttpContext.Request.Method} to ProcessRefundHook");
+            if ("post".Equals(HttpContext.Request.Method, StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine("Reading request body...");
+                try
+                {
+                    string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+                    Console.WriteLine($"|{bodyAsText}|");
+                    _context.Vtex.Logger.Debug("ProcessRefundHook", null, bodyAsText);
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine($"Error processing refund. {ex.Message}");
+                    _context.Vtex.Logger.Error("ProcessRefundHook", null, "Error processing refund.", ex);
+                    return BadRequest();
+                }
+            }
+
+            return Ok();
+        }
+
+        public async Task<IActionResult> ValidateAddress()
+        {
+            Response.Headers.Add("Cache-Control", "private");
+            if ("post".Equals(HttpContext.Request.Method, StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+                    _context.Vtex.Logger.Debug("ValidateAddress", null, bodyAsText);
+                    Address validateAddress = JsonConvert.DeserializeObject<Address>(bodyAsText);
+                    var response = await _taxjarService.ValidateAddress(validateAddress);
+                    return Json(response);
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine($"Error Validating Address. {ex.Message}");
+                    _context.Vtex.Logger.Error("ProcessRefundHook", null, "Error Validating Address.", ex);
+                }
+            }
+
+            return BadRequest();
+        }
+
         public async Task<IActionResult> InitConfig()
         {
             Response.Headers.Add("Cache-Control", "private");
