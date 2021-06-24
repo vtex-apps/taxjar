@@ -1,0 +1,14 @@
+
+{
+    "name": "TaxJar",
+    "headline": "Calcule impuestos y registre pedidos para la generación de informes con esta integración",
+    "overview": "TaxJar simplifica la gestión de todo el ciclo de los impuestos, desde los cálculos hasta los informes y la declaración. La rápida respuesta y los cálculos precisos de TaxJar garantizan que se contabilicen todos los productos de su tienda",
+    "features": [
+      "Calcule impuestos de productos.",
+      "Registre pedidos facturados para la generación de informes."
+    ],  
+    "websiteURL": "https://vtex.com/",
+    "support": {
+      "url": "https://help-tickets.vtex.com/en/support?app=vtex.taxjar"
+    }
+  }
