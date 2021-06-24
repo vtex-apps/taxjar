@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Added screenshots, metadata messages, and an icon
 
+## [0.0.9] - 2021-06-16
+
+### Added
+
+- testing address validation and refunds
+
 ## [0.0.8] - 2021-05-25
 
 ### Changed
