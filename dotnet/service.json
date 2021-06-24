@@ -26,12 +26,20 @@
       "path": "/taxjar/oms/invoice",
       "public": true
     },
+    "processRefundHook": {
+      "path": "/taxjar/oms/refund",
+      "public": true
+    },
     "initConfig": {
       "path": "/taxjar/init-config",
       "public": true
     },
     "summaryRates": {
       "path": "/taxjar/summary-rates",
+      "public": true
+    },
+    "validateAddress": {
+      "path": "/taxjar/validate-address",
       "public": true
     }
   },

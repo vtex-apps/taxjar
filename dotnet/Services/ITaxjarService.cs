@@ -29,5 +29,7 @@ namespace Taxjar.Services
         Task<CustomerResponse> DeleteCustomer(string customerId);
 
         Task<NexusRegionsResponse> ListNexusRegions();
+
+        Task<AddressValidationResponse> ValidateAddress(Address address);
     }
 }
