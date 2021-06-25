@@ -516,7 +516,7 @@ namespace Taxjar.Services
             {
                 VtexOrderItem orderItem = vtexOrder.Items.Where(i => i.Id.Equals(refundItem.Id)).FirstOrDefault();
                 totalItemAmount += refundItem.Price * refundItem.Quantity;
-                long taxForReturnedItems = orderItem.PriceTags.Where(t => t.Name.Contains("TAX")).Sum(t => t.Value) / refundItem.Quantity;
+                long taxForReturnedItems = (orderItem.PriceTags.Where(t => t.Name.Contains("TAX")).Sum(t => t.Value) / orderItem.Quantity) * refundItem.Quantity;
                 totalTaxAmount += taxForReturnedItems;
                 
                 GetSkuContextResponse contextResponse = await this.GetSku(orderItem.SellerSku);
