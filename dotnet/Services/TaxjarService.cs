@@ -92,8 +92,17 @@ namespace Taxjar.Services
                 _context.Vtex.Logger.Info("SendRequest", null, $"[{httpMethod}] '{jsonSerializedData}'\rto '{endpoint}'\rResponse [{response.StatusCode}] '{responseContent}'");
                 if(!response.IsSuccessStatusCode)
                 {
-                    responseContent = null;
                     Console.WriteLine($"SendRequest [{response.StatusCode}] {responseContent}");
+                    //responseContent = null;
+                    try
+                    {
+                        ErrorResponse errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(responseContent);
+                        responseContent = $"{TaxjarConstants.ERROR_INDICATOR}:{errorResponse.Detail}";
+                    }
+                    catch (Exception ex)
+                    {
+                        _context.Vtex.Logger.Error("SendRequest", null, $"Could not parse error response '{responseContent}'", ex);
+                    }
                 }
             }
             catch (Exception ex)
@@ -109,7 +118,12 @@ namespace Taxjar.Services
             CategoriesResponse categoriesResponse = null;
             string  response = await SendRequest("categories", null, HttpMethod.Get);
             if (!string.IsNullOrEmpty(response))
-                categoriesResponse = JsonConvert.DeserializeObject<CategoriesResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    categoriesResponse = JsonConvert.DeserializeObject<CategoriesResponse>(response);
+                }
+            }
 
             return categoriesResponse;
         }
@@ -119,7 +133,12 @@ namespace Taxjar.Services
             RateResponse rateResponse = null;
             string response = await SendRequest($"rates/{zip}", null, HttpMethod.Get);
             if(!string.IsNullOrEmpty(response))
-                rateResponse = JsonConvert.DeserializeObject<RateResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    rateResponse = JsonConvert.DeserializeObject<RateResponse>(response);
+                }
+            }
 
             return rateResponse;
         }
@@ -129,7 +148,12 @@ namespace Taxjar.Services
             SummaryRatesResponse rateResponse = null;
             string response = await SendRequest($"summary_rates", null, HttpMethod.Get);
             if (!string.IsNullOrEmpty(response))
-                rateResponse = JsonConvert.DeserializeObject<SummaryRatesResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    rateResponse = JsonConvert.DeserializeObject<SummaryRatesResponse>(response);
+                }
+            }
 
             return rateResponse;
         }
@@ -140,7 +164,12 @@ namespace Taxjar.Services
             string jsonSerialiezedData = JsonConvert.SerializeObject(taxForOrder);
             string response = await SendRequest($"taxes", jsonSerialiezedData, HttpMethod.Post);
             if (!string.IsNullOrEmpty(response))
-                taxResponse = JsonConvert.DeserializeObject<TaxResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    taxResponse = JsonConvert.DeserializeObject<TaxResponse>(response);
+                }
+            }
 
             return taxResponse;
         }
@@ -150,7 +179,12 @@ namespace Taxjar.Services
             OrdersResponse ordersResponse = null;
             string response = await SendRequest($"transactions/orders", null, HttpMethod.Get);
             if (!string.IsNullOrEmpty(response))
-                ordersResponse = JsonConvert.DeserializeObject<OrdersResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    ordersResponse = JsonConvert.DeserializeObject<OrdersResponse>(response);
+                }
+            }
 
             return ordersResponse;
         }
@@ -160,7 +194,12 @@ namespace Taxjar.Services
             OrderResponse orderResponse = null;
             string response = await SendRequest($"transactions/orders/{transactionId}", null, HttpMethod.Get);
             if (!string.IsNullOrEmpty(response))
-                orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+                }
+            }
 
             return orderResponse;
         }
@@ -171,7 +210,19 @@ namespace Taxjar.Services
             string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarOrder);
             string response = await SendRequest($"transactions/orders", jsonSerialiezedData, HttpMethod.Post);
             if (!string.IsNullOrEmpty(response))
-                orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+                }
+                else
+                {
+                    if(response.Contains("already imported for your user account"))
+                    {
+                        orderResponse = new OrderResponse();
+                    }
+                }
+            }
 
             return orderResponse;
         }
@@ -182,7 +233,12 @@ namespace Taxjar.Services
             string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarOrder);
             string response = await SendRequest($"transactions/orders/{taxjarOrder.TransactionId}", jsonSerialiezedData, HttpMethod.Put);
             if (!string.IsNullOrEmpty(response))
-                orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+                }
+            }
 
             return orderResponse;
         }
@@ -192,7 +248,12 @@ namespace Taxjar.Services
             OrderResponse orderResponse = null;
             string response = await SendRequest($"transactions/orders/{transactionId}", null, HttpMethod.Delete);
             if (!string.IsNullOrEmpty(response))
-                orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    orderResponse = JsonConvert.DeserializeObject<OrderResponse>(response);
+                }
+            }
 
             return orderResponse;
         }
@@ -202,7 +263,12 @@ namespace Taxjar.Services
             RefundsResponse refundsResponse = null;
             string response = await SendRequest($"transactions/refunds", null, HttpMethod.Get);
             if (!string.IsNullOrEmpty(response))
-                refundsResponse = JsonConvert.DeserializeObject<RefundsResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    refundsResponse = JsonConvert.DeserializeObject<RefundsResponse>(response);
+                }
+            }
 
             return refundsResponse;
         }
@@ -212,7 +278,12 @@ namespace Taxjar.Services
             RefundResponse refundResponse = null;
             string response = await SendRequest($"transactions/refunds/{transactionId}", null, HttpMethod.Get);
             if (!string.IsNullOrEmpty(response))
-                refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+                }
+            }
 
             return refundResponse;
         }
@@ -223,7 +294,12 @@ namespace Taxjar.Services
             string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarOrder);
             string response = await SendRequest($"transactions/refunds", jsonSerialiezedData, HttpMethod.Post);
             if (!string.IsNullOrEmpty(response))
-                refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+                }
+            }
 
             return refundResponse;
         }
@@ -234,7 +310,12 @@ namespace Taxjar.Services
             string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarOrder);
             string response = await SendRequest($"transactions/refunds/{taxjarOrder.TransactionId}", jsonSerialiezedData, HttpMethod.Put);
             if (!string.IsNullOrEmpty(response))
-                refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+                }
+            }
 
             return refundResponse;
         }
@@ -244,7 +325,12 @@ namespace Taxjar.Services
             RefundResponse refundResponse = null;
             string response = await SendRequest($"transactions/refunds/{transactionId}", null, HttpMethod.Delete);
             if (!string.IsNullOrEmpty(response))
-                refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    refundResponse = JsonConvert.DeserializeObject<RefundResponse>(response);
+                }
+            }
 
             return refundResponse;
         }
@@ -254,7 +340,12 @@ namespace Taxjar.Services
             CustomersResponse customersResponse = null;
             string response = await SendRequest($"customers", null, HttpMethod.Get);
             if (!string.IsNullOrEmpty(response))
-                customersResponse = JsonConvert.DeserializeObject<CustomersResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    customersResponse = JsonConvert.DeserializeObject<CustomersResponse>(response);
+                }
+            }
 
             return customersResponse;
         }
@@ -265,7 +356,12 @@ namespace Taxjar.Services
             //string response = await SendRequest($"customers/{HttpUtility.UrlEncode(customerId)}", null, HttpMethod.Get);
             string response = await SendRequest($"customers/{customerId}", null, HttpMethod.Get);
             if (!string.IsNullOrEmpty(response))
-                customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+                }
+            }
 
             return customerResponse;
         }
@@ -276,7 +372,12 @@ namespace Taxjar.Services
             string jsonSerialiezedData = JsonConvert.SerializeObject(taxjarCustomer);
             string response = await SendRequest($"customers", jsonSerialiezedData, HttpMethod.Post);
             if (!string.IsNullOrEmpty(response))
-                customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+                }
+            }
 
             return customerResponse;
         }
@@ -288,7 +389,12 @@ namespace Taxjar.Services
             //string response = await SendRequest($"customers/{HttpUtility.UrlEncode(taxjarCustomer.CustomerId)}", jsonSerialiezedData, HttpMethod.Put);
             string response = await SendRequest($"customers/{taxjarCustomer.CustomerId}", jsonSerialiezedData, HttpMethod.Put);
             if (!string.IsNullOrEmpty(response))
-                customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+                }
+            }
 
             return customerResponse;
         }
@@ -299,7 +405,12 @@ namespace Taxjar.Services
             //string response = await SendRequest($"customers/{HttpUtility.UrlEncode(customerId)}", null, HttpMethod.Delete);
             string response = await SendRequest($"customers/{customerId}", null, HttpMethod.Delete);
             if (!string.IsNullOrEmpty(response))
-                customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    customerResponse = JsonConvert.DeserializeObject<CustomerResponse>(response);
+                }
+            }
 
             return customerResponse;
         }
@@ -309,7 +420,12 @@ namespace Taxjar.Services
             NexusRegionsResponse nexusRegionsResponse = null;
             string response = await SendRequest($"nexus/regions", null, HttpMethod.Get);
             if (!string.IsNullOrEmpty(response))
-                nexusRegionsResponse = JsonConvert.DeserializeObject<NexusRegionsResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    nexusRegionsResponse = JsonConvert.DeserializeObject<NexusRegionsResponse>(response);
+                }
+            }
 
             return nexusRegionsResponse;
         }
@@ -321,7 +437,12 @@ namespace Taxjar.Services
             string jsonSerialiezedData = JsonConvert.SerializeObject(address);
             string response = await SendRequest($"addresses/validate", jsonSerialiezedData, HttpMethod.Post);
             if (!string.IsNullOrEmpty(response))
-                addressValidationResponse = JsonConvert.DeserializeObject<AddressValidationResponse>(response);
+            {
+                if(!response.Contains(TaxjarConstants.ERROR_INDICATOR))
+                {
+                    addressValidationResponse = JsonConvert.DeserializeObject<AddressValidationResponse>(response);
+                }
+            }
 
             return addressValidationResponse;
         }
