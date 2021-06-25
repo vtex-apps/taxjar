@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Process refunds
 
+## [0.0.10] - 2021-06-24
+
+### Added
+
+- Added screenshots, metadata messages, and an icon
+
 ## [0.0.9] - 2021-06-16
 
 ### Added
