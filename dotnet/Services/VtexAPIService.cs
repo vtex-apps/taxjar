@@ -506,10 +506,41 @@ namespace Taxjar.Services
         {
             //var refunds = vtexOrder.PackageAttachment.Packages.Where(p => p.Type.Equals("Input"));
 
+            long totalRefundAmout = package.Restitutions.Refund.Value;
+            //long totalItemAmount = package.Restitutions.Refund.Items.Sum(r => r.Price * r.Quantity);
+            long totalItemAmount = 0;
+            long totalTaxAmount = 0;
+            long totalShippingAmount = 0;
+            List<LineItem> taxJarItems = new List<LineItem>();
+            foreach(RefundItem refundItem in package.Restitutions.Refund.Items)
+            {
+                VtexOrderItem orderItem = vtexOrder.Items.Where(i => i.Id.Equals(refundItem.Id)).FirstOrDefault();
+                totalItemAmount += refundItem.Price * refundItem.Quantity;
+                long taxForReturnedItems = (orderItem.PriceTags.Where(t => t.Name.Contains("TAX")).Sum(t => t.Value) / orderItem.Quantity) * refundItem.Quantity;
+                totalTaxAmount += taxForReturnedItems;
+                
+                GetSkuContextResponse contextResponse = await this.GetSku(orderItem.SellerSku);
+                LineItem taxForOrderLineItem = new LineItem
+                {
+                    Id = refundItem.Id,
+                    Quantity = (int)refundItem.Quantity,
+                    ProductIdentifier = orderItem.SellerSku,
+                    Description = orderItem.Name,
+                    ProductTaxCode = contextResponse.TaxCode,
+                    UnitPrice = (decimal)refundItem.Price * -1 / 100,
+                    //Discount = Math.Abs((decimal)orderItem.PriceTags.Where(p => p.Name.Contains("DISCOUNT@")).Sum(p => p.Value) / 100),
+                    SalesTax = (decimal)taxForReturnedItems * -1 / 100
+                };
+
+                taxJarItems.Add(taxForOrderLineItem);
+            }
+
+            totalShippingAmount = totalRefundAmout - totalItemAmount;
+
             CreateTaxjarOrder taxjarOrder = new CreateTaxjarOrder
             {
-                TransactionId = vtexOrder.OrderId,
-                TransactionReferenceId = package.InvoiceNumber,
+                TransactionId = package.InvoiceNumber,
+                TransactionReferenceId = vtexOrder.OrderId,
                 TransactionDate = DateTime.Parse(package.IssuanceDate).ToString("yyyy-MM-ddTHH:mm:sszzz"),
                 Provider = vtexOrder.SalesChannel,
                 ToCountry = vtexOrder.ShippingData.Address.Country.Substring(0, 2),
@@ -517,12 +548,12 @@ namespace Taxjar.Services
                 ToState = vtexOrder.ShippingData.Address.State,
                 ToCity = vtexOrder.ShippingData.Address.City,
                 ToStreet = vtexOrder.ShippingData.Address.Street,
-                Amount = (decimal)package.Restitutions.Refund.Items.Sum(r => r.Price) / 100, //vtexOrder.Totals.Where(t => !t.Id.Contains("Tax")).Sum(t => t.Value) / 100,
-                Shipping = (decimal)vtexOrder.Totals.Where(t => t.Id.Contains("Shipping")).Sum(t => t.Value) / 100,
-                SalesTax = (decimal)vtexOrder.Totals.Where(t => t.Id.Contains("Tax")).Sum(t => t.Value) / 100,
+                Amount = (decimal)(totalItemAmount + totalShippingAmount) * -1 / 100, // Total amount of the refunded order with shipping, excluding sales tax in dollars.
+                Shipping = (decimal)totalShippingAmount * -1 / 100, // Total amount of shipping for the refunded order in dollars.
+                SalesTax = (decimal)totalTaxAmount * -1 / 100, // Total amount of sales tax collected for the refunded order in dollars.
                 CustomerId = await this.GetShopperIdByEmail(vtexOrder.ClientProfileData.Email),
                 //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT,
-                //LineItems = new List<LineItem>(),
+                LineItems = taxJarItems,
                 PlugIn = TaxjarConstants.PLUGIN
             };
 
@@ -545,26 +576,6 @@ namespace Taxjar.Services
                         taxjarOrder.FromStreet = vtexDock.PickupStoreInfo.Address.Street;
                     }
                 }
-            }
-
-            foreach (VtexOrderItem vtexOrderItem in vtexOrder.Items)
-            {
-                GetSkuContextResponse contextResponse = await this.GetSku(vtexOrderItem.SellerSku);
-
-                LineItem taxForOrderLineItem = new LineItem
-                {
-                    Id = vtexOrderItem.Id,
-                    Quantity = (int)vtexOrderItem.Quantity,
-                    ProductIdentifier = vtexOrderItem.SellerSku,
-                    Description = vtexOrderItem.Name,
-                    ProductTaxCode = contextResponse.TaxCode,
-                    UnitPrice = (decimal)vtexOrderItem.Price / 100,
-                    Discount = Math.Abs((decimal)vtexOrderItem.PriceTags.Where(p => p.Name.Contains("DISCOUNT@")).Sum(p => p.Value) / 100),
-                    SalesTax = (decimal)vtexOrderItem.PriceTags.Where(t => t.Name.Contains("TAX")).Sum(t => t.Value) / 100
-                };
-
-                taxjarOrder.LineItems.Add(taxForOrderLineItem);
-                Console.WriteLine($"'{taxjarOrder.TransactionId}' [{taxForOrderLineItem.Description}] UnitPrice: {taxForOrderLineItem.UnitPrice} Discount: {taxForOrderLineItem.Discount} SalesTax: {taxForOrderLineItem.SalesTax} ");
             }
 
             return taxjarOrder;
@@ -932,8 +943,8 @@ namespace Taxjar.Services
                     OrderResponse orderResponse = await _taxjarService.CreateOrder(taxjarOrder);
                     if (orderResponse != null)
                     {
-                        _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, $"Order '{orderId}' taxes were commited");
-                        Console.WriteLine($"Order taxes were commited");
+                        _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, $"Order '{orderId}' taxes were committed");
+                        Console.WriteLine($"Order taxes were committed");
                     }
                     else
                     {

@@ -37,6 +37,8 @@ namespace Taxjar.Data
 
         public const string PICKUP_TAG = "TaxJar";
 
+        public const string ERROR_INDICATOR = "error-detail:";
+
         public class ExemptionType
         {
             public const string WHOLESALE = "wholesale";

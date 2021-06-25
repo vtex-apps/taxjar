@@ -376,9 +376,9 @@
                                 OrderResponse orderResponse = await _taxjarService.CreateOrder(taxjarOrder);
                                 if (orderResponse != null)
                                 {
-                                    _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, $"Order '{orderStatus.OrderId}' taxes were commited");
-                                    Console.WriteLine($"Order taxes were commited");
-                                    return Ok("Order taxes were commited");
+                                    _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, $"Order '{orderStatus.OrderId}' taxes were committed");
+                                    Console.WriteLine($"Order taxes were committed");
+                                    return Ok("Order taxes were committed");
                                 }
                                 else
                                 {
@@ -406,7 +406,7 @@
                 }
             }
 
-            //return Json("Order taxes were commited");
+            //return Json("Order taxes were committed");
             return BadRequest();
         }
 
@@ -422,6 +422,44 @@
                     string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
                     Console.WriteLine($"|{bodyAsText}|");
                     _context.Vtex.Logger.Debug("ProcessRefundHook", null, bodyAsText);
+                    RefundHook refundHook = JsonConvert.DeserializeObject<RefundHook>(bodyAsText);
+                    MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
+                    if (merchantSettings.EnableTransactionPosting)
+                    {
+                        VtexOrder vtexOrder = await _vtexAPIService.GetOrderInformation(refundHook.OrderId);
+                        if (vtexOrder != null)
+                        {
+                            bool success = true;
+                            List<Package> packages = vtexOrder.PackageAttachment.Packages.Where(p => p.Type.Equals("Input")).ToList();
+                            foreach(Package package in packages)
+                            {
+                                CreateTaxjarOrder taxjarOrder = await _vtexAPIService.VtexPackageToTaxjarRefund(vtexOrder, package);
+                                _context.Vtex.Logger.Debug("CreateTaxjarOrder", null, $"{JsonConvert.SerializeObject(taxjarOrder)}");
+                                RefundResponse orderResponse = await _taxjarService.CreateRefund(taxjarOrder);
+                                if (orderResponse != null)
+                                {
+                                    _context.Vtex.Logger.Debug("ProcessRefundHook", null, $"Order '{refundHook.OrderId}' refund was committed");
+                                    Console.WriteLine($"Refund was committed");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"Null OrderResponse!");
+                                    success = false;
+                                }
+                            }
+
+                            if(success)
+                            {
+                                return Ok("Refund was committed");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _context.Vtex.Logger.Debug("ProcessRefundHook", null, $"Transaction Posting is not enabled. Order '{refundHook.OrderId}' ");
+                        Console.WriteLine($"Transaction Posting is not enabled. Order '{refundHook.OrderId}'");
+                        return Ok("Transaction Posting is not enabled.");
+                    }
                 }
                 catch(Exception ex)
                 {
@@ -431,7 +469,7 @@
                 }
             }
 
-            return Ok();
+            return BadRequest();
         }
 
         public async Task<IActionResult> ValidateAddress()
