@@ -69,31 +69,51 @@ namespace Taxjar.Services
                 return null;
             }
 
-            if(vtexDock.PickupStoreInfo == null)
-            {
-                vtexDock.PickupStoreInfo = new DockPickupStoreInfo();
-                _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Missing address for Dock {dockId}");
-            }
-
             TaxForOrder taxForOrder = new TaxForOrder
             {
                 //Amount = (float)vtexTaxRequest.Totals.Sum(t => t.Value) / 100,
                 Shipping = (float)vtexTaxRequest.Totals.Where(t => t.Id.Equals("Shipping")).Sum(t => t.Value) / 100,
-                ToCity = vtexTaxRequest.ShippingDestination.City,
-                ToCountry = vtexTaxRequest.ShippingDestination.Country.Substring(0, 2),
-                ToState = vtexTaxRequest.ShippingDestination.State,
-                ToStreet = vtexTaxRequest.ShippingDestination.Street,
-                ToZip = vtexTaxRequest.ShippingDestination.PostalCode,
-                FromCity = vtexDock.PickupStoreInfo.Address.City,
-                FromCountry = vtexDock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2),
-                FromState = vtexDock.PickupStoreInfo.Address.State,
-                FromStreet = vtexDock.PickupStoreInfo.Address.Street,
-                FromZip = vtexDock.PickupStoreInfo.Address.PostalCode,
+                //ToCity = vtexTaxRequest.ShippingDestination.City,
+                //ToCountry = vtexTaxRequest.ShippingDestination.Country.Substring(0, 2),
+                //ToState = vtexTaxRequest.ShippingDestination.State,
+                //ToStreet = vtexTaxRequest.ShippingDestination.Street,
+                //ToZip = vtexTaxRequest.ShippingDestination.PostalCode,
+                //FromCity = vtexDock.PickupStoreInfo.Address.City,
+                //FromCountry = vtexDock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2),
+                //FromState = vtexDock.PickupStoreInfo.Address.State,
+                //FromStreet = vtexDock.PickupStoreInfo.Address.Street,
+                //FromZip = vtexDock.PickupStoreInfo.Address.PostalCode,
                 CustomerId = await this.GetShopperIdByEmail(vtexTaxRequest.ClientData.Email),
                 LineItems = new TaxForOrderLineItem[vtexTaxRequest.Items.Length],
                 //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT
                 PlugIn = TaxjarConstants.PLUGIN
             };
+
+            if(vtexTaxRequest.ShippingDestination != null)
+            {
+                taxForOrder.ToCity = vtexTaxRequest.ShippingDestination.City;
+                taxForOrder.ToCountry = vtexTaxRequest.ShippingDestination.Country.Substring(0, 2);
+                taxForOrder.ToState = vtexTaxRequest.ShippingDestination.State;
+                taxForOrder.ToStreet = vtexTaxRequest.ShippingDestination.Street;
+                taxForOrder.ToZip = vtexTaxRequest.ShippingDestination.PostalCode;
+            }
+            else
+            {
+                _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Missing Shipping Destination");
+            }
+
+            if(vtexDock != null && vtexDock.PickupStoreInfo != null && vtexDock.PickupStoreInfo.Address != null)
+            {
+                taxForOrder.FromCity = vtexDock.PickupStoreInfo.Address.City;
+                taxForOrder.FromCountry = vtexDock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2);
+                taxForOrder.FromState = vtexDock.PickupStoreInfo.Address.State;
+                taxForOrder.FromStreet = vtexDock.PickupStoreInfo.Address.Street;
+                taxForOrder.FromZip = vtexDock.PickupStoreInfo.Address.PostalCode;
+            }
+            else
+            {
+                _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Missing address for Dock {dockId}");
+            }
 
             for (int i = 0; i < vtexTaxRequest.Items.Length; i++)
             {
