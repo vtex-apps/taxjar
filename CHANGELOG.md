@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- Handle missing Dock address
+
 ## [0.0.11] - 2021-06-25
 
 ### Added
