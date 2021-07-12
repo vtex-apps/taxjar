@@ -34,6 +34,7 @@ const Admin: FC = () => {
     enableTaxCalculation: false,
     enableTransactionPosting: false,
     useTaxJarNexus: true,
+    salesChannelExclude: '',
   })
 
   const [testAllowed, setTestAllowed] = useState(false)
@@ -270,6 +271,23 @@ const Admin: FC = () => {
                   helpText={formatMessage({
                     id:
                       'admin/taxjar.settings.useTaxJarNexus.helpText',
+                  })}
+                />
+                </section>
+                <section className="pb4">
+                  <Input
+                    label={formatMessage({
+                    id: 'admin/taxjar.settings.salesChannelExclude.label',
+                     })}
+                      value={settingsState.salesChannelExclude}
+                      onChange={(e: React.FormEvent<HTMLInputElement>) =>
+                      setSettingsState({
+                         ...settingsState,
+                          salesChannelExclude: e.currentTarget.value,
+                           })
+                         }
+                       helpText={formatMessage({
+                           id: 'admin/taxjar.settings.salesChannelExclude.helpText',
                   })}
                 />
               </section>

@@ -371,6 +371,17 @@
                             VtexOrder vtexOrder = await _vtexAPIService.GetOrderInformation(orderStatus.OrderId);
                             if (vtexOrder != null)
                             {
+                                Console.WriteLine($"!!! SalesChannel = {vtexOrder.SalesChannel} : Exclude = {merchantSettings.SalesChannelExclude}");
+                                if (!string.IsNullOrEmpty(merchantSettings.SalesChannelExclude))
+                                {
+                                    string[] salesChannelsToExclude = merchantSettings.SalesChannelExclude.Split(',');
+                                    if (salesChannelsToExclude.Contains(vtexOrder.SalesChannel))
+                                    {
+                                        Console.WriteLine($"Ignoring sales channel '{vtexOrder.SalesChannel}'.");
+                                        return Ok($"Ignoring sales channel '{vtexOrder.SalesChannel}'.");
+                                    }
+                                }
+
                                 CreateTaxjarOrder taxjarOrder = await _vtexAPIService.VtexOrderToTaxjarOrder(vtexOrder);
                                 _context.Vtex.Logger.Debug("CreateTaxjarOrder", null, $"{JsonConvert.SerializeObject(taxjarOrder)}");
                                 OrderResponse orderResponse = await _taxjarService.CreateOrder(taxjarOrder);

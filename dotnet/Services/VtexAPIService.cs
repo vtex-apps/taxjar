@@ -958,18 +958,26 @@ namespace Taxjar.Services
                 VtexOrder vtexOrder = await this.GetOrderInformation(orderId);
                 if (vtexOrder != null)
                 {
+                    if (!string.IsNullOrEmpty(merchantSettings.SalesChannelExclude))
+                    {
+                        string[] salesChannelsToExclude = merchantSettings.SalesChannelExclude.Split(',');
+                        if (salesChannelsToExclude.Contains(vtexOrder.SalesChannel))
+                        {
+                            _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, $"Order '{orderId}' skipping sales channel '{vtexOrder.SalesChannel}'");
+                            return success;
+                        }
+                    }
+
                     CreateTaxjarOrder taxjarOrder = await this.VtexOrderToTaxjarOrder(vtexOrder);
                     _context.Vtex.Logger.Debug("CreateTaxjarOrder", null, $"{JsonConvert.SerializeObject(taxjarOrder)}");
                     OrderResponse orderResponse = await _taxjarService.CreateOrder(taxjarOrder);
                     if (orderResponse != null)
                     {
                         _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, $"Order '{orderId}' taxes were committed");
-                        Console.WriteLine($"Order taxes were committed");
                     }
                     else
                     {
                         success = false;
-                        Console.WriteLine($"Null OrderResponse!");
                     }
                 }
             }
