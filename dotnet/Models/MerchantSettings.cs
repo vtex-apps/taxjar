@@ -11,5 +11,6 @@ namespace Taxjar.Models
         //public bool EnableTaxCalculations { get; set; }
         public bool EnableTransactionPosting { get; set; }
         public bool UseTaxJarNexus { get; set; }
+        public string  SalesChannelExclude { get; set; }
     }
 }
