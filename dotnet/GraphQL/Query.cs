@@ -31,10 +31,6 @@ namespace Taxjar.GraphQL
                             customerResponse.Customer.CustomerId = vtexAPIService.GetShopperEmailById(customerResponse.Customer.CustomerId).Result;
                             customerList.Add(customerResponse.Customer);
                         }
-                        else
-                        {
-                            Console.WriteLine($"Could not load customer '{customer}'");
-                        }
                     }
 
                     return customerList;

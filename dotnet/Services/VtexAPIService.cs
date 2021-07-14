@@ -53,18 +53,15 @@ namespace Taxjar.Services
             PickupPoints pickupPoints = await this.ListPickupPoints();
             if(vtexDocks == null)
             {
-                Console.WriteLine("Could not load docks");
                 _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, "Could not load docks.");
                 return null;
             }
 
             string dockId = vtexTaxRequest.Items.Select(i => i.DockId).FirstOrDefault();
-            Console.WriteLine($"DOCK = '{dockId}'");
             //VtexDockResponse vtexDock = await this.ListDockById(dockId);
             VtexDockResponse vtexDock = vtexDocks.Where(d => d.Id.Equals(dockId)).FirstOrDefault();
             if(vtexDock == null)
             {
-                Console.WriteLine($"Dock '{dockId}' not found.");
                 _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Dock '{dockId}' not found.");
                 return null;
             }
@@ -122,11 +119,9 @@ namespace Taxjar.Services
                 if(skuContextResponse != null)
                 {
                     taxCode = skuContextResponse.TaxCode;
-                    Console.WriteLine($"GetSkuContextResponse taxcode: '{taxCode}'");
                 }
                 else
                 {
-                    Console.WriteLine("GetSkuContextResponse is NULL!");
                     _context.Vtex.Logger.Warn($"GetSkuContextResponse was NULL for sku '{vtexTaxRequest.Items[i].Sku}' from order '{vtexTaxRequest.OrderFormId}'");
                 }
 
@@ -154,7 +149,6 @@ namespace Taxjar.Services
                     {
                         if(pickupPoint.Address != null)
                         {
-                            Console.WriteLine($"Adding pickup point {pickupPoint.Name} ");
                             nexuses.Add(
                                     new TaxForOrderNexusAddress
                                     {
@@ -170,7 +164,6 @@ namespace Taxjar.Services
                         else
                         {
                             _context.Vtex.Logger.Warn("VtexRequestToTaxjarRequest", null, $"PickupPoint {pickupPoint.PickupPointId} missing address");
-                            Console.WriteLine($"PickupPoint {pickupPoint.PickupPointId} missing address");
                         }
                     }
                 }
@@ -187,27 +180,18 @@ namespace Taxjar.Services
         {
             if(taxResponse == null)
             {
-                Console.WriteLine("taxResponse is null");
                 return null;
             }
 
             if (taxResponse.Tax == null)
             {
-                Console.WriteLine("Tax is null");
                 return null;
             }
 
             if (taxResponse.Tax.Breakdown == null)
             {
-                Console.WriteLine("Breakdown is null");
                 return null;
             }
-
-            //if (taxResponse.Tax.Breakdown.Shipping == null)
-            //{
-            //    Console.WriteLine("Shipping is null");
-            //    return null;
-            //}
 
             VtexTaxResponse vtexTaxResponse = new VtexTaxResponse
             {
@@ -240,14 +224,8 @@ namespace Taxjar.Services
                 shippingTaxPST = (double)taxResponse.Tax.Breakdown.Shipping.PST;
                 shippingTaxQST = (double)taxResponse.Tax.Breakdown.Shipping.QST;
             }
-            else
-            {
-                Console.WriteLine("Shipping is null!!!");
-            }
 
             double totalItemTax = (double)taxResponse.Tax.Breakdown.LineItems.Sum(i => i.TaxCollectable);
-            //double itemTaxPercentOfWhole = 1D / (double)taxResponse.Tax.Breakdown.LineItems.Count;
-            //Console.WriteLine($"itemTaxPercentOfWhole = {itemTaxPercentOfWhole}%");
 
             for (int i = 0; i < taxResponse.Tax.Breakdown.LineItems.Count; i++)
             {
@@ -309,7 +287,6 @@ namespace Taxjar.Services
 
                 if (shippingTaxState > 0)
                 {
-                    Console.WriteLine($"item[{i}] shippingTaxState: {shippingTaxState}*{itemTaxPercentOfWhole}={(decimal)Math.Round(shippingTaxState * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)}");
                     vtexTaxes.Add(
                         new VtexTax
                         {
@@ -322,7 +299,6 @@ namespace Taxjar.Services
 
                 if (shippingTaxCounty > 0)
                 {
-                    Console.WriteLine($"item[{i}] shippingTaxCounty: {shippingTaxCounty}*{itemTaxPercentOfWhole}={(decimal)Math.Round(shippingTaxCounty * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)}");
                     vtexTaxes.Add(
                         new VtexTax
                         {
@@ -335,7 +311,6 @@ namespace Taxjar.Services
 
                 if (shippingTaxCity > 0)
                 {
-                    Console.WriteLine($"item[{i}] shippingTaxCity: {shippingTaxCity}*{itemTaxPercentOfWhole}={(decimal)Math.Round(shippingTaxCity * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)}");
                     vtexTaxes.Add(
                         new VtexTax
                         {
@@ -348,7 +323,6 @@ namespace Taxjar.Services
 
                 if (shippingTaxSpecial > 0)
                 {
-                    Console.WriteLine($"item[{i}] shippingTaxSpecial: {shippingTaxSpecial}*{itemTaxPercentOfWhole}={(decimal)Math.Round(shippingTaxSpecial * itemTaxPercentOfWhole, 2, MidpointRounding.ToEven)}");
                     vtexTaxes.Add(
                         new VtexTax
                         {
@@ -439,17 +413,11 @@ namespace Taxjar.Services
             decimal totalResponseTax = vtexTaxResponse.ItemTaxResponse.SelectMany(t => t.Taxes).Sum(i => i.Value);
             if(!totalOrderTax.Equals(totalResponseTax))
             {
-                Console.WriteLine($"Order Tax = {totalOrderTax} =/= Response Tax = {totalResponseTax}");
                 decimal adjustmentAmount = Math.Round((totalOrderTax - totalResponseTax),2,MidpointRounding.ToEven);
-                Console.WriteLine($"Adjustment = {adjustmentAmount}");
                 int lastItemIndex = vtexTaxResponse.ItemTaxResponse.Length - 1;
                 int lastTaxIndex = vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes.Length - 1;
                 vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes[lastTaxIndex].Value += adjustmentAmount;
                 _context.Vtex.Logger.Info("TaxjarResponseToVtexResponse", null, $"Applying adjustment: {totalOrderTax} - {totalResponseTax} = {adjustmentAmount}");
-            }
-            else
-            {
-                Console.WriteLine($"Order Tax = {totalOrderTax} == Response Tax = {totalResponseTax}");
             }
 
             _context.Vtex.Logger.Info("TaxjarResponseToVtexResponse", null, $"Request: {JsonConvert.SerializeObject(taxResponse)}\nResponse: {JsonConvert.SerializeObject(vtexTaxResponse)}");
@@ -477,8 +445,6 @@ namespace Taxjar.Services
                 LineItems = new List<LineItem>(),
                 PlugIn = TaxjarConstants.PLUGIN
             };
-
-            Console.WriteLine($"'{taxjarOrder.TransactionId}' Amount: {taxjarOrder.Amount} Shipping: {taxjarOrder.Shipping} SalesTax: {taxjarOrder.SalesTax} ");
 
             LogisticsInfo logisticsInfo = vtexOrder.ShippingData.LogisticsInfo.FirstOrDefault();
             if (logisticsInfo != null)
@@ -516,7 +482,6 @@ namespace Taxjar.Services
                 };
 
                 taxjarOrder.LineItems.Add(taxForOrderLineItem);
-                Console.WriteLine($"'{taxjarOrder.TransactionId}' [{taxForOrderLineItem.Description}] UnitPrice: {taxForOrderLineItem.UnitPrice} Discount: {taxForOrderLineItem.Discount} SalesTax: {taxForOrderLineItem.SalesTax} ");
             }
 
             return taxjarOrder;
@@ -577,8 +542,6 @@ namespace Taxjar.Services
                 PlugIn = TaxjarConstants.PLUGIN
             };
 
-            Console.WriteLine($"'{taxjarOrder.TransactionId}' Amount: {taxjarOrder.Amount} Shipping: {taxjarOrder.Shipping} SalesTax: {taxjarOrder.SalesTax} ");
-
             LogisticsInfo logisticsInfo = vtexOrder.ShippingData.LogisticsInfo.FirstOrDefault();
             if (logisticsInfo != null)
             {
@@ -603,13 +566,6 @@ namespace Taxjar.Services
 
         public async Task<VtexOrder> GetOrderInformation(string orderId)
         {
-            //Console.WriteLine("------- Headers -------");
-            //foreach (var header in this._httpContextAccessor.HttpContext.Request.Headers)
-            //{
-            //    Console.WriteLine($"{header.Key}: {header.Value}");
-            //}
-            //Console.WriteLine($"http://{this._httpContextAccessor.HttpContext.Request.Headers[Constants.VTEX_ACCOUNT_HEADER_NAME]}.{Constants.ENVIRONMENT}.com.br/api/checkout/pvt/orders/{orderId}");
-
             VtexOrder vtexOrder = null;
 
             try
@@ -621,10 +577,7 @@ namespace Taxjar.Services
                 };
 
                 request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
-                //request.Headers.Add(Constants.ACCEPT, Constants.APPLICATION_JSON);
-                //request.Headers.Add(Constants.CONTENT_TYPE, Constants.APPLICATION_JSON);
                 string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
-                //Console.WriteLine($"Token = '{authToken}'");
                 if (authToken != null)
                 {
                     request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
@@ -641,17 +594,14 @@ namespace Taxjar.Services
                 if (response.IsSuccessStatusCode)
                 {
                     vtexOrder = JsonConvert.DeserializeObject<VtexOrder>(responseContent);
-                    Console.WriteLine($"GetOrderInformation: [{response.StatusCode}] ");
                 }
                 else
                 {
-                    Console.WriteLine($"GetOrderInformation: [{response.StatusCode}] '{responseContent}'");
                     _context.Vtex.Logger.Info("GetOrderInformation", null, $"Order# {orderId} [{response.StatusCode}] '{responseContent}'");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"GetOrderInformation Error: {ex.Message}");
                 _context.Vtex.Logger.Error("GetOrderInformation", null, $"Order# {orderId} Error", ex);
             }
 
@@ -676,15 +626,9 @@ namespace Taxjar.Services
                 request.Headers.Add(TaxjarConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
             }
 
-            //MerchantSettings merchantSettings = await _shipStationRepository.GetMerchantSettings();
-            //request.Headers.Add(TaxjarConstants.APP_KEY, merchantSettings.AppKey);
-            //request.Headers.Add(TaxjarConstants.APP_TOKEN, merchantSettings.AppToken);
-
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
-            //Console.WriteLine($"ListVtexDocks [{response.StatusCode}] {responseContent}");
-            Console.WriteLine($"ListVtexDocks [{response.StatusCode}] ");
             if (response.IsSuccessStatusCode)
             {
                 listVtexDocks = JsonConvert.DeserializeObject<VtexDockResponse[]>(responseContent);
@@ -711,15 +655,9 @@ namespace Taxjar.Services
                 request.Headers.Add(TaxjarConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
             }
 
-            //MerchantSettings merchantSettings = await _shipStationRepository.GetMerchantSettings();
-            //request.Headers.Add(TaxjarConstants.APP_KEY, merchantSettings.AppKey);
-            //request.Headers.Add(TaxjarConstants.APP_TOKEN, merchantSettings.AppToken);
-
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
-            //Console.WriteLine($"ListDockById [{response.StatusCode}] {responseContent}");
-            Console.WriteLine($"ListDockById [{response.StatusCode}] ");
             if (response.IsSuccessStatusCode)
             {
                 dockResponse = JsonConvert.DeserializeObject<VtexDockResponse>(responseContent);
@@ -753,8 +691,6 @@ namespace Taxjar.Services
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
-            //Console.WriteLine($"ListPickupPoints [{response.StatusCode}] {responseContent}");
-            Console.WriteLine($"ListPickupPoints [{response.StatusCode}] ");
             if (response.IsSuccessStatusCode)
             {
                 pickupPoints = JsonConvert.DeserializeObject<PickupPoints>(responseContent);
@@ -859,8 +795,6 @@ namespace Taxjar.Services
                 retval = success.ToString();
             }
 
-            Console.WriteLine($"RemoveConfiguration = {retval}");
-
             return retval;
         }
 
@@ -896,7 +830,6 @@ namespace Taxjar.Services
                 if (response.IsSuccessStatusCode)
                 {
                     fallbackResponse = JsonConvert.DeserializeObject<TaxFallbackResponse>(responseContent);
-                    Console.WriteLine($"GetFallbackRate [{response.StatusCode}] '{responseContent}'");
                 }
                 else
                 {
@@ -926,7 +859,6 @@ namespace Taxjar.Services
                             break;
                         break;
                         default:
-                            Console.WriteLine($"State {allStatesNotification.CurrentState} not implemeted.");
                             //_context.Vtex.Logger.Info("ProcessNotification", null, $"State {hookNotification.State} not implemeted.");
                             break;
                     }
@@ -935,13 +867,11 @@ namespace Taxjar.Services
                     switch (allStatesNotification.CurrentState)
                     {
                         default:
-                            Console.WriteLine($"State {allStatesNotification.CurrentState} not implemeted.");
                             //_context.Vtex.Logger.Info("ProcessNotification", null, $"State {hookNotification.State} not implemeted.");
                             break;
                     }
                     break;
                 default:
-                    Console.WriteLine($"Domain {allStatesNotification.Domain} not implemeted.");
                     //_context.Vtex.Logger.Info("ProcessNotification", null, $"Domain {hookNotification.Domain} not implemeted.");
                     break;
             }
@@ -1133,7 +1063,6 @@ namespace Taxjar.Services
                         NexusRegionsResponse = nexusRegionsResponse
                     };
 
-                    Console.WriteLine("Updating Nexus...");
                     _taxjarRepository.SetNexusRegions(nexusRegionsStorage);
                 }
             }

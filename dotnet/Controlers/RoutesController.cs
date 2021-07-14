@@ -87,17 +87,10 @@
                         totalItems = taxRequest.Items.Sum(i => i.Quantity);
                         decimal total = taxRequest.Totals.Sum(t => t.Value);
                         // accountname+app+appversion+ 2021-04-23-4-20 + skuid+skuquantity+zipcode => turn this into a HASH
-                        //string cacheKey = $"{_context.Vtex.App.Version}{taxRequest.ShippingDestination.PostalCode}{total}";
                         int cacheKey = $"{_context.Vtex.App.Version}{taxRequest.ShippingDestination.PostalCode}{total}".GetHashCode();
-                        //if (_memoryCache.TryGetValue(cacheKey, out vtexTaxResponse))
-                        //{
-                        //    Console.WriteLine($"Fetched from Cache with key '{cacheKey}'.");
-                        //    _context.Vtex.Logger.Info("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(vtexTaxResponse)}");
-                        //}
                         if(_taxjarRepository.TryGetCache(cacheKey, out vtexTaxResponse))
                         {
                             fromCache = true;
-                            Console.WriteLine($"Fetched from Cache with key '{cacheKey}'.");
                             _context.Vtex.Logger.Info("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(vtexTaxResponse)}");
                         }
                         else
@@ -109,12 +102,10 @@
                                 List<string> dockIds = taxRequest.Items.Select(i => i.DockId).Distinct().ToList();
                                 if (dockIds.Count > 1)
                                 {
-                                    Console.WriteLine($" !!! SPLIT SHIPMENT ORDER !!! {dockIds.Count} LOCATIONS !!! ");
                                     List<VtexTaxResponse> taxResponses = new List<VtexTaxResponse>();
                                     decimal itemsTotal = taxRequest.Totals.Where(t => t.Id.Equals("Items")).Select(t => t.Value).FirstOrDefault();
                                     decimal shippingTotal = taxRequest.Totals.Where(t => t.Id.Equals("Items")).Select(t => t.Value).FirstOrDefault();
                                     long itemQuantity = taxRequest.Items.Sum(i => i.Quantity);
-                                    //decimal itemsTotalSoFar = 0M;
                                     foreach (string dockId in dockIds)
                                     {
                                         List<Item> items = taxRequest.Items.Where(i => i.DockId.Equals(dockId)).ToList();
@@ -162,12 +153,7 @@
                                             else
                                             {
                                                 useFallbackRates = true;
-                                                Console.WriteLine("Null taxResponse");
                                             }
-                                        }
-                                        else
-                                        {
-                                            Console.WriteLine("Null taxForOrder");
                                         }
                                     }
 
@@ -186,15 +172,8 @@
                                         vtexTaxResponse.ItemTaxResponse = itemTaxResponses.ToArray();
                                         if (vtexTaxResponse != null)
                                         {
-                                            //var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
-                                            //_memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
                                             await _taxjarRepository.SetCache(cacheKey, vtexTaxResponse);
-                                            Console.WriteLine($"Split Response saved to cache with key '{cacheKey}'");
                                         }
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine($"No tax response.");
                                     }
                                 }
                                 else
@@ -208,21 +187,13 @@
                                             vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
                                             if (vtexTaxResponse != null)
                                             {
-                                                //var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
-                                                //_memoryCache.Set(cacheKey, vtexTaxResponse, cacheEntryOptions);
                                                 await _taxjarRepository.SetCache(cacheKey, vtexTaxResponse);
-                                                Console.WriteLine($"Response saved to cache with key '{cacheKey}'");
                                             }
                                         }
                                         else
                                         {
                                             useFallbackRates = true;
-                                            Console.WriteLine("Null taxResponse");
                                         }
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine("Null taxForOrder");
                                     }
                                 }
 
@@ -233,14 +204,7 @@
                                     {
                                         vtexTaxResponse = new VtexTaxResponse
                                         {
-                                            Hooks = new Hook[]
-                                            {
-                                                //new Hook
-                                                //{
-                                                //    Major = 1,
-                                                //    Url = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_WORKSPACE]}--{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/taxjar/oms/invoice")
-                                                //}
-                                            },
+                                            Hooks = new Hook[]{},
                                             ItemTaxResponse = new ItemTaxResponse[taxRequest.Items.Length]
                                         };
 
@@ -312,26 +276,14 @@
                             }
                             else
                             {
-                                Console.WriteLine($"Destination state '{taxRequest.ShippingDestination.State}' is NOT in nexus");
                                 _context.Vtex.Logger.Info("TaxjarOrderTaxHandler", null, $"Order '{taxRequest.OrderFormId}' Destination state '{taxRequest.ShippingDestination.State}' is NOT in nexus");
                             }
                         }
                     }
-                    else
-                    {
-                        Console.WriteLine("Null taxRequest");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Null body");
                 }
             }
 
-
-            //Console.WriteLine($"TaxjarOrderTaxHandler Response = {JsonConvert.SerializeObject(vtexTaxResponse)}");
             timer.Stop();
-            Console.WriteLine($"-> Elapsed Time = '{timer.Elapsed.TotalMilliseconds}' {totalItems} items.  From cache? {fromCache} <-");
             _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Elapsed Time = '{timer.Elapsed.TotalMilliseconds}' '{orderFormId}' {totalItems} items.  From cache? {fromCache}");
 
             return Json(vtexTaxResponse);
@@ -354,10 +306,8 @@
         public async Task<IActionResult> ProcessInvoiceHook()
         {
             Response.Headers.Add("Cache-Control", "private");
-            Console.WriteLine($"{HttpContext.Request.Method} to ProcessInvoiceHook");
             if ("post".Equals(HttpContext.Request.Method, StringComparison.OrdinalIgnoreCase))
             {
-                Console.WriteLine("Reading request body...");
                 try
                 {
                     string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
@@ -371,13 +321,11 @@
                             VtexOrder vtexOrder = await _vtexAPIService.GetOrderInformation(orderStatus.OrderId);
                             if (vtexOrder != null)
                             {
-                                Console.WriteLine($"!!! SalesChannel = {vtexOrder.SalesChannel} : Exclude = {merchantSettings.SalesChannelExclude}");
                                 if (!string.IsNullOrEmpty(merchantSettings.SalesChannelExclude))
                                 {
                                     string[] salesChannelsToExclude = merchantSettings.SalesChannelExclude.Split(',');
                                     if (salesChannelsToExclude.Contains(vtexOrder.SalesChannel))
                                     {
-                                        Console.WriteLine($"Ignoring sales channel '{vtexOrder.SalesChannel}'.");
                                         return Ok($"Ignoring sales channel '{vtexOrder.SalesChannel}'.");
                                     }
                                 }
@@ -388,31 +336,23 @@
                                 if (orderResponse != null)
                                 {
                                     _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, $"Order '{orderStatus.OrderId}' taxes were committed");
-                                    Console.WriteLine($"Order taxes were committed");
                                     return Ok("Order taxes were committed");
-                                }
-                                else
-                                {
-                                    Console.WriteLine($"Null OrderResponse!");
                                 }
                             }
                         }
                         else
                         {
                             _context.Vtex.Logger.Debug("ProcessInvoiceHook", null, $"Transaction Posting is not enabled. Order '{orderStatus.OrderId}' ");
-                            Console.WriteLine($"Transaction Posting is not enabled. Order '{orderStatus.OrderId}'");
                             return Ok("Transaction Posting is not enabled.");
                         }
                     }
                     else
                     {
-                        Console.WriteLine($"Ignoring status '{orderStatus.Status}' for order '{orderStatus.OrderId}'");
                         return Ok("Ignoring status.");
                     }
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine($"Error processing invoice. {ex.Message}");
                     _context.Vtex.Logger.Error("ProcessInvoiceHook", null, "Error processing invoice.", ex);
                 }
             }
@@ -424,14 +364,11 @@
         public async Task<IActionResult> ProcessRefundHook()
         {
             Response.Headers.Add("Cache-Control", "private");
-            Console.WriteLine($"{HttpContext.Request.Method} to ProcessRefundHook");
             if ("post".Equals(HttpContext.Request.Method, StringComparison.OrdinalIgnoreCase))
             {
-                Console.WriteLine("Reading request body...");
                 try
                 {
                     string bodyAsText = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-                    Console.WriteLine($"|{bodyAsText}|");
                     _context.Vtex.Logger.Debug("ProcessRefundHook", null, bodyAsText);
                     RefundHook refundHook = JsonConvert.DeserializeObject<RefundHook>(bodyAsText);
                     MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
@@ -450,11 +387,9 @@
                                 if (orderResponse != null)
                                 {
                                     _context.Vtex.Logger.Debug("ProcessRefundHook", null, $"Order '{refundHook.OrderId}' refund was committed");
-                                    Console.WriteLine($"Refund was committed");
                                 }
                                 else
                                 {
-                                    Console.WriteLine($"Null OrderResponse!");
                                     success = false;
                                 }
                             }
@@ -468,13 +403,11 @@
                     else
                     {
                         _context.Vtex.Logger.Debug("ProcessRefundHook", null, $"Transaction Posting is not enabled. Order '{refundHook.OrderId}' ");
-                        Console.WriteLine($"Transaction Posting is not enabled. Order '{refundHook.OrderId}'");
                         return Ok("Transaction Posting is not enabled.");
                     }
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine($"Error processing refund. {ex.Message}");
                     _context.Vtex.Logger.Error("ProcessRefundHook", null, "Error processing refund.", ex);
                     return BadRequest();
                 }
@@ -498,7 +431,6 @@
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine($"Error Validating Address. {ex.Message}");
                     _context.Vtex.Logger.Error("ProcessRefundHook", null, "Error Validating Address.", ex);
                 }
             }
@@ -536,7 +468,6 @@
                 }
                 else
                 {
-                    Console.WriteLine("Loaded Rates from Storage");
                     summaryRatesResponse = summaryRatesStorage.SummaryRatesResponse;
                 }
             }
@@ -551,7 +482,6 @@
                         SummaryRatesResponse = summaryRatesResponse
                     };
 
-                    Console.WriteLine("Updating Rates...");
                     _taxjarRepository.SetSummaryRates(summaryRatesStorage);
                 }
             }
@@ -575,11 +505,9 @@
                 {
                     if (nexusRegion != null && !string.IsNullOrEmpty(nexusRegion.CountryCode) && !string.IsNullOrEmpty(nexusRegion.RegionCode))
                     {
-                        Console.WriteLine($"Nexus '{nexusRegion.RegionCode},{nexusRegion.CountryCode}' Destination '{state},{country}' ");
                         if (nexusRegion.RegionCode.Equals(state) && nexusRegion.CountryCode.Equals(country))
                         {
                             inNexus = true;
-                            Console.WriteLine($"Destination '{nexusRegion.Region},{nexusRegion.Country}' is in nexus");
                             break;
                         }
                     }
@@ -593,11 +521,9 @@
                 {
                     if (pickupPoint != null && pickupPoint.Address != null && pickupPoint.Address.State != null && pickupPoint.Address.Country != null)
                     {
-                        Console.WriteLine($"Nexus '{pickupPoint.Address.State},{pickupPoint.Address.Country.Acronym}' Destination '{state},{country}' ");
                         if (pickupPoint.Address.State.Equals(state) && pickupPoint.Address.Country.Acronym.Substring(0, 2).Equals(country))
                         {
                             inNexus = true;
-                            Console.WriteLine($"Destination '{state},{country}' is in nexus");
                             break;
                         }
                     }

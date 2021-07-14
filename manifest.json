@@ -37,18 +37,6 @@
   },
   "policies": [
     {
-      "name": "outbound-access",
-      "attrs": {
-        "host": "bnb.data.bl.uk"
-      }
-    },
-    {
-      "name": "outbound-access",
-      "attrs": {
-        "host": "nuget.org"
-      }
-    },
-    {
       "name": "ADMIN_DS"
     },
     {
