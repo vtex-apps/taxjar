@@ -183,7 +183,6 @@ const Admin: FC<any> = () => {
           customer
         },
       })
-      console.log('res', res)
     } finally {
       if (res?.data.createCustomer) {
         const random = Math.random().toString(36).substring(7)
