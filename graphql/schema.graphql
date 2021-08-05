@@ -25,13 +25,13 @@ type Customer {
 }
 
 type ExemptRegion {
-  country: [String]
-  state: [String]
+  country: String
+  state: String
 }
 
 input ExemptRegionInput {
-  country: [String]
-  state: [String]
+  country: String
+  state: String
 }
 
 type Category {

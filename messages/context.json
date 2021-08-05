@@ -18,5 +18,16 @@
   "admin/taxjar.settings.useTaxJarNexus.label": "Use TaxJar nexus regions",
   "admin/taxjar.settings.useTaxJarNexus.helpText": "Enable to use nexus region settings from TaxJar.",
   "admin/taxjar.settings.salesChannelExclude.label": "Sales Channels to Exclude from TaxJar.",
-  "admin/taxjar.settings.salesChannelExclude.helpText": "Comma separated list of sales channel ids to exclude."
+  "admin/taxjar.settings.salesChannelExclude.helpText": "Comma separated list of sales channel ids to exclude.",
+  "admin/taxjar.settings.exemption.title": "Customer Exemptions",
+  "admin/taxjar.settings.exemption-modal.label": "Add Customer",
+  "admin/taxjar.settings.exemption-modal.submit": "Create Customer Exemption",
+  "admin/taxjar.settings.exemption.line-action.label": "Delete Customer Exemption",
+  "admin/taxjar.settings.exemption.line-action.alert": "Customer Exemption Removed",
+  "admin/taxjar.settings.exemption-modal.name": "Name",
+  "admin/taxjar.settings.exemption-modal.email": "Email",
+  "admin/taxjar.settings.exemption-modal.type": "Exemption Type",
+  "admin/taxjar.settings.exemption-modal.state": "State",
+  "admin/taxjar.settings.exemption-modal.country": "Country",
+  "admin/taxjar.settings.exemption.customer.error": "Error Creating Customer Exemption"
 }

@@ -16,6 +16,7 @@ namespace Taxjar.GraphQL.Types
             Field(c => c.CustomerId, type: typeof(StringGraphType)).Description("Customer Id");
             Field(c => c.Name, type: typeof(StringGraphType)).Description("Customer Name");
             Field(c => c.ExemptionType, type: typeof(StringGraphType)).Description("Exemption Type");
+            Field(c => c.ExemptRegions, type: typeof(ListGraphType<ExemptRegionsResponseType>)).Description("Exempt Region Type");
         }
     }
 }
