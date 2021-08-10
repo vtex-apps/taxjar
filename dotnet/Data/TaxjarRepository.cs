@@ -77,7 +77,8 @@
             };
 
             request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
-            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            string authToken = _context.Vtex.AdminUserAuthToken;
             if (authToken != null)
             {
                 request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
@@ -109,7 +110,8 @@
             };
 
             request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
-            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            string authToken = _context.Vtex.AdminUserAuthToken;
             if (authToken != null)
             {
                 request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);

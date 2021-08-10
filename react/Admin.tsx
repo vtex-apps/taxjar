@@ -20,11 +20,6 @@ import RemoveConfiguration from './mutations/RemoveConfiguration.gql'
 import ConnectionTest from './queries/connectionTest.graphql'
 import AppSettings from './queries/appSettings.graphql'
 import SaveAppSettings from './mutations/saveAppSettings.graphql'
-// import Q_LIST_CUSTOMERS from './queries/ListCustomers.gql'
-// import M_CREATE_CUSTOMER from './mutations/CreateCustomer.gql'
-
-// -[Sign up for TaxJar](https://partners.taxjar.com/English)
-// -[How do I get a TaxJar sales tax API token ?](https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token)
 
 const Admin: FC = () => {
   const { formatMessage } = useIntl()
@@ -161,7 +156,7 @@ const Admin: FC = () => {
                         to="https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token"
                         target="_blank"
                       >
-                        https://support.taxjar.com/ar[...]-api-token
+                        Link
                       </Link>
                     ),
                     signupLink: (
@@ -170,7 +165,7 @@ const Admin: FC = () => {
                         to="https://partners.taxjar.com/English"
                         target="_blank"
                       >
-                        https://partners.taxjar.com/English
+                        Link
                       </Link>
                     ),
                     lineBreak: <br />,
