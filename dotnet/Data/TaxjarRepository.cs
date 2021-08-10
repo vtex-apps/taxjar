@@ -77,7 +77,8 @@
             };
 
             request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
-            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            string authToken = _context.Vtex.AdminUserAuthToken;
             if (authToken != null)
             {
                 request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
@@ -87,7 +88,6 @@
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
-            //Console.WriteLine($"GetOrderConfiguration [{response.StatusCode}] '{responseContent}' ");
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return null;
@@ -110,7 +110,8 @@
             };
 
             request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
-            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            string authToken = _context.Vtex.AdminUserAuthToken;
             if (authToken != null)
             {
                 request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
@@ -196,8 +197,6 @@
 
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
-            Console.WriteLine($"CacheTaxResponse {response.StatusCode}");
-            string responseContent = await response.Content.ReadAsStringAsync();
 
             return response.IsSuccessStatusCode;
         }
@@ -222,7 +221,6 @@
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"GetCachedTaxResponse {response.StatusCode}");
             if (response.IsSuccessStatusCode)
             {
                 vtexTaxResponse = JsonConvert.DeserializeObject<VtexTaxResponse>(responseContent);
@@ -243,7 +241,6 @@
             catch(Exception ex)
             {
                 _context.Vtex.Logger.Error("TryGetCache", null, "Error getting cache", ex);
-                Console.WriteLine($"Error getting cache {ex}");
             }
 
             return success;
@@ -264,7 +261,6 @@
                 List<int> keysToRemove = await _cachedKeys.ListExpiredKeys();
                 foreach (int cacheKeyToRemove in keysToRemove)
                 {
-                    Console.WriteLine($"REMOVING CACHED ITEM {cacheKey}");
                     await CacheTaxResponse(null, cacheKey);
                     await _cachedKeys.RemoveCacheKey(cacheKey);
                 }

@@ -27,12 +27,10 @@ import RemoveConfiguration from './mutations/RemoveConfiguration.gql'
 import ConnectionTest from './queries/connectionTest.graphql'
 import AppSettings from './queries/appSettings.graphql'
 import SaveAppSettings from './mutations/saveAppSettings.graphql'
+
 import GET_CUSTOMERS from './queries/ListCustomers.gql'
 import DELETE_CUSTOMER from './mutations/DeleteCustomer.gql'
 import CREATE_CUSTOMER from './mutations/CreateCustomer.gql'
-
-// -[Sign up for TaxJar](https://partners.taxjar.com/English)
-// -[How do I get a TaxJar sales tax API token ?](https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token)
 
 const Admin: FC<any> = () => {
   const { formatMessage } = useIntl()
