@@ -1,3 +1,11 @@
 query ListCustomers {
-  listCustomers
+  listCustomers {
+    customerId
+    exemptionType
+    name
+    exemptRegions {
+      country
+      state
+    }
+  }
 }
