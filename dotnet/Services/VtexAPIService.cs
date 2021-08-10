@@ -63,7 +63,6 @@ namespace Taxjar.Services
             if(vtexDock == null)
             {
                 _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Dock '{dockId}' not found.");
-                return null;
             }
 
             TaxForOrder taxForOrder = new TaxForOrder
