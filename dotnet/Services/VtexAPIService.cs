@@ -54,7 +54,7 @@ namespace Taxjar.Services
             if(vtexDocks == null)
             {
                 _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, "Could not load docks.");
-                return null;
+                //return null;
             }
 
             string dockId = vtexTaxRequest.Items.Select(i => i.DockId).FirstOrDefault();
@@ -111,6 +111,7 @@ namespace Taxjar.Services
                 _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Missing address for Dock {dockId}");
             }
 
+            Console.WriteLine($"Dock {dockId} # items = {vtexTaxRequest.Items.Length}");
             for (int i = 0; i < vtexTaxRequest.Items.Length; i++)
             {
                 string taxCode = null;
