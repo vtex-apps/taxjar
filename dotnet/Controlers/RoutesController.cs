@@ -111,8 +111,29 @@
                                         List<Item> items = taxRequest.Items.Where(i => i.DockId.Equals(dockId)).ToList();
                                         long itemQuantityThisDock = items.Sum(i => i.Quantity);
                                         decimal percentOfWhole = itemQuantityThisDock / itemQuantity;
-                                        VtexTaxRequest taxRequestThisDock = taxRequest;
-                                        taxRequestThisDock.Items = items.ToArray();
+                                        VtexTaxRequest taxRequestThisDock = new VtexTaxRequest
+                                        {
+                                            ClientData = new ClientData
+                                            {
+                                                CorporateDocument = taxRequest.ClientData.CorporateDocument,
+                                                Document = taxRequest.ClientData.Document,
+                                                Email = taxRequest.ClientData.Email,
+                                                StateInscription = taxRequest.ClientData.StateInscription
+                                            },
+                                            ClientEmail = taxRequest.ClientEmail,
+                                            Items = items.ToArray(),
+                                            OrderFormId = taxRequest.OrderFormId,
+                                            ShippingDestination = new ShippingDestination
+                                            {
+                                                City = taxRequest.ShippingDestination.City,
+                                                Country = taxRequest.ShippingDestination.Country,
+                                                Neighborhood = taxRequest.ShippingDestination.Neighborhood,
+                                                PostalCode = taxRequest.ShippingDestination.PostalCode,
+                                                State = taxRequest.ShippingDestination.State,
+                                                Street = taxRequest.ShippingDestination.Street
+                                            }
+                                        };
+
                                         decimal itemsTotalThisDock = 0M;
                                         foreach (Item item in items)
                                         {
@@ -148,7 +169,11 @@
                                             if (taxResponse != null)
                                             {
                                                 VtexTaxResponse vtexTaxResponseThisDock = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
-                                                taxResponses.Add(vtexTaxResponseThisDock);
+                                                _context.Vtex.Logger.Info("TaxjarOrderTaxHandler", null, $"Taxes for '{dockId}'\n{JsonConvert.SerializeObject(vtexTaxResponseThisDock)}");
+                                                if (vtexTaxResponseThisDock != null)
+                                                {
+                                                    taxResponses.Add(vtexTaxResponseThisDock);
+                                                }
                                             }
                                             else
                                             {
@@ -159,20 +184,53 @@
 
                                     if (taxResponses != null && taxResponses.Count > 0)
                                     {
-                                        vtexTaxResponse.Hooks = taxResponses.FirstOrDefault().Hooks;
-                                        List<ItemTaxResponse> itemTaxResponses = new List<ItemTaxResponse>();
-                                        foreach (VtexTaxResponse taxResponse in taxResponses)
+                                        if (taxResponses.Count == 1)
                                         {
-                                            foreach (ItemTaxResponse itemTaxResponse in taxResponse.ItemTaxResponse)
-                                            {
-                                                itemTaxResponses.Add(itemTaxResponse);
-                                            }
+                                            vtexTaxResponse = taxResponses.First();
                                         }
-
-                                        vtexTaxResponse.ItemTaxResponse = itemTaxResponses.ToArray();
-                                        if (vtexTaxResponse != null)
+                                        else
                                         {
-                                            await _taxjarRepository.SetCache(cacheKey, vtexTaxResponse);
+                                            try
+                                            {
+                                                vtexTaxResponse.Hooks = taxResponses[0].Hooks;
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                _context.Vtex.Logger.Error("TaxjarOrderTaxHandler", null, $"Order '{taxRequest.OrderFormId}' Error setting hooks", ex);
+                                            }
+
+                                            List<ItemTaxResponse> itemTaxResponses = new List<ItemTaxResponse>();
+                                            foreach (var taxResponse in taxResponses)
+                                            {
+                                                if (taxResponse != null && taxResponse.ItemTaxResponse != null)
+                                                {
+                                                    foreach (var itemTaxResponse in taxResponse.ItemTaxResponse)
+                                                    {
+                                                        itemTaxResponses.Add(itemTaxResponse);
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    _context.Vtex.Logger.Warn("TaxjarOrderTaxHandler", null, $"Order '{taxRequest.OrderFormId}' Null ItemTaxResponse\n{JsonConvert.SerializeObject(taxResponse)}");
+                                                }
+                                            }
+
+                                            try
+                                            {
+                                                vtexTaxResponse = new VtexTaxResponse
+                                                {
+                                                    ItemTaxResponse = itemTaxResponses.ToArray()
+                                                };
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                _context.Vtex.Logger.Error("TaxjarOrderTaxHandler", null, $"Order '{taxRequest.OrderFormId}' Error setting ItemTaxResponse", ex);
+                                            }
+
+                                            if (vtexTaxResponse != null)
+                                            {
+                                                await _taxjarRepository.SetCache(cacheKey, vtexTaxResponse);
+                                            }
                                         }
                                     }
                                 }
