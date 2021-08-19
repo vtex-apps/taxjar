@@ -65,6 +65,12 @@ namespace Taxjar.Services
                 _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Dock '{dockId}' not found.");
             }
 
+            string customerId = null;
+            if(vtexTaxRequest.ClientData != null && vtexTaxRequest.ClientData.Email != null)
+            {
+                customerId = await this.GetShopperIdByEmail(vtexTaxRequest.ClientData.Email);
+            }
+
             TaxForOrder taxForOrder = new TaxForOrder
             {
                 //Amount = (float)vtexTaxRequest.Totals.Sum(t => t.Value) / 100,
@@ -79,7 +85,7 @@ namespace Taxjar.Services
                 //FromState = vtexDock.PickupStoreInfo.Address.State,
                 //FromStreet = vtexDock.PickupStoreInfo.Address.Street,
                 //FromZip = vtexDock.PickupStoreInfo.Address.PostalCode,
-                CustomerId = await this.GetShopperIdByEmail(vtexTaxRequest.ClientData.Email),
+                CustomerId = customerId,
                 LineItems = new TaxForOrderLineItem[vtexTaxRequest.Items.Length],
                 //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT
                 PlugIn = TaxjarConstants.PLUGIN
