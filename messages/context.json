@@ -29,5 +29,6 @@
   "admin/taxjar.settings.exemption-modal.type": "Exemption Type",
   "admin/taxjar.settings.exemption-modal.state": "State",
   "admin/taxjar.settings.exemption-modal.country": "Country",
-  "admin/taxjar.settings.exemption.customer.error": "Error Creating Customer Exemption"
+  "admin/taxjar.settings.exemption.customer.error": "Error Creating Customer Exemption",
+  "admin/taxjar.settings.exemption.add-location": "Add More Locations"
 }

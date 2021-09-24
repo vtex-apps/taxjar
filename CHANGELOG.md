@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Dropdowns for customer exemption creation
+- Can add up to 3 exemption locations
+
+### Fixed
+
+- Customer exemptions not saving properly
+
 ## [0.1.3] - 2021-08-20
 
 ### Fixed

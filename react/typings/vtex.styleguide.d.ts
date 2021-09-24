@@ -19,6 +19,7 @@ declare module 'vtex.styleguide' {
   export const IconArrowBack
   export const IconArrowUp
   export const IconClose
+  export const IconPlusLines
   export const IconExternalLink
   export const IconSearch
   export const IconSuccess
