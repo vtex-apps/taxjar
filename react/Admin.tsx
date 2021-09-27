@@ -14,6 +14,7 @@ import {
   Tabs,
   Table,
   IconPlusLines,
+  Dropdown,
   Modal,
   ButtonWithIcon,
   Alert
@@ -31,6 +32,8 @@ import SaveAppSettings from './mutations/saveAppSettings.graphql'
 import GET_CUSTOMERS from './queries/ListCustomers.gql'
 import DELETE_CUSTOMER from './mutations/DeleteCustomer.gql'
 import CREATE_CUSTOMER from './mutations/CreateCustomer.gql'
+import { countries, states, options } from './common/utils'
+
 
 const Admin: FC<any> = () => {
   const { formatMessage } = useIntl()
@@ -47,11 +50,21 @@ const Admin: FC<any> = () => {
     customerName: '',
     customerEmail: '',
     customerExemptionType: '',
-    customerState: '',
-    customerCountry: '',
-    customerList: undefined,
-    customerCreationError: false
+    customerState1: '',
+    customerCountry1: '',
+    customerState2: '',
+    customerCountry2: '',
+    customerState3: '',
+    customerCountry3: '',
+    customerList: [],
+    customerCreationError: false,
+    showMoreTypes1: false,
+    showMoreTypes2: false,
   })
+
+  const {
+    customerList
+  } = settingsState
 
   const [testAllowed, setTestAllowed] = useState(false)
   const [testComplete, setTestComplete] = useState(false)
@@ -147,8 +160,9 @@ const Admin: FC<any> = () => {
     getCustomers()
   }
 
-  if (customerCalled && settingsState.customerList === undefined && customerData?.listCustomers){
-    const newList = customerData?.listCustomers || []
+  if (customerData && !customerList.length){
+    console.log('data', customerData)
+    const newList = customerData.listCustomers
     setSettingsState({...settingsState, customerList: newList})
   }
 
@@ -164,15 +178,38 @@ const Admin: FC<any> = () => {
   }
 
   const handleCustomerCreate = async () => {
+    console.log('creation state', settingsState)
+
+    let exemptRegions: any = [{
+      state: settingsState.customerState1,
+      country: settingsState.customerCountry1
+    }]
+
+    if (settingsState.customerState2) {
+      exemptRegions.push({
+        state: settingsState.customerState2,
+        country: settingsState.customerCountry2
+      })
+    }
+
+    if (settingsState.customerState3) {
+      exemptRegions.push({
+        state: settingsState.customerState3,
+        country: settingsState.customerCountry3
+      })
+    }
+
+    console.log('exempt regions', exemptRegions)
+
+
     const customer: object = {
       name: settingsState.customerName,
       customerId: settingsState.customerEmail,
       exemptionType: settingsState.customerExemptionType,
-      exemptRegions: [{
-        state: settingsState.customerState,
-        country: settingsState.customerCountry
-      }]
+      exemptRegions,
     }
+
+    console.log(customer)
 
     let res: any 
     try {
@@ -514,50 +551,147 @@ const Admin: FC<any> = () => {
                           label={formatMessage({
                             id: 'admin/taxjar.settings.exemption-modal.email',
                           })}
-                          type="string"
+                          type="email"
+                          helpText="This email must be a VTEX account ID"
                           onChange={(e: any) =>
                             setSettingsState({ ...settingsState, customerEmail: e.target.value })
                           }
                         />
                       </div>
 
-                      <div className="mt4">
-                        <Input
+                      <div className="mt5">
+                        <Dropdown
                           label={formatMessage({
                             id: 'admin/taxjar.settings.exemption-modal.type',
                           })}
-                          type="string"
-                          onChange={(e: any) =>
-                            setSettingsState({ ...settingsState, customerExemptionType: e.target.value })
+                          options={options}
+                          value={settingsState.customerExemptionType}
+                          size="small"
+                          onChange={(_: any, v: string) =>
+                            setSettingsState({ ...settingsState, customerExemptionType: v })
                           }
                         />
                       </div>
 
-                      <div className="mt4">
-                        <Input
+                      <div className="mt6">
+                        <Dropdown
                           label={formatMessage({
                             id: 'admin/taxjar.settings.exemption-modal.state',
                           })}
-                          type="string"
-                          maxLength="2"
-                          onChange={(e: any) =>
-                            setSettingsState({ ...settingsState, customerState: e.target.value })
+                          options={states}
+                          size="small"
+                          value={settingsState.customerState1}
+                          onChange={(_: any, v: string) =>
+                            setSettingsState({ ...settingsState, customerState1: v })
                           }
                         />
                       </div>
 
+
+
                       <div className="mt4">
-                        <Input
+                        <Dropdown
                           label={formatMessage({
                             id: 'admin/taxjar.settings.exemption-modal.country',
                           })}
-                          type="string"
-                          maxLength="2"
-                          onChange={(e: any) =>
-                            setSettingsState({ ...settingsState, customerCountry: e.target.value })
+                          options={countries}
+                          value={settingsState.customerCountry1}
+                          size="small"
+                          onChange={(_: any, v: string) =>
+                            setSettingsState({ ...settingsState, customerCountry1: v })
                           }
                         />
                       </div>
+                      
+                      {!settingsState.showMoreTypes1 && (
+                        <div className="mt5">
+                          <ButtonWithIcon
+                            onClick={() => setSettingsState({ ...settingsState, showMoreTypes1: true })}
+                            icon={plus}
+                            size="small"
+                            variation="secondary"
+                          >
+                            <FormattedMessage id="admin/taxjar.settings.exemption.add-location" />  
+                          </ButtonWithIcon>
+                        </div>
+                      )}
+
+                      {settingsState.showMoreTypes1 && (
+                        <div>
+                          <div className="mt4">
+                            <Dropdown
+                              label={formatMessage({
+                                id: 'admin/taxjar.settings.exemption-modal.state',
+                              })}
+                              options={states}
+                              size="small"
+                              value={settingsState.customerState2}
+                              onChange={(_: any, v: string) =>
+                                setSettingsState({ ...settingsState, customerState2: v })
+                              }
+                            />
+                          </div>
+
+                          <div className="mt4">
+                            <Dropdown
+                              label={formatMessage({
+                                id: 'admin/taxjar.settings.exemption-modal.country',
+                              })}
+                              options={countries}
+                              value={settingsState.customerCountry2}
+                              size="small"
+                              onChange={(_: any, v: string) =>
+                                setSettingsState({ ...settingsState, customerCountry2: v })
+                              }
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {settingsState.showMoreTypes1 && !settingsState.showMoreTypes2 && (
+                        <div className="mt5">
+                          <ButtonWithIcon
+                            onClick={() => setSettingsState({ ...settingsState, showMoreTypes2: true })}
+                            icon={plus}
+                            size="small"
+                            variation="secondary"
+                          >
+                            <FormattedMessage id="admin/taxjar.settings.exemption.add-location" />  
+                          </ButtonWithIcon>
+                        </div>
+                      )}
+
+                      {settingsState.showMoreTypes1 && settingsState.showMoreTypes2 && (
+                        <div>
+                          <div className="mt4">
+                            <Dropdown
+                              label={formatMessage({
+                                id: 'admin/taxjar.settings.exemption-modal.state',
+                              })}
+                              options={states}
+                              size="small"
+                              value={settingsState.customerState3}
+                              onChange={(_: any, v: string) =>
+                                setSettingsState({ ...settingsState, customerState3: v })
+                              }
+                            />
+                          </div>
+
+                          <div className="mt4">
+                            <Dropdown
+                              label={formatMessage({
+                                id: 'admin/taxjar.settings.exemption-modal.country',
+                              })}
+                              options={countries}
+                              value={settingsState.customerCountry3}
+                              size="small"
+                              onChange={(_: any, v: string) =>
+                                setSettingsState({ ...settingsState, customerCountry3: v })
+                              }
+                            />
+                          </div>
+                        </div>
+                      )}
 
                       <div className="mt6">
                         <Button
