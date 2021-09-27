@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/jsx-no-target-blank */
+/* eslint-disable react/display-name */
 import type { FC } from 'react'
 import React, { useState, useEffect } from 'react'
 import {
@@ -17,7 +20,7 @@ import {
   Dropdown,
   Modal,
   ButtonWithIcon,
-  Alert
+  Alert,
 } from 'vtex.styleguide'
 import { useIntl, FormattedMessage } from 'react-intl'
 import { useQuery, useLazyQuery, useMutation } from 'react-apollo'
@@ -28,12 +31,10 @@ import RemoveConfiguration from './mutations/RemoveConfiguration.gql'
 import ConnectionTest from './queries/connectionTest.graphql'
 import AppSettings from './queries/appSettings.graphql'
 import SaveAppSettings from './mutations/saveAppSettings.graphql'
-
 import GET_CUSTOMERS from './queries/ListCustomers.gql'
 import DELETE_CUSTOMER from './mutations/DeleteCustomer.gql'
 import CREATE_CUSTOMER from './mutations/CreateCustomer.gql'
 import { countries, states, options } from './common/utils'
-
 
 const Admin: FC<any> = () => {
   const { formatMessage } = useIntl()
@@ -62,9 +63,7 @@ const Admin: FC<any> = () => {
     showMoreTypes2: false,
   })
 
-  const {
-    customerList
-  } = settingsState
+  const { customerList } = settingsState
 
   const [testAllowed, setTestAllowed] = useState(false)
   const [testComplete, setTestComplete] = useState(false)
@@ -90,7 +89,11 @@ const Admin: FC<any> = () => {
     onCompleted: () => setTestComplete(true),
   })
 
-  const [getCustomers, {data: customerData, called: customerCalled}] = useLazyQuery(GET_CUSTOMERS)
+  const [
+    getCustomers,
+    { data: customerData, called: customerCalled },
+  ] = useLazyQuery(GET_CUSTOMERS)
+
   const [saveSettings] = useMutation(SaveAppSettings)
   const [initConfig] = useMutation(M_INIT_CONFIG)
   const [removeConfig] = useMutation(RemoveConfiguration)
@@ -160,98 +163,120 @@ const Admin: FC<any> = () => {
     getCustomers()
   }
 
-  if (customerData && !customerList.length){
-    console.log('data', customerData)
+  if (customerData && !customerList.length) {
     const newList = customerData.listCustomers
-    setSettingsState({...settingsState, customerList: newList})
+
+    setSettingsState({ ...settingsState, customerList: newList })
   }
 
   if (!settingsState.currentTab) {
     setSettingsState({
       ...settingsState,
-      currentTab: 1
+      currentTab: 1,
     })
   }
 
   const handleModalToggle = () => {
-    setSettingsState({ ...settingsState, isModalOpen: !settingsState.isModalOpen })
+    setSettingsState({
+      ...settingsState,
+      isModalOpen: !settingsState.isModalOpen,
+    })
   }
 
   const handleCustomerCreate = async () => {
-    console.log('creation state', settingsState)
-
-    let exemptRegions: any = [{
-      state: settingsState.customerState1,
-      country: settingsState.customerCountry1
-    }]
+    const exemptRegions: any = [
+      {
+        state: settingsState.customerState1,
+        country: settingsState.customerCountry1,
+      },
+    ]
 
     if (settingsState.customerState2) {
       exemptRegions.push({
         state: settingsState.customerState2,
-        country: settingsState.customerCountry2
+        country: settingsState.customerCountry2,
       })
     }
 
     if (settingsState.customerState3) {
       exemptRegions.push({
         state: settingsState.customerState3,
-        country: settingsState.customerCountry3
+        country: settingsState.customerCountry3,
       })
     }
 
-    console.log('exempt regions', exemptRegions)
-
-
-    const customer: object = {
+    const customer: Record<string, unknown> = {
       name: settingsState.customerName,
       customerId: settingsState.customerEmail,
       exemptionType: settingsState.customerExemptionType,
       exemptRegions,
     }
 
-    console.log(customer)
+    let res: any
 
-    let res: any 
     try {
       res = await createCustomer({
         variables: {
-          customer
+          customer,
         },
       })
     } finally {
       if (res?.data.createCustomer) {
         const random = Math.random().toString(36).substring(7)
         const newCustomerList: any = settingsState.customerList || []
+
         newCustomerList.push(customer)
-        setSettingsState({ ...settingsState, customerList: newCustomerList, updateTableKey: random, isModalOpen: false })
+        setSettingsState({
+          ...settingsState,
+          customerList: newCustomerList,
+          updateTableKey: random,
+          isModalOpen: false,
+        })
       } else {
-        setSettingsState({ ...settingsState, customerCreationError: true, isModalOpen: false })
+        setSettingsState({
+          ...settingsState,
+          customerCreationError: true,
+          isModalOpen: false,
+        })
       }
     }
   }
 
   const handleCustomerDelete = (rowData: any) => {
     const random = Math.random().toString(36).substring(7)
-    const customerList = settingsState.customerList || []
-    const newCustomerList: any = customerList?.filter((customer: any) => customer.customerId !== rowData.customerId)
-    setSettingsState({...settingsState, customerList: newCustomerList, updateTableKey: random})
+    const customers = settingsState.customerList || []
+    const newCustomerList: any = customers?.filter(
+      (customer: any) => customer.customerId !== rowData.customerId
+    )
+
+    setSettingsState({
+      ...settingsState,
+      customerList: newCustomerList,
+      updateTableKey: random,
+    })
   }
 
   const lineActions = [
     {
-      label: () => <FormattedMessage id="admin/taxjar.settings.exemption.line-action.label" />,
+      label: () => (
+        <FormattedMessage id="admin/taxjar.settings.exemption.line-action.label" />
+      ),
       isDangerous: true,
       onClick: async ({ rowData }: any) => {
         deleteCustomer({
           variables: {
-            customerId: rowData.customerId
+            customerId: rowData.customerId,
           },
-        }),
+        })
+
         handleCustomerDelete(rowData)
-        alert(formatMessage({
-          id: 'admin/taxjar.settings.exemption.line-action.alert',
-        }))
-      }
+
+        alert(
+          formatMessage({
+            id: 'admin/taxjar.settings.exemption.line-action.alert',
+          })
+        )
+      },
     },
   ]
 
@@ -265,11 +290,7 @@ const Admin: FC<any> = () => {
         title: 'Email',
         width: 250,
         cellRenderer: (cellData: any) => {
-          return (
-            <div>
-              {cellData.rowData.customerId}
-            </div>
-          )
+          return <div>{cellData.rowData.customerId}</div>
         },
       },
       exemptionType: {
@@ -281,11 +302,16 @@ const Admin: FC<any> = () => {
         width: 150,
         cellRenderer: (cellData: any) => {
           const regions = cellData.rowData.exemptRegions
+
           return (
             <div>
               {regions.map((region: any) => {
                 return (
-                  <div key={region.state}>{region['state']}{`, `}{region['country']}</div>
+                  <div key={region.state}>
+                    {region.state}
+                    {`, `}
+                    {region.country}
+                  </div>
                 )
               })}
             </div>
@@ -322,40 +348,39 @@ const Admin: FC<any> = () => {
             }
             fullWidth
           >
-              <PageBlock
-                subtitle={
-                  <FormattedMessage
-                    id="admin/taxjar.settings.introduction"
-                    values={{
-                      tokenLink: (
-                        // eslint-disable-next-line react/jsx-no-target-blank
-                        <Link
-                          to="https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token"
-                          target="_blank"
-                        >
-                          https://support.taxjar.com/ar[...]-api-token
-                        </Link>
-                      ),
-                      signupLink: (
-                        // eslint-disable-next-line react/jsx-no-target-blank
-                        <Link
-                          to="https://partners.taxjar.com/English"
-                          target="_blank"
-                        >
-                          https://partners.taxjar.com/English
-                        </Link>
-                      ),
-                      lineBreak: <br />,
-                    }}
-                  />
-                }
-              >
-              
+            <PageBlock
+              subtitle={
+                <FormattedMessage
+                  id="admin/taxjar.settings.introduction"
+                  values={{
+                    tokenLink: (
+                      <Link
+                        to="https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token"
+                        target="_blank"
+                      >
+                        <FormattedMessage id="admin/taxjar.settings.clickHere" />
+                      </Link>
+                    ),
+                    signupLink: (
+                      <Link
+                        to="https://partners.taxjar.com/English"
+                        target="_blank"
+                      >
+                        <FormattedMessage id="admin/taxjar.settings.clickHere" />
+                      </Link>
+                    ),
+                    lineBreak: <br />,
+                  }}
+                />
+              }
+            >
               <Tabs>
                 <Tab
                   label="Settings"
                   active={settingsState.currentTab === 1}
-                  onClick={() => setSettingsState({ ...settingsState, currentTab: 1 })}
+                  onClick={() =>
+                    setSettingsState({ ...settingsState, currentTab: 1 })
+                  }
                 >
                   <section className="pb4 mt4">
                     <Input
@@ -409,7 +434,8 @@ const Admin: FC<any> = () => {
                         })
                       }}
                       helpText={formatMessage({
-                        id: 'admin/taxjar.settings.enableTaxCalculation.helpText',
+                        id:
+                          'admin/taxjar.settings.enableTaxCalculation.helpText',
                       })}
                     />
                   </section>
@@ -417,7 +443,8 @@ const Admin: FC<any> = () => {
                     <Toggle
                       semantic
                       label={formatMessage({
-                        id: 'admin/taxjar.settings.enableTransactionPosting.label',
+                        id:
+                          'admin/taxjar.settings.enableTransactionPosting.label',
                       })}
                       size="large"
                       checked={settingsState.enableTransactionPosting}
@@ -448,25 +475,25 @@ const Admin: FC<any> = () => {
                         })
                       }}
                       helpText={formatMessage({
-                        id:
-                          'admin/taxjar.settings.useTaxJarNexus.helpText',
+                        id: 'admin/taxjar.settings.useTaxJarNexus.helpText',
                       })}
                     />
-                    </section>
-                    <section className="pb4">
-                      <Input
-                        label={formatMessage({
+                  </section>
+                  <section className="pb4">
+                    <Input
+                      label={formatMessage({
                         id: 'admin/taxjar.settings.salesChannelExclude.label',
-                        })}
-                          value={settingsState.salesChannelExclude}
-                          onChange={(e: React.FormEvent<HTMLInputElement>) =>
-                          setSettingsState({
-                            ...settingsState,
-                              salesChannelExclude: e.currentTarget.value,
-                              })
-                            }
-                          helpText={formatMessage({
-                              id: 'admin/taxjar.settings.salesChannelExclude.helpText',
+                      })}
+                      value={settingsState.salesChannelExclude}
+                      onChange={(e: React.FormEvent<HTMLInputElement>) =>
+                        setSettingsState({
+                          ...settingsState,
+                          salesChannelExclude: e.currentTarget.value,
+                        })
+                      }
+                      helpText={formatMessage({
+                        id:
+                          'admin/taxjar.settings.salesChannelExclude.helpText',
                       })}
                     />
                   </section>
@@ -492,19 +519,25 @@ const Admin: FC<any> = () => {
                     {` `}
                     {testComplete ? (
                       connectionTestData?.findProductCode?.length ? (
-                        <FormattedMessage id="admin/taxjar.testConnection.success" />
+                        <Alert type="success">
+                          <FormattedMessage id="admin/taxjar.testConnection.success" />
+                        </Alert>
                       ) : (
-                        <FormattedMessage id="admin/taxjar.testConnection.failure" />
+                        <Alert type="error">
+                          <FormattedMessage id="admin/taxjar.testConnection.failure" />
+                        </Alert>
                       )
                     ) : null}
                   </section>
-                </ Tab>
+                </Tab>
                 <Tab
                   label={formatMessage({
                     id: 'admin/taxjar.settings.exemption.title',
                   })}
                   active={settingsState.currentTab === 2}
-                  onClick={() => setSettingsState({ ...settingsState, currentTab: 2 })}
+                  onClick={() =>
+                    setSettingsState({ ...settingsState, currentTab: 2 })
+                  }
                 >
                   <div className="mt8">
                     <ButtonWithIcon
@@ -517,10 +550,18 @@ const Admin: FC<any> = () => {
 
                     {settingsState.customerCreationError && (
                       <div className="mt6">
-                        <Alert type="error" onClose={() => setSettingsState({ ...settingsState, customerCreationError: false })}>
+                        <Alert
+                          type="error"
+                          onClose={() =>
+                            setSettingsState({
+                              ...settingsState,
+                              customerCreationError: false,
+                            })
+                          }
+                        >
                           <FormattedMessage id="admin/taxjar.settings.exemption.customer.error" />
                         </Alert>
-                      </ div>
+                      </div>
                     )}
 
                     <Modal
@@ -533,7 +574,6 @@ const Admin: FC<any> = () => {
                         handleModalToggle()
                       }}
                     >
-
                       <div className="mt4">
                         <Input
                           label={formatMessage({
@@ -541,7 +581,10 @@ const Admin: FC<any> = () => {
                           })}
                           type="string"
                           onChange={(e: any) =>
-                            setSettingsState({ ...settingsState, customerName: e.target.value })
+                            setSettingsState({
+                              ...settingsState,
+                              customerName: e.target.value,
+                            })
                           }
                         />
                       </div>
@@ -554,7 +597,10 @@ const Admin: FC<any> = () => {
                           type="email"
                           helpText="This email must be a VTEX account ID"
                           onChange={(e: any) =>
-                            setSettingsState({ ...settingsState, customerEmail: e.target.value })
+                            setSettingsState({
+                              ...settingsState,
+                              customerEmail: e.target.value,
+                            })
                           }
                         />
                       </div>
@@ -568,7 +614,10 @@ const Admin: FC<any> = () => {
                           value={settingsState.customerExemptionType}
                           size="small"
                           onChange={(_: any, v: string) =>
-                            setSettingsState({ ...settingsState, customerExemptionType: v })
+                            setSettingsState({
+                              ...settingsState,
+                              customerExemptionType: v,
+                            })
                           }
                         />
                       </div>
@@ -582,12 +631,13 @@ const Admin: FC<any> = () => {
                           size="small"
                           value={settingsState.customerState1}
                           onChange={(_: any, v: string) =>
-                            setSettingsState({ ...settingsState, customerState1: v })
+                            setSettingsState({
+                              ...settingsState,
+                              customerState1: v,
+                            })
                           }
                         />
                       </div>
-
-
 
                       <div className="mt4">
                         <Dropdown
@@ -598,20 +648,28 @@ const Admin: FC<any> = () => {
                           value={settingsState.customerCountry1}
                           size="small"
                           onChange={(_: any, v: string) =>
-                            setSettingsState({ ...settingsState, customerCountry1: v })
+                            setSettingsState({
+                              ...settingsState,
+                              customerCountry1: v,
+                            })
                           }
                         />
                       </div>
-                      
+
                       {!settingsState.showMoreTypes1 && (
                         <div className="mt5">
                           <ButtonWithIcon
-                            onClick={() => setSettingsState({ ...settingsState, showMoreTypes1: true })}
+                            onClick={() =>
+                              setSettingsState({
+                                ...settingsState,
+                                showMoreTypes1: true,
+                              })
+                            }
                             icon={plus}
                             size="small"
                             variation="secondary"
                           >
-                            <FormattedMessage id="admin/taxjar.settings.exemption.add-location" />  
+                            <FormattedMessage id="admin/taxjar.settings.exemption.add-location" />
                           </ButtonWithIcon>
                         </div>
                       )}
@@ -621,13 +679,17 @@ const Admin: FC<any> = () => {
                           <div className="mt4">
                             <Dropdown
                               label={formatMessage({
-                                id: 'admin/taxjar.settings.exemption-modal.state',
+                                id:
+                                  'admin/taxjar.settings.exemption-modal.state',
                               })}
                               options={states}
                               size="small"
                               value={settingsState.customerState2}
                               onChange={(_: any, v: string) =>
-                                setSettingsState({ ...settingsState, customerState2: v })
+                                setSettingsState({
+                                  ...settingsState,
+                                  customerState2: v,
+                                })
                               }
                             />
                           </div>
@@ -635,63 +697,82 @@ const Admin: FC<any> = () => {
                           <div className="mt4">
                             <Dropdown
                               label={formatMessage({
-                                id: 'admin/taxjar.settings.exemption-modal.country',
+                                id:
+                                  'admin/taxjar.settings.exemption-modal.country',
                               })}
                               options={countries}
                               value={settingsState.customerCountry2}
                               size="small"
                               onChange={(_: any, v: string) =>
-                                setSettingsState({ ...settingsState, customerCountry2: v })
+                                setSettingsState({
+                                  ...settingsState,
+                                  customerCountry2: v,
+                                })
                               }
                             />
                           </div>
                         </div>
                       )}
 
-                      {settingsState.showMoreTypes1 && !settingsState.showMoreTypes2 && (
-                        <div className="mt5">
-                          <ButtonWithIcon
-                            onClick={() => setSettingsState({ ...settingsState, showMoreTypes2: true })}
-                            icon={plus}
-                            size="small"
-                            variation="secondary"
-                          >
-                            <FormattedMessage id="admin/taxjar.settings.exemption.add-location" />  
-                          </ButtonWithIcon>
-                        </div>
-                      )}
-
-                      {settingsState.showMoreTypes1 && settingsState.showMoreTypes2 && (
-                        <div>
-                          <div className="mt4">
-                            <Dropdown
-                              label={formatMessage({
-                                id: 'admin/taxjar.settings.exemption-modal.state',
-                              })}
-                              options={states}
+                      {settingsState.showMoreTypes1 &&
+                        !settingsState.showMoreTypes2 && (
+                          <div className="mt5">
+                            <ButtonWithIcon
+                              onClick={() =>
+                                setSettingsState({
+                                  ...settingsState,
+                                  showMoreTypes2: true,
+                                })
+                              }
+                              icon={plus}
                               size="small"
-                              value={settingsState.customerState3}
-                              onChange={(_: any, v: string) =>
-                                setSettingsState({ ...settingsState, customerState3: v })
-                              }
-                            />
+                              variation="secondary"
+                            >
+                              <FormattedMessage id="admin/taxjar.settings.exemption.add-location" />
+                            </ButtonWithIcon>
                           </div>
+                        )}
 
-                          <div className="mt4">
-                            <Dropdown
-                              label={formatMessage({
-                                id: 'admin/taxjar.settings.exemption-modal.country',
-                              })}
-                              options={countries}
-                              value={settingsState.customerCountry3}
-                              size="small"
-                              onChange={(_: any, v: string) =>
-                                setSettingsState({ ...settingsState, customerCountry3: v })
-                              }
-                            />
+                      {settingsState.showMoreTypes1 &&
+                        settingsState.showMoreTypes2 && (
+                          <div>
+                            <div className="mt4">
+                              <Dropdown
+                                label={formatMessage({
+                                  id:
+                                    'admin/taxjar.settings.exemption-modal.state',
+                                })}
+                                options={states}
+                                size="small"
+                                value={settingsState.customerState3}
+                                onChange={(_: any, v: string) =>
+                                  setSettingsState({
+                                    ...settingsState,
+                                    customerState3: v,
+                                  })
+                                }
+                              />
+                            </div>
+
+                            <div className="mt4">
+                              <Dropdown
+                                label={formatMessage({
+                                  id:
+                                    'admin/taxjar.settings.exemption-modal.country',
+                                })}
+                                options={countries}
+                                value={settingsState.customerCountry3}
+                                size="small"
+                                onChange={(_: any, v: string) =>
+                                  setSettingsState({
+                                    ...settingsState,
+                                    customerCountry3: v,
+                                  })
+                                }
+                              />
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
                       <div className="mt6">
                         <Button
@@ -703,7 +784,6 @@ const Admin: FC<any> = () => {
                           <FormattedMessage id="admin/taxjar.settings.exemption-modal.submit" />
                         </Button>
                       </div>
-
                     </Modal>
                   </div>
                   <div className="mt5">
@@ -716,8 +796,8 @@ const Admin: FC<any> = () => {
                       lineActions={lineActions}
                     />
                   </div>
-                </ Tab>
-              </ Tabs>
+                </Tab>
+              </Tabs>
             </PageBlock>
           </Layout>
         )}
