@@ -1,7 +1,6 @@
-
 {
   "name": "TaxJar",
-  "headline": "Calculate taxes and record orders for reporting with this integration",
+  "headline": "Calculate taxes and record orders for reporting with this integration.",
   "overview": "TaxJar makes it simple to manage the entire tax cycle - from calculations to reporting and filing. TaxJar's quick response times and accurate calculations ensures that every product on your store will be accounted for.",
   "features": [
     "Calculates taxes for products.",
