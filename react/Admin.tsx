@@ -11,8 +11,6 @@ import {
   Input,
   Spinner,
   Toggle,
-  ToastConsumer,
-  ToastProvider,
   Tab,
   Tabs,
   Table,
@@ -68,6 +66,8 @@ const Admin: FC<any> = () => {
   const [testAllowed, setTestAllowed] = useState(false)
   const [testComplete, setTestComplete] = useState(false)
   const [settingsLoading, setSettingsLoading] = useState(false)
+  const [settingsError, setSettingsError] = useState(false)
+  const [settingsSaved, setSettingsSaved] = useState(false)
   const plus = <IconPlusLines />
 
   const { data } = useQuery(AppSettings, {
@@ -84,10 +84,7 @@ const Admin: FC<any> = () => {
       data: connectionTestData,
       refetch: connectionTestRefetch,
     },
-  ] = useLazyQuery(ConnectionTest, {
-    onError: () => setTestComplete(true),
-    onCompleted: () => setTestComplete(true),
-  })
+  ] = useLazyQuery(ConnectionTest)
 
   const [
     getCustomers,
@@ -109,7 +106,7 @@ const Admin: FC<any> = () => {
     setSettingsState(parsedSettings)
   }, [data])
 
-  const handleSaveSettings = async (showToast: any) => {
+  const handleSaveSettings = async () => {
     setSettingsLoading(true)
 
     try {
@@ -125,31 +122,24 @@ const Admin: FC<any> = () => {
           settings: JSON.stringify(settingsState),
         },
       }).then(() => {
-        showToast({
-          message: formatMessage({
-            id: 'admin/taxjar.saveSettings.success',
-          }),
-          duration: 5000,
-        })
+        setSettingsSaved(true)
         setTestAllowed(true)
-        setTestComplete(false)
-        setSettingsLoading(false)
       })
     } catch (error) {
       console.error(error)
-      showToast({
-        message: formatMessage({
-          id: 'admin/taxjar.saveSettings.failure',
-        }),
-        duration: 5000,
-      })
+      setSettingsError(true)
       setTestAllowed(false)
+    } finally {
       setTestComplete(false)
       setSettingsLoading(false)
     }
   }
 
   const handleTestConnection = () => {
+    setSettingsSaved(false)
+    setSettingsError(false)
+    setTestComplete(true)
+
     if (connectionTestData) {
       connectionTestRefetch()
 
@@ -337,472 +327,471 @@ const Admin: FC<any> = () => {
   }
 
   return (
-    <ToastProvider positioning="window">
-      <ToastConsumer>
-        {({ showToast }: { showToast: any }) => (
-          <Layout
-            pageHeader={
-              <PageHeader
-                title={<FormattedMessage id="admin/taxjar.title" />}
-              />
+    <Layout
+      pageHeader={
+        <PageHeader title={<FormattedMessage id="admin/taxjar.title" />} />
+      }
+      fullWidth
+    >
+      <PageBlock
+        subtitle={
+          <FormattedMessage
+            id="admin/taxjar.settings.introduction"
+            values={{
+              tokenLink: (
+                <Link
+                  to="https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token"
+                  target="_blank"
+                >
+                  <FormattedMessage id="admin/taxjar.settings.clickHere" />
+                </Link>
+              ),
+              signupLink: (
+                <Link to="https://partners.taxjar.com/English" target="_blank">
+                  <FormattedMessage id="admin/taxjar.settings.clickHere" />
+                </Link>
+              ),
+              lineBreak: <br />,
+            }}
+          />
+        }
+      >
+        <Tabs>
+          <Tab
+            label="Settings"
+            active={settingsState.currentTab === 1}
+            onClick={() =>
+              setSettingsState({ ...settingsState, currentTab: 1 })
             }
-            fullWidth
           >
-            <PageBlock
-              subtitle={
-                <FormattedMessage
-                  id="admin/taxjar.settings.introduction"
-                  values={{
-                    tokenLink: (
-                      <Link
-                        to="https://support.taxjar.com/article/160-how-do-i-get-a-taxjar-sales-tax-api-token"
-                        target="_blank"
-                      >
-                        <FormattedMessage id="admin/taxjar.settings.clickHere" />
-                      </Link>
-                    ),
-                    signupLink: (
-                      <Link
-                        to="https://partners.taxjar.com/English"
-                        target="_blank"
-                      >
-                        <FormattedMessage id="admin/taxjar.settings.clickHere" />
-                      </Link>
-                    ),
-                    lineBreak: <br />,
-                  }}
-                />
-              }
-            >
-              <Tabs>
-                <Tab
-                  label="Settings"
-                  active={settingsState.currentTab === 1}
-                  onClick={() =>
-                    setSettingsState({ ...settingsState, currentTab: 1 })
-                  }
-                >
-                  <section className="pb4 mt4">
-                    <Input
-                      label={formatMessage({
-                        id: 'admin/taxjar.settings.apiToken.label',
-                      })}
-                      value={settingsState.apiToken}
-                      onChange={(e: React.FormEvent<HTMLInputElement>) =>
-                        setSettingsState({
-                          ...settingsState,
-                          apiToken: e.currentTarget.value,
-                        })
-                      }
-                      helpText={formatMessage({
-                        id: 'admin/taxjar.settings.apiToken.helpText',
-                      })}
-                      token
-                    />
-                  </section>
-                  <section className="pv4">
-                    <Toggle
-                      semantic
-                      label={formatMessage({
-                        id: 'admin/taxjar.settings.isLive.label',
-                      })}
-                      size="large"
-                      checked={settingsState.isLive}
-                      onChange={() => {
-                        setSettingsState({
-                          ...settingsState,
-                          isLive: !settingsState.isLive,
-                        })
-                      }}
-                      helpText={formatMessage({
-                        id: 'admin/taxjar.settings.isLive.helpText',
-                      })}
-                    />
-                  </section>
-                  <section className="pv4">
-                    <Toggle
-                      semantic
-                      label={formatMessage({
-                        id: 'admin/taxjar.settings.enableTaxCalculation.label',
-                      })}
-                      size="large"
-                      checked={settingsState.enableTaxCalculation}
-                      onChange={() => {
-                        setSettingsState({
-                          ...settingsState,
-                          enableTaxCalculation: !settingsState.enableTaxCalculation,
-                        })
-                      }}
-                      helpText={formatMessage({
-                        id:
-                          'admin/taxjar.settings.enableTaxCalculation.helpText',
-                      })}
-                    />
-                  </section>
-                  <section className="pv4">
-                    <Toggle
-                      semantic
-                      label={formatMessage({
-                        id:
-                          'admin/taxjar.settings.enableTransactionPosting.label',
-                      })}
-                      size="large"
-                      checked={settingsState.enableTransactionPosting}
-                      onChange={() => {
-                        setSettingsState({
-                          ...settingsState,
-                          enableTransactionPosting: !settingsState.enableTransactionPosting,
-                        })
-                      }}
-                      helpText={formatMessage({
-                        id:
-                          'admin/taxjar.settings.enableTransactionPosting.helpText',
-                      })}
-                    />
-                  </section>
-                  <section className="pv4">
-                    <Toggle
-                      semantic
-                      label={formatMessage({
-                        id: 'admin/taxjar.settings.useTaxJarNexus.label',
-                      })}
-                      size="large"
-                      checked={settingsState.useTaxJarNexus}
-                      onChange={() => {
-                        setSettingsState({
-                          ...settingsState,
-                          useTaxJarNexus: !settingsState.useTaxJarNexus,
-                        })
-                      }}
-                      helpText={formatMessage({
-                        id: 'admin/taxjar.settings.useTaxJarNexus.helpText',
-                      })}
-                    />
-                  </section>
-                  <section className="pb4">
-                    <Input
-                      label={formatMessage({
-                        id: 'admin/taxjar.settings.salesChannelExclude.label',
-                      })}
-                      value={settingsState.salesChannelExclude}
-                      onChange={(e: React.FormEvent<HTMLInputElement>) =>
-                        setSettingsState({
-                          ...settingsState,
-                          salesChannelExclude: e.currentTarget.value,
-                        })
-                      }
-                      helpText={formatMessage({
-                        id:
-                          'admin/taxjar.settings.salesChannelExclude.helpText',
-                      })}
-                    />
-                  </section>
-                  <section className="pt4">
-                    <Button
-                      variation="primary"
-                      onClick={() => handleSaveSettings(showToast)}
-                      isLoading={settingsLoading}
-                      disabled={!settingsState.apiToken}
+            <section className="pb4 mt4">
+              <Input
+                label={formatMessage({
+                  id: 'admin/taxjar.settings.apiToken.label',
+                })}
+                value={settingsState.apiToken}
+                onChange={(e: React.FormEvent<HTMLInputElement>) =>
+                  setSettingsState({
+                    ...settingsState,
+                    apiToken: e.currentTarget.value,
+                  })
+                }
+                helpText={formatMessage({
+                  id: 'admin/taxjar.settings.apiToken.helpText',
+                })}
+                token
+              />
+            </section>
+            <section className="pv4">
+              <Toggle
+                semantic
+                label={formatMessage({
+                  id: 'admin/taxjar.settings.isLive.label',
+                })}
+                size="large"
+                checked={settingsState.isLive}
+                onChange={() => {
+                  setSettingsState({
+                    ...settingsState,
+                    isLive: !settingsState.isLive,
+                  })
+                }}
+                helpText={formatMessage({
+                  id: 'admin/taxjar.settings.isLive.helpText',
+                })}
+              />
+            </section>
+            <section className="pv4">
+              <Toggle
+                semantic
+                label={formatMessage({
+                  id: 'admin/taxjar.settings.enableTaxCalculation.label',
+                })}
+                size="large"
+                checked={settingsState.enableTaxCalculation}
+                onChange={() => {
+                  setSettingsState({
+                    ...settingsState,
+                    enableTaxCalculation: !settingsState.enableTaxCalculation,
+                  })
+                }}
+                helpText={formatMessage({
+                  id: 'admin/taxjar.settings.enableTaxCalculation.helpText',
+                })}
+              />
+            </section>
+            <section className="pv4">
+              <Toggle
+                semantic
+                label={formatMessage({
+                  id: 'admin/taxjar.settings.enableTransactionPosting.label',
+                })}
+                size="large"
+                checked={settingsState.enableTransactionPosting}
+                onChange={() => {
+                  setSettingsState({
+                    ...settingsState,
+                    enableTransactionPosting: !settingsState.enableTransactionPosting,
+                  })
+                }}
+                helpText={formatMessage({
+                  id: 'admin/taxjar.settings.enableTransactionPosting.helpText',
+                })}
+              />
+            </section>
+            <section className="pv4">
+              <Toggle
+                semantic
+                label={formatMessage({
+                  id: 'admin/taxjar.settings.useTaxJarNexus.label',
+                })}
+                size="large"
+                checked={settingsState.useTaxJarNexus}
+                onChange={() => {
+                  setSettingsState({
+                    ...settingsState,
+                    useTaxJarNexus: !settingsState.useTaxJarNexus,
+                  })
+                }}
+                helpText={formatMessage({
+                  id: 'admin/taxjar.settings.useTaxJarNexus.helpText',
+                })}
+              />
+            </section>
+            <section className="pb4">
+              <Input
+                label={formatMessage({
+                  id: 'admin/taxjar.settings.salesChannelExclude.label',
+                })}
+                value={settingsState.salesChannelExclude}
+                onChange={(e: React.FormEvent<HTMLInputElement>) =>
+                  setSettingsState({
+                    ...settingsState,
+                    salesChannelExclude: e.currentTarget.value,
+                  })
+                }
+                helpText={formatMessage({
+                  id: 'admin/taxjar.settings.salesChannelExclude.helpText',
+                })}
+              />
+            </section>
+            <section className="pt4">
+              <div className="mb4">
+                {!settingsLoading && (settingsSaved || settingsError) ? (
+                  settingsSaved ? (
+                    <Alert
+                      autoClose={5000}
+                      type="success"
+                      onClose={() => setSettingsSaved(false)}
                     >
-                      <FormattedMessage id="admin/taxjar.saveSettings.buttonText" />
-                    </Button>
-                  </section>
-                  <section className="pt4">
-                    <Button
-                      variation="secondary"
-                      onClick={() => handleTestConnection()}
-                      isLoading={connectionTestLoading}
-                      disabled={!testAllowed}
+                      <FormattedMessage id="admin/taxjar.saveSettings.success" />
+                    </Alert>
+                  ) : (
+                    <Alert type="error" onClose={() => setSettingsError(false)}>
+                      <FormattedMessage id="admin/taxjar.saveSettings.failure" />
+                    </Alert>
+                  )
+                ) : null}
+                {testComplete && !connectionTestLoading ? (
+                  connectionTestData?.findProductCode?.length ? (
+                    <Alert
+                      autoClose={5000}
+                      type="success"
+                      onClose={() => setTestComplete(false)}
                     >
-                      <FormattedMessage id="admin/taxjar.testConnection.buttonText" />
-                    </Button>
-                    {` `}
-                    {testComplete ? (
-                      connectionTestData?.findProductCode?.length ? (
-                        <Alert type="success">
-                          <FormattedMessage id="admin/taxjar.testConnection.success" />
-                        </Alert>
-                      ) : (
-                        <Alert type="error">
-                          <FormattedMessage id="admin/taxjar.testConnection.failure" />
-                        </Alert>
-                      )
-                    ) : null}
-                  </section>
-                </Tab>
-                <Tab
-                  label={formatMessage({
-                    id: 'admin/taxjar.settings.exemption.title',
-                  })}
-                  active={settingsState.currentTab === 2}
-                  onClick={() =>
-                    setSettingsState({ ...settingsState, currentTab: 2 })
-                  }
-                >
-                  <div className="mt8">
-                    <ButtonWithIcon
-                      onClick={() => handleModalToggle()}
-                      icon={plus}
-                      variation="secondary"
-                    >
-                      <FormattedMessage id="admin/taxjar.settings.exemption-modal.label" />
-                    </ButtonWithIcon>
+                      <FormattedMessage id="admin/taxjar.testConnection.success" />
+                    </Alert>
+                  ) : (
+                    <Alert type="error" onClose={() => setTestComplete(false)}>
+                      <FormattedMessage id="admin/taxjar.testConnection.failure" />
+                    </Alert>
+                  )
+                ) : null}
+              </div>
+              <Button
+                variation="primary"
+                onClick={() => handleSaveSettings()}
+                isLoading={settingsLoading}
+                disabled={!settingsState.apiToken}
+              >
+                <FormattedMessage id="admin/taxjar.saveSettings.buttonText" />
+              </Button>
+            </section>
+            <section className="pt4">
+              <Button
+                variation="secondary"
+                onClick={() => handleTestConnection()}
+                isLoading={connectionTestLoading}
+                disabled={!testAllowed}
+              >
+                <FormattedMessage id="admin/taxjar.testConnection.buttonText" />
+              </Button>
+            </section>
+          </Tab>
+          <Tab
+            label={formatMessage({
+              id: 'admin/taxjar.settings.exemption.title',
+            })}
+            active={settingsState.currentTab === 2}
+            onClick={() =>
+              setSettingsState({ ...settingsState, currentTab: 2 })
+            }
+          >
+            <div className="mt8">
+              <ButtonWithIcon
+                onClick={() => handleModalToggle()}
+                icon={plus}
+                variation="secondary"
+              >
+                <FormattedMessage id="admin/taxjar.settings.exemption-modal.label" />
+              </ButtonWithIcon>
 
-                    {settingsState.customerCreationError && (
-                      <div className="mt6">
-                        <Alert
-                          type="error"
-                          onClose={() =>
-                            setSettingsState({
-                              ...settingsState,
-                              customerCreationError: false,
-                            })
-                          }
-                        >
-                          <FormattedMessage id="admin/taxjar.settings.exemption.customer.error" />
-                        </Alert>
-                      </div>
-                    )}
+              {settingsState.customerCreationError && (
+                <div className="mt6">
+                  <Alert
+                    type="error"
+                    onClose={() =>
+                      setSettingsState({
+                        ...settingsState,
+                        customerCreationError: false,
+                      })
+                    }
+                  >
+                    <FormattedMessage id="admin/taxjar.settings.exemption.customer.error" />
+                  </Alert>
+                </div>
+              )}
 
-                    <Modal
-                      isOpen={settingsState.isModalOpen}
-                      centered
-                      title={formatMessage({
-                        id: 'admin/taxjar.settings.exemption-modal.label',
-                      })}
-                      onClose={() => {
-                        handleModalToggle()
-                      }}
-                    >
-                      <div className="mt4">
-                        <Input
-                          label={formatMessage({
-                            id: 'admin/taxjar.settings.exemption-modal.name',
-                          })}
-                          type="string"
-                          onChange={(e: any) =>
-                            setSettingsState({
-                              ...settingsState,
-                              customerName: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
+              <Modal
+                isOpen={settingsState.isModalOpen}
+                centered
+                title={formatMessage({
+                  id: 'admin/taxjar.settings.exemption-modal.label',
+                })}
+                onClose={() => {
+                  handleModalToggle()
+                }}
+              >
+                <div className="mt4">
+                  <Input
+                    label={formatMessage({
+                      id: 'admin/taxjar.settings.exemption-modal.name',
+                    })}
+                    type="string"
+                    onChange={(e: any) =>
+                      setSettingsState({
+                        ...settingsState,
+                        customerName: e.target.value,
+                      })
+                    }
+                  />
+                </div>
 
-                      <div className="mt4">
-                        <Input
-                          label={formatMessage({
-                            id: 'admin/taxjar.settings.exemption-modal.email',
-                          })}
-                          type="email"
-                          helpText="This email must be a VTEX account ID"
-                          onChange={(e: any) =>
-                            setSettingsState({
-                              ...settingsState,
-                              customerEmail: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
+                <div className="mt4">
+                  <Input
+                    label={formatMessage({
+                      id: 'admin/taxjar.settings.exemption-modal.email',
+                    })}
+                    type="email"
+                    helpText="This email must be a VTEX account ID"
+                    onChange={(e: any) =>
+                      setSettingsState({
+                        ...settingsState,
+                        customerEmail: e.target.value,
+                      })
+                    }
+                  />
+                </div>
 
-                      <div className="mt5">
-                        <Dropdown
-                          label={formatMessage({
-                            id: 'admin/taxjar.settings.exemption-modal.type',
-                          })}
-                          options={options}
-                          value={settingsState.customerExemptionType}
-                          size="small"
-                          onChange={(_: any, v: string) =>
-                            setSettingsState({
-                              ...settingsState,
-                              customerExemptionType: v,
-                            })
-                          }
-                        />
-                      </div>
+                <div className="mt5">
+                  <Dropdown
+                    label={formatMessage({
+                      id: 'admin/taxjar.settings.exemption-modal.type',
+                    })}
+                    options={options}
+                    value={settingsState.customerExemptionType}
+                    size="small"
+                    onChange={(_: any, v: string) =>
+                      setSettingsState({
+                        ...settingsState,
+                        customerExemptionType: v,
+                      })
+                    }
+                  />
+                </div>
 
-                      <div className="mt6">
-                        <Dropdown
-                          label={formatMessage({
-                            id: 'admin/taxjar.settings.exemption-modal.state',
-                          })}
-                          options={states}
-                          size="small"
-                          value={settingsState.customerState1}
-                          onChange={(_: any, v: string) =>
-                            setSettingsState({
-                              ...settingsState,
-                              customerState1: v,
-                            })
-                          }
-                        />
-                      </div>
+                <div className="mt6">
+                  <Dropdown
+                    label={formatMessage({
+                      id: 'admin/taxjar.settings.exemption-modal.state',
+                    })}
+                    options={states}
+                    size="small"
+                    value={settingsState.customerState1}
+                    onChange={(_: any, v: string) =>
+                      setSettingsState({
+                        ...settingsState,
+                        customerState1: v,
+                      })
+                    }
+                  />
+                </div>
 
-                      <div className="mt4">
-                        <Dropdown
-                          label={formatMessage({
-                            id: 'admin/taxjar.settings.exemption-modal.country',
-                          })}
-                          options={countries}
-                          value={settingsState.customerCountry1}
-                          size="small"
-                          onChange={(_: any, v: string) =>
-                            setSettingsState({
-                              ...settingsState,
-                              customerCountry1: v,
-                            })
-                          }
-                        />
-                      </div>
+                <div className="mt4">
+                  <Dropdown
+                    label={formatMessage({
+                      id: 'admin/taxjar.settings.exemption-modal.country',
+                    })}
+                    options={countries}
+                    value={settingsState.customerCountry1}
+                    size="small"
+                    onChange={(_: any, v: string) =>
+                      setSettingsState({
+                        ...settingsState,
+                        customerCountry1: v,
+                      })
+                    }
+                  />
+                </div>
 
-                      {!settingsState.showMoreTypes1 && (
-                        <div className="mt5">
-                          <ButtonWithIcon
-                            onClick={() =>
-                              setSettingsState({
-                                ...settingsState,
-                                showMoreTypes1: true,
-                              })
-                            }
-                            icon={plus}
-                            size="small"
-                            variation="secondary"
-                          >
-                            <FormattedMessage id="admin/taxjar.settings.exemption.add-location" />
-                          </ButtonWithIcon>
-                        </div>
-                      )}
-
-                      {settingsState.showMoreTypes1 && (
-                        <div>
-                          <div className="mt4">
-                            <Dropdown
-                              label={formatMessage({
-                                id:
-                                  'admin/taxjar.settings.exemption-modal.state',
-                              })}
-                              options={states}
-                              size="small"
-                              value={settingsState.customerState2}
-                              onChange={(_: any, v: string) =>
-                                setSettingsState({
-                                  ...settingsState,
-                                  customerState2: v,
-                                })
-                              }
-                            />
-                          </div>
-
-                          <div className="mt4">
-                            <Dropdown
-                              label={formatMessage({
-                                id:
-                                  'admin/taxjar.settings.exemption-modal.country',
-                              })}
-                              options={countries}
-                              value={settingsState.customerCountry2}
-                              size="small"
-                              onChange={(_: any, v: string) =>
-                                setSettingsState({
-                                  ...settingsState,
-                                  customerCountry2: v,
-                                })
-                              }
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {settingsState.showMoreTypes1 &&
-                        !settingsState.showMoreTypes2 && (
-                          <div className="mt5">
-                            <ButtonWithIcon
-                              onClick={() =>
-                                setSettingsState({
-                                  ...settingsState,
-                                  showMoreTypes2: true,
-                                })
-                              }
-                              icon={plus}
-                              size="small"
-                              variation="secondary"
-                            >
-                              <FormattedMessage id="admin/taxjar.settings.exemption.add-location" />
-                            </ButtonWithIcon>
-                          </div>
-                        )}
-
-                      {settingsState.showMoreTypes1 &&
-                        settingsState.showMoreTypes2 && (
-                          <div>
-                            <div className="mt4">
-                              <Dropdown
-                                label={formatMessage({
-                                  id:
-                                    'admin/taxjar.settings.exemption-modal.state',
-                                })}
-                                options={states}
-                                size="small"
-                                value={settingsState.customerState3}
-                                onChange={(_: any, v: string) =>
-                                  setSettingsState({
-                                    ...settingsState,
-                                    customerState3: v,
-                                  })
-                                }
-                              />
-                            </div>
-
-                            <div className="mt4">
-                              <Dropdown
-                                label={formatMessage({
-                                  id:
-                                    'admin/taxjar.settings.exemption-modal.country',
-                                })}
-                                options={countries}
-                                value={settingsState.customerCountry3}
-                                size="small"
-                                onChange={(_: any, v: string) =>
-                                  setSettingsState({
-                                    ...settingsState,
-                                    customerCountry3: v,
-                                  })
-                                }
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                      <div className="mt6">
-                        <Button
-                          onClick={() => {
-                            handleCustomerCreate()
-                            handleModalToggle()
-                          }}
-                        >
-                          <FormattedMessage id="admin/taxjar.settings.exemption-modal.submit" />
-                        </Button>
-                      </div>
-                    </Modal>
-                  </div>
+                {!settingsState.showMoreTypes1 && (
                   <div className="mt5">
-                    <Table
-                      fullWidth
-                      updateTableKey={settingsState.updateTableKey}
-                      items={settingsState.customerList}
-                      density="low"
-                      schema={customerSchema}
-                      lineActions={lineActions}
-                    />
+                    <ButtonWithIcon
+                      onClick={() =>
+                        setSettingsState({
+                          ...settingsState,
+                          showMoreTypes1: true,
+                        })
+                      }
+                      icon={plus}
+                      size="small"
+                      variation="secondary"
+                    >
+                      <FormattedMessage id="admin/taxjar.settings.exemption.add-location" />
+                    </ButtonWithIcon>
                   </div>
-                </Tab>
-              </Tabs>
-            </PageBlock>
-          </Layout>
-        )}
-      </ToastConsumer>
-    </ToastProvider>
+                )}
+
+                {settingsState.showMoreTypes1 && (
+                  <div>
+                    <div className="mt4">
+                      <Dropdown
+                        label={formatMessage({
+                          id: 'admin/taxjar.settings.exemption-modal.state',
+                        })}
+                        options={states}
+                        size="small"
+                        value={settingsState.customerState2}
+                        onChange={(_: any, v: string) =>
+                          setSettingsState({
+                            ...settingsState,
+                            customerState2: v,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="mt4">
+                      <Dropdown
+                        label={formatMessage({
+                          id: 'admin/taxjar.settings.exemption-modal.country',
+                        })}
+                        options={countries}
+                        value={settingsState.customerCountry2}
+                        size="small"
+                        onChange={(_: any, v: string) =>
+                          setSettingsState({
+                            ...settingsState,
+                            customerCountry2: v,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {settingsState.showMoreTypes1 && !settingsState.showMoreTypes2 && (
+                  <div className="mt5">
+                    <ButtonWithIcon
+                      onClick={() =>
+                        setSettingsState({
+                          ...settingsState,
+                          showMoreTypes2: true,
+                        })
+                      }
+                      icon={plus}
+                      size="small"
+                      variation="secondary"
+                    >
+                      <FormattedMessage id="admin/taxjar.settings.exemption.add-location" />
+                    </ButtonWithIcon>
+                  </div>
+                )}
+
+                {settingsState.showMoreTypes1 && settingsState.showMoreTypes2 && (
+                  <div>
+                    <div className="mt4">
+                      <Dropdown
+                        label={formatMessage({
+                          id: 'admin/taxjar.settings.exemption-modal.state',
+                        })}
+                        options={states}
+                        size="small"
+                        value={settingsState.customerState3}
+                        onChange={(_: any, v: string) =>
+                          setSettingsState({
+                            ...settingsState,
+                            customerState3: v,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="mt4">
+                      <Dropdown
+                        label={formatMessage({
+                          id: 'admin/taxjar.settings.exemption-modal.country',
+                        })}
+                        options={countries}
+                        value={settingsState.customerCountry3}
+                        size="small"
+                        onChange={(_: any, v: string) =>
+                          setSettingsState({
+                            ...settingsState,
+                            customerCountry3: v,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt6">
+                  <Button
+                    onClick={() => {
+                      handleCustomerCreate()
+                      handleModalToggle()
+                    }}
+                  >
+                    <FormattedMessage id="admin/taxjar.settings.exemption-modal.submit" />
+                  </Button>
+                </div>
+              </Modal>
+            </div>
+            <div className="mt5">
+              <Table
+                fullWidth
+                updateTableKey={settingsState.updateTableKey}
+                items={settingsState.customerList}
+                density="low"
+                schema={customerSchema}
+                lineActions={lineActions}
+              />
+            </div>
+          </Tab>
+        </Tabs>
+      </PageBlock>
+    </Layout>
   )
 }
 
