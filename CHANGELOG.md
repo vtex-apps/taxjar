@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Test Connection and Save Settings feedback Alerts
+- App store meta data improvements
+
 ## [0.1.4] - 2021-09-27
 
 ### Added
