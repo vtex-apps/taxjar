@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- Error when applying adjustment
+
 ## [0.1.5] - 2021-09-29
 
 ### Added
