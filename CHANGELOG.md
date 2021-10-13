@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Error handling
 
+## [0.1.7] - 2021-10-13
+
+### Fixed
+
+- Error when reading `customerList.length`
+
 ## [0.1.6] - 2021-10-07
 
 ### Fixed
