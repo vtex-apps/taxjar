@@ -153,7 +153,7 @@ const Admin: FC<any> = () => {
     getCustomers()
   }
 
-  if (customerData && !customerList.length) {
+  if (customerData && !customerList?.length) {
     const newList = customerData.listCustomers
 
     setSettingsState({ ...settingsState, customerList: newList })
