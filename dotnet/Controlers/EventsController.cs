@@ -27,7 +27,7 @@ namespace service.Controllers
         {
             string bodyAsText = new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync().Result;
             AllStatesNotification allStatesNotification = JsonConvert.DeserializeObject<AllStatesNotification>(bodyAsText);
-            _context.Vtex.Logger.Debug("Order Broadcast", null, $"Notification {bodyAsText}");
+            //_context.Vtex.Logger.Debug("Order Broadcast", null, $"Notification {bodyAsText}");
             bool success = _vtexAPIService.ProcessNotification(allStatesNotification).Result;
             if (!success)
             {
