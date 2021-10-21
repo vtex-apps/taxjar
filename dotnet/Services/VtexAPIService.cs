@@ -76,12 +76,12 @@ namespace Taxjar.Services
                 //Amount = (float)vtexTaxRequest.Totals.Sum(t => t.Value) / 100,
                 Shipping = (float)vtexTaxRequest.Totals.Where(t => t.Id.Equals("Shipping")).Sum(t => t.Value) / 100,
                 //ToCity = vtexTaxRequest.ShippingDestination.City,
-                //ToCountry = vtexTaxRequest.ShippingDestination.Country.Substring(0, 2),
+                //ToCountry = GetCountryCode(vtexTaxRequest.ShippingDestination.Country),
                 //ToState = vtexTaxRequest.ShippingDestination.State,
                 //ToStreet = vtexTaxRequest.ShippingDestination.Street,
                 //ToZip = vtexTaxRequest.ShippingDestination.PostalCode,
                 //FromCity = vtexDock.PickupStoreInfo.Address.City,
-                //FromCountry = vtexDock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2),
+                //FromCountry = GetCountryCode(vtexDock.PickupStoreInfo.Address.Country.Acronym),
                 //FromState = vtexDock.PickupStoreInfo.Address.State,
                 //FromStreet = vtexDock.PickupStoreInfo.Address.Street,
                 //FromZip = vtexDock.PickupStoreInfo.Address.PostalCode,
@@ -94,7 +94,7 @@ namespace Taxjar.Services
             if(vtexTaxRequest.ShippingDestination != null)
             {
                 taxForOrder.ToCity = vtexTaxRequest.ShippingDestination.City;
-                taxForOrder.ToCountry = vtexTaxRequest.ShippingDestination.Country.Substring(0, 2);
+                taxForOrder.ToCountry = GetCountryCode(vtexTaxRequest.ShippingDestination.Country);
                 taxForOrder.ToState = vtexTaxRequest.ShippingDestination.State;
                 taxForOrder.ToStreet = vtexTaxRequest.ShippingDestination.Street;
                 taxForOrder.ToZip = vtexTaxRequest.ShippingDestination.PostalCode;
@@ -107,7 +107,7 @@ namespace Taxjar.Services
             if(vtexDock != null && vtexDock.PickupStoreInfo != null && vtexDock.PickupStoreInfo.Address != null)
             {
                 taxForOrder.FromCity = vtexDock.PickupStoreInfo.Address.City;
-                taxForOrder.FromCountry = vtexDock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2);
+                taxForOrder.FromCountry = GetCountryCode(vtexDock.PickupStoreInfo.Address.Country.Acronym);
                 taxForOrder.FromState = vtexDock.PickupStoreInfo.Address.State;
                 taxForOrder.FromStreet = vtexDock.PickupStoreInfo.Address.Street;
                 taxForOrder.FromZip = vtexDock.PickupStoreInfo.Address.PostalCode;
@@ -117,7 +117,7 @@ namespace Taxjar.Services
                 _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Missing address for Dock {dockId}");
             }
 
-            Console.WriteLine($"Dock {dockId} # items = {vtexTaxRequest.Items.Length}");
+            //Console.WriteLine($"Dock {dockId} # items = {vtexTaxRequest.Items.Length}");
             for (int i = 0; i < vtexTaxRequest.Items.Length; i++)
             {
                 string taxCode = null;
@@ -159,7 +159,7 @@ namespace Taxjar.Services
                                     new TaxForOrderNexusAddress
                                     {
                                         City = pickupPoint.Address.City,
-                                        Country = string.IsNullOrEmpty(pickupPoint.Address.Country.Acronym) ? string.Empty : pickupPoint.Address.Country.Acronym.Substring(0, 2),
+                                        Country = string.IsNullOrEmpty(pickupPoint.Address.Country.Acronym) ? string.Empty : GetCountryCode(pickupPoint.Address.Country.Acronym),
                                         Id = pickupPoint.PickupPointId,
                                         State = pickupPoint.Address.State,
                                         Street = pickupPoint.Address.Street,
@@ -236,7 +236,16 @@ namespace Taxjar.Services
             for (int i = 0; i < taxResponse.Tax.Breakdown.LineItems.Count; i++)
             {
                 TaxBreakdownLineItem lineItem = taxResponse.Tax.Breakdown.LineItems[i];
-                double itemTaxPercentOfWhole = (double)lineItem.TaxCollectable / totalItemTax;
+                double itemTaxPercentOfWhole = 0;
+                if (totalItemTax > 0)
+                {
+                    itemTaxPercentOfWhole = (double)lineItem.TaxCollectable / totalItemTax;
+                }
+                else
+                {
+                    itemTaxPercentOfWhole = 1 / (double)taxResponse.Tax.Breakdown.LineItems.Count;
+                }
+
                 ItemTaxResponse itemTaxResponse = new ItemTaxResponse
                 {
                     Id = lineItem.Id
@@ -423,6 +432,11 @@ namespace Taxjar.Services
                 {
                     decimal adjustmentAmount = Math.Round((totalOrderTax - totalResponseTax), 2, MidpointRounding.ToEven);
                     int lastItemIndex = vtexTaxResponse.ItemTaxResponse.Length - 1;
+                    if(vtexTaxResponse.ItemTaxResponse[lastItemIndex] == null || vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes == null)
+                    {
+                        lastItemIndex = 0;
+                    }
+
                     int lastTaxIndex = vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes.Length - 1;
                     vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes[lastTaxIndex].Value += adjustmentAmount;
                     _context.Vtex.Logger.Info("TaxjarResponseToVtexResponse", null, $"Applying adjustment: {totalOrderTax} - {totalResponseTax} = {adjustmentAmount}");
@@ -445,7 +459,7 @@ namespace Taxjar.Services
                 TransactionId = vtexOrder.OrderId,
                 TransactionDate = DateTime.Parse(vtexOrder.InvoicedDate).ToString("yyyy-MM-ddTHH:mm:sszzz"),
                 Provider = vtexOrder.SalesChannel,
-                ToCountry = vtexOrder.ShippingData.Address.Country.Substring(0, 2),
+                ToCountry = GetCountryCode(vtexOrder.ShippingData.Address.Country),
                 ToZip = vtexOrder.ShippingData.Address.PostalCode,
                 ToState = vtexOrder.ShippingData.Address.State,
                 ToCity = vtexOrder.ShippingData.Address.City,
@@ -469,7 +483,7 @@ namespace Taxjar.Services
                     VtexDockResponse vtexDock = await this.ListDockById(deliveryId.DockId);
                     if (vtexDock != null && vtexDock.PickupStoreInfo != null && vtexDock.PickupStoreInfo.Address != null)
                     {
-                        taxjarOrder.FromCountry = vtexDock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2);
+                        taxjarOrder.FromCountry = GetCountryCode(vtexDock.PickupStoreInfo.Address.Country.Acronym);
                         taxjarOrder.FromZip = vtexDock.PickupStoreInfo.Address.PostalCode;
                         taxjarOrder.FromState = vtexDock.PickupStoreInfo.Address.State;
                         taxjarOrder.FromCity = vtexDock.PickupStoreInfo.Address.City;
@@ -541,7 +555,7 @@ namespace Taxjar.Services
                 TransactionReferenceId = vtexOrder.OrderId,
                 TransactionDate = DateTime.Parse(package.IssuanceDate).ToString("yyyy-MM-ddTHH:mm:sszzz"),
                 Provider = vtexOrder.SalesChannel,
-                ToCountry = vtexOrder.ShippingData.Address.Country.Substring(0, 2),
+                ToCountry = GetCountryCode(vtexOrder.ShippingData.Address.Country),
                 ToZip = vtexOrder.ShippingData.Address.PostalCode,
                 ToState = vtexOrder.ShippingData.Address.State,
                 ToCity = vtexOrder.ShippingData.Address.City,
@@ -565,7 +579,7 @@ namespace Taxjar.Services
                     VtexDockResponse vtexDock = await this.ListDockById(deliveryId.DockId);
                     if (vtexDock != null && vtexDock.PickupStoreInfo != null && vtexDock.PickupStoreInfo.Address != null)
                     {
-                        taxjarOrder.FromCountry = vtexDock.PickupStoreInfo.Address.Country.Acronym.Substring(0, 2);
+                        taxjarOrder.FromCountry = GetCountryCode(vtexDock.PickupStoreInfo.Address.Country.Acronym);
                         taxjarOrder.FromZip = vtexDock.PickupStoreInfo.Address.PostalCode;
                         taxjarOrder.FromState = vtexDock.PickupStoreInfo.Address.State;
                         taxjarOrder.FromCity = vtexDock.PickupStoreInfo.Address.City;
@@ -762,6 +776,7 @@ namespace Taxjar.Services
             string jsonSerializedOrderConfig = await this._taxjarRepository.GetOrderConfiguration();
             if (string.IsNullOrEmpty(jsonSerializedOrderConfig))
             {
+                //Console.WriteLine("------------ Could not load Order Configuration. ----------------------");
                 retval = "Could not load Order Configuration.";
             }
             else
@@ -819,8 +834,7 @@ namespace Taxjar.Services
 
             try
             {
-                if (country.Length > 2)
-                    country = country.Substring(0, 2);
+                country = GetCountryCode(country);
 
                 var request = new HttpRequestMessage
                 {
@@ -1061,7 +1075,7 @@ namespace Taxjar.Services
                 }
                 else
                 {
-                    Console.WriteLine("Loaded Nexus from Storage");
+                    //Console.WriteLine("Loaded Nexus from Storage");
                     nexusRegionsResponse = nexusRegionsStorage.NexusRegionsResponse;
                 }
             }
@@ -1081,6 +1095,23 @@ namespace Taxjar.Services
             }
 
             return nexusRegionsResponse;
+        }
+
+        public string GetCountryCode(string country)
+        {
+            try
+            {
+                if (country.Length > 2)
+                {
+                    country = TaxjarConstants.CountryCodesMapping[country];
+                }
+            }
+            catch(Exception ex)
+            {
+                _context.Vtex.Logger.Error("GetCountryCode", null, $"Error getting country code {country}", ex);
+            }
+
+            return country;
         }
     }
 }

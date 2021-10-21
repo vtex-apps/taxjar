@@ -238,7 +238,7 @@
                 vtexTaxResponse = GetCachedTaxResponse(cacheKey).Result;
                 success = vtexTaxResponse != null;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _context.Vtex.Logger.Error("TryGetCache", null, "Error getting cache", ex);
             }

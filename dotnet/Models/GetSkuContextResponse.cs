@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Taxjar.Models
 {
@@ -122,7 +120,7 @@ namespace Taxjar.Models
         public bool IsDirectCategoryActive { get; set; }
 
         [JsonProperty("ProductGlobalCategoryId")]
-        public long ProductGlobalCategoryId { get; set; }
+        public string ProductGlobalCategoryId { get; set; }
 
         [JsonProperty("ProductCategories")]
         public object ProductCategories { get; set; }
@@ -131,7 +129,7 @@ namespace Taxjar.Models
         public object CommercialConditionId { get; set; }
 
         [JsonProperty("RewardValue")]
-        public long RewardValue { get; set; }
+        public string RewardValue { get; set; }
 
         [JsonProperty("AlternateIds")]
         public AlternateIds AlternateIds { get; set; }

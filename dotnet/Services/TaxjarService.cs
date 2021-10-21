@@ -86,11 +86,12 @@ namespace Taxjar.Services
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
                 responseContent = await response.Content.ReadAsStringAsync();
-                _context.Vtex.Logger.Info("SendRequest", null, $"[{httpMethod}] '{jsonSerializedData}'\rto '{endpoint}'\rResponse [{response.StatusCode}] '{responseContent}'");
+                //_context.Vtex.Logger.Debug("SendRequest", null, $"[{httpMethod}] '{jsonSerializedData}'\rto '{endpoint}'\rResponse [{response.StatusCode}] '{responseContent}'");
                 if(!response.IsSuccessStatusCode)
                 {
                     try
                     {
+                        _context.Vtex.Logger.Warn("SendRequest", null, $"[{httpMethod}] '{jsonSerializedData}'\rto '{endpoint}'\rResponse [{response.StatusCode}] '{responseContent}'");
                         ErrorResponse errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(responseContent);
                         responseContent = $"{TaxjarConstants.ERROR_INDICATOR}:{errorResponse.Detail}";
                     }

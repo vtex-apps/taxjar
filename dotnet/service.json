@@ -41,6 +41,10 @@
     "validateAddress": {
       "path": "/taxjar/validate-address",
       "public": true
+    },
+    "taxjarToVtex": {
+      "path": "/taxjar/taxjar-vtex",
+      "public": true
     }
   },
   "events": {
