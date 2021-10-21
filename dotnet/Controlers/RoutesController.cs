@@ -369,7 +369,6 @@
 
             timer.Stop();
             _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Elapsed Time = '{timer.Elapsed.TotalMilliseconds}' '{orderFormId}' {totalItems} items.  From cache? {fromCache}");
-
             return Json(vtexTaxResponse);
         }
 
@@ -616,6 +615,7 @@
                     }
                     else
                     {
+                        //Console.WriteLine("Could not load nexus list from TaxJar.");
                         _context.Vtex.Logger.Warn("InNexus", null, "Could not load nexus list from TaxJar.");
                     }
                 }
@@ -640,8 +640,9 @@
             {
                 // if there is an error, try to collect tax
                 inNexus = true;
+                //Console.WriteLine($"ERROR: {ex.Message}");
             }
-
+            
             return inNexus;
         }
     }

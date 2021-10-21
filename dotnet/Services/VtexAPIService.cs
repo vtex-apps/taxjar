@@ -236,7 +236,16 @@ namespace Taxjar.Services
             for (int i = 0; i < taxResponse.Tax.Breakdown.LineItems.Count; i++)
             {
                 TaxBreakdownLineItem lineItem = taxResponse.Tax.Breakdown.LineItems[i];
-                double itemTaxPercentOfWhole = (double)lineItem.TaxCollectable / totalItemTax;
+                double itemTaxPercentOfWhole = 0;
+                if (totalItemTax > 0)
+                {
+                    itemTaxPercentOfWhole = (double)lineItem.TaxCollectable / totalItemTax;
+                }
+                else
+                {
+                    itemTaxPercentOfWhole = 1 / (double)taxResponse.Tax.Breakdown.LineItems.Count;
+                }
+
                 ItemTaxResponse itemTaxResponse = new ItemTaxResponse
                 {
                     Id = lineItem.Id
