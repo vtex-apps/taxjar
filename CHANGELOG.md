@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Handle zero value items
 - Error handling
 
 ## [0.1.7] - 2021-10-13
