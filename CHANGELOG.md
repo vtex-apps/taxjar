@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.1.9] - 2021-10-25
+
 ### Fixed
 
 - TAXJAR-34 Ensure tax adjustment does not reduce tax below zero
