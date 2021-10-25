@@ -431,15 +431,28 @@ namespace Taxjar.Services
                 try
                 {
                     decimal adjustmentAmount = Math.Round((totalOrderTax - totalResponseTax), 2, MidpointRounding.ToEven);
-                    int lastItemIndex = vtexTaxResponse.ItemTaxResponse.Length - 1;
-                    if(vtexTaxResponse.ItemTaxResponse[lastItemIndex] == null || vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes == null)
+                    for (int lastItemIndex = vtexTaxResponse.ItemTaxResponse.Length - 1; lastItemIndex >= 0; lastItemIndex--)
                     {
-                        lastItemIndex = 0;
+                        if (vtexTaxResponse.ItemTaxResponse[lastItemIndex] != null && vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes != null)
+                        {
+                            for (int lastTaxIndex = vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes.Length - 1; lastTaxIndex >= 0; lastTaxIndex--)
+                            {
+                                if (vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes[lastTaxIndex].Value + adjustmentAmount >= 0)
+                                {
+                                    vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes[lastTaxIndex].Value += adjustmentAmount;
+                                    adjustmentAmount = 0;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if(adjustmentAmount == 0)
+                        {
+                            break;
+                        }
                     }
 
-                    int lastTaxIndex = vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes.Length - 1;
-                    vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes[lastTaxIndex].Value += adjustmentAmount;
-                    _context.Vtex.Logger.Info("TaxjarResponseToVtexResponse", null, $"Applying adjustment: {totalOrderTax} - {totalResponseTax} = {adjustmentAmount}");
+                    _context.Vtex.Logger.Warn("TaxjarResponseToVtexResponse", null, $"Applying adjustment: {totalOrderTax} - {totalResponseTax} = {adjustmentAmount}");
                 }
                 catch(Exception ex)
                 {
