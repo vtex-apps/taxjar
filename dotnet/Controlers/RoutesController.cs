@@ -85,7 +85,7 @@
                         if(_taxjarRepository.TryGetCache(cacheKey, out vtexTaxResponse))
                         {
                             fromCache = true;
-                            _context.Vtex.Logger.Info("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(vtexTaxResponse)}");
+                            _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(vtexTaxResponse)}");
                         }
                         else
                         {
