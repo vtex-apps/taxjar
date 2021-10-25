@@ -431,6 +431,7 @@ namespace Taxjar.Services
                 try
                 {
                     decimal adjustmentAmount = Math.Round((totalOrderTax - totalResponseTax), 2, MidpointRounding.ToEven);
+                    _context.Vtex.Logger.Warn("TaxjarResponseToVtexResponse", null, $"Applying adjustment: {totalOrderTax} - {totalResponseTax} = {adjustmentAmount}");
                     for (int lastItemIndex = vtexTaxResponse.ItemTaxResponse.Length - 1; lastItemIndex >= 0; lastItemIndex--)
                     {
                         if (vtexTaxResponse.ItemTaxResponse[lastItemIndex] != null && vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes != null)
@@ -451,8 +452,6 @@ namespace Taxjar.Services
                             break;
                         }
                     }
-
-                    _context.Vtex.Logger.Warn("TaxjarResponseToVtexResponse", null, $"Applying adjustment: {totalOrderTax} - {totalResponseTax} = {adjustmentAmount}");
                 }
                 catch(Exception ex)
                 {
