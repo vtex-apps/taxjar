@@ -80,11 +80,13 @@
                         orderFormId = taxRequest.OrderFormId;
                         totalItems = taxRequest.Items.Sum(i => i.Quantity);
                         decimal total = taxRequest.Totals.Sum(t => t.Value);
+                        //Console.WriteLine($"cacheKey = {_context.Vtex.App.Version} {taxRequest.ShippingDestination.PostalCode} {total} ");
                         // accountname+app+appversion+ 2021-04-23-4-20 + skuid+skuquantity+zipcode => turn this into a HASH
                         int cacheKey = $"{_context.Vtex.App.Version}{taxRequest.ShippingDestination.PostalCode}{total}".GetHashCode();
                         if(_taxjarRepository.TryGetCache(cacheKey, out vtexTaxResponse))
                         {
                             fromCache = true;
+                            //Console.WriteLine($"fromCache = {fromCache} ");
                             _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(vtexTaxResponse)}");
                         }
                         else
@@ -369,6 +371,16 @@
 
             timer.Stop();
             _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Elapsed Time = '{timer.Elapsed.TotalMilliseconds}' '{orderFormId}' {totalItems} items.  From cache? {fromCache}");
+            //Console.WriteLine($"Elapsed Time = '{timer.Elapsed.TotalMilliseconds}' '{orderFormId}' {totalItems} items.  From cache? {fromCache}");
+            //var taxes = vtexTaxResponse.ItemTaxResponse.Select(t => t.Taxes).ToList();
+            //foreach(var taxValues in taxes)
+            //{
+            //    foreach (var taxValue in taxValues)
+            //    {
+            //        Console.WriteLine($"TAX = {taxValue.Name} = {taxValue.Value}");
+            //    }
+            //}
+            
             return Json(vtexTaxResponse);
         }
 
