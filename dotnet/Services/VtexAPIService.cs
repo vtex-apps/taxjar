@@ -139,6 +139,8 @@ namespace Taxjar.Services
                     Quantity = vtexTaxRequest.Items[i].Quantity,
                     UnitPrice = (float)(vtexTaxRequest.Items[i].ItemPrice / vtexTaxRequest.Items[i].Quantity)
                 };
+
+                //Console.WriteLine($"[{taxForOrder.LineItems[i].Id}] x{taxForOrder.LineItems[i].Quantity} {taxForOrder.LineItems[i].UnitPrice} - {taxForOrder.LineItems[i].Discount}");
             }
 
             List<TaxForOrderNexusAddress> nexuses = new List<TaxForOrderNexusAddress>();
@@ -252,7 +254,7 @@ namespace Taxjar.Services
                 };
 
                 List<VtexTax> vtexTaxes = new List<VtexTax>();
-                if (lineItem.StateAmount > 0)
+                //if (lineItem.StateAmount > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -264,7 +266,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (lineItem.CountyAmount > 0)
+                //if (lineItem.CountyAmount > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -276,7 +278,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (lineItem.CityAmount > 0)
+                //if (lineItem.CityAmount > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -288,7 +290,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (lineItem.SpecialDistrictAmount > 0)
+                //if (lineItem.SpecialDistrictAmount > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -300,7 +302,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (shippingTaxState > 0)
+                //if (shippingTaxState > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -312,7 +314,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (shippingTaxCounty > 0)
+                //if (shippingTaxCounty > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -324,7 +326,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (shippingTaxCity > 0)
+                //if (shippingTaxCity > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -336,7 +338,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (shippingTaxSpecial > 0)
+                //if (shippingTaxSpecial > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -348,7 +350,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (lineItem.GST > 0)
+                //if (lineItem.GST > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -360,7 +362,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (lineItem.PST > 0)
+                //if (lineItem.PST > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -372,7 +374,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (lineItem.QST > 0)
+                //if (lineItem.QST > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -384,7 +386,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (shippingTaxGST > 0)
+                //if (shippingTaxGST > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -396,7 +398,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (shippingTaxPST > 0)
+                //if (shippingTaxPST > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -408,7 +410,7 @@ namespace Taxjar.Services
                      );
                 }
 
-                if (shippingTaxQST > 0)
+                //if (shippingTaxQST > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -432,6 +434,7 @@ namespace Taxjar.Services
                 {
                     decimal adjustmentAmount = Math.Round((totalOrderTax - totalResponseTax), 2, MidpointRounding.ToEven);
                     _context.Vtex.Logger.Warn("TaxjarResponseToVtexResponse", null, $"Applying adjustment: {totalOrderTax} - {totalResponseTax} = {adjustmentAmount}");
+                    //Console.WriteLine($"Applying adjustment: {totalOrderTax} - {totalResponseTax} = {adjustmentAmount}");
                     for (int lastItemIndex = vtexTaxResponse.ItemTaxResponse.Length - 1; lastItemIndex >= 0; lastItemIndex--)
                     {
                         if (vtexTaxResponse.ItemTaxResponse[lastItemIndex] != null && vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes != null)
@@ -521,6 +524,7 @@ namespace Taxjar.Services
                 };
 
                 taxjarOrder.LineItems.Add(taxForOrderLineItem);
+                //Console.WriteLine($"[{taxForOrderLineItem.Id}] x{taxForOrderLineItem.Quantity} {taxForOrderLineItem.UnitPrice} - {taxForOrderLineItem.Discount}");
             }
 
             return taxjarOrder;
