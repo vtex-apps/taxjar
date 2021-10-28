@@ -439,9 +439,9 @@ namespace Taxjar.Services
                     {
                         if (vtexTaxResponse.ItemTaxResponse[lastItemIndex] != null && vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes != null)
                         {
-                            for (int lastTaxIndex = vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes.Length - 1; lastTaxIndex > 0; lastTaxIndex--)
+                            for (int lastTaxIndex = vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes.Length - 1; lastTaxIndex >= 0; lastTaxIndex--)
                             {
-                                if (vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes[lastTaxIndex].Value + adjustmentAmount >= 0)
+                                if (vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes[lastTaxIndex].Value > 0 && vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes[lastTaxIndex].Value + adjustmentAmount >= 0)
                                 {
                                     vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes[lastTaxIndex].Value += adjustmentAmount;
                                     adjustmentAmount = 0;
