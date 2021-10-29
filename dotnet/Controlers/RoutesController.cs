@@ -80,13 +80,21 @@
                         orderFormId = taxRequest.OrderFormId;
                         totalItems = taxRequest.Items.Sum(i => i.Quantity);
                         decimal total = taxRequest.Totals.Sum(t => t.Value);
+                        if(total == 0)
+                        {
+                            timer.Stop();
+                            _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Elapsed Time = '{timer.Elapsed.TotalMilliseconds}' '{orderFormId}' {totalItems} items.  Order total is zero.");
+
+                            return Json(vtexTaxResponse);
+                        }
+
                         //Console.WriteLine($"cacheKey = {_context.Vtex.App.Version} {taxRequest.ShippingDestination.PostalCode} {total} ");
                         // accountname+app+appversion+ 2021-04-23-4-20 + skuid+skuquantity+zipcode => turn this into a HASH
                         int cacheKey = $"{_context.Vtex.App.Version}{taxRequest.ShippingDestination.PostalCode}{total}".GetHashCode();
                         if(_taxjarRepository.TryGetCache(cacheKey, out vtexTaxResponse))
                         {
                             fromCache = true;
-                            //Console.WriteLine($"fromCache = {fromCache} ");
+                            Console.WriteLine($"'{cacheKey}' fromCache = {fromCache} ");
                             _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(vtexTaxResponse)}");
                         }
                         else

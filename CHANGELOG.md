@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Check for zero dollar orders.
+
 ## [0.1.11] - 2021-10-28
 
 ### Changed
