@@ -19,6 +19,7 @@ namespace Taxjar.Services
         Task<string> GetShopperEmailById(string userId);
         Task<NexusRegionsResponse> NexusRegions();
         Task<CreateTaxjarOrder> VtexPackageToTaxjarRefund(VtexOrder vtexOrder, Package package);
+        Task<GetListOfUsers> GetListOfUsers(int numItems, int pageNumber);
 
         string GetCountryCode(string country);
     }

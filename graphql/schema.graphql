@@ -1,6 +1,7 @@
 type Query {
   listCustomers: [Customer]
   findProductCode(searchTerm: String): [Category]
+  getListOfUsers(numItems: Int pageNumber:Int): UserList
 }
 
 type Mutation {
@@ -38,4 +39,22 @@ type Category {
   description: String
   name: String
   productTaxCode: String
+}
+
+type UserList {
+  items: [UserItem]
+  paging: Paging
+}
+
+type UserItem {
+  id: String
+  email: String
+  name: String
+}
+
+type Paging {
+  page: Int
+  perPage: Int
+  total: Int
+  pages: Int
 }

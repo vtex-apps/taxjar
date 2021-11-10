@@ -1067,6 +1067,37 @@ namespace Taxjar.Services
             return email;
         }
 
+        public async Task<GetListOfUsers> GetListOfUsers(int numItems, int pageNumber)
+        {
+            GetListOfUsers getListOfUsers = null;
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/license-manager/site/pvt/logins/list/paged?numItems={numItems}&pageNumber={pageNumber}&sort=name&sortType=ASC'")
+            };
+
+            request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
+            //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+            string authToken = _context.Vtex.AdminUserAuthToken;
+            if (authToken != null)
+            {
+                request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+                request.Headers.Add(TaxjarConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
+            }
+
+            var client = _clientFactory.CreateClient();
+            var response = await client.SendAsync(request);
+            string responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($" - GetListOfUsers - [{response.StatusCode}] - '{responseContent}' - ");
+            if (response.IsSuccessStatusCode)
+            {
+                getListOfUsers = JsonConvert.DeserializeObject<GetListOfUsers>(responseContent);
+            }
+
+            return getListOfUsers;
+        }
+
         public async Task<NexusRegionsResponse> NexusRegions()
         {
             //Response.Headers.Add("Cache-Control", "private");

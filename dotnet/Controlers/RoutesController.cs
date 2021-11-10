@@ -88,7 +88,20 @@
                             return Json(vtexTaxResponse);
                         }
 
-                        //Console.WriteLine($"cacheKey = {_context.Vtex.App.Version} {taxRequest.ShippingDestination.PostalCode} {total} ");
+                        try
+                        {
+                            decimal totalOrderDiscount = Math.Abs(taxRequest.Totals.Where(t => t.Id.Equals("Discounts")).Sum(t => t.Value));
+                            decimal totalItemDiscount = Math.Abs(taxRequest.Items.Sum(i => i.DiscountPrice) * 100);
+                            if (totalOrderDiscount != totalItemDiscount)
+                            {
+                                _context.Vtex.Logger.Error("Discount", null, $"Order Discount {totalOrderDiscount} does not match Item Discount {totalItemDiscount} for order id '{taxRequest.OrderFormId}'");
+                            }
+                        }
+                        catch(Exception ex)
+                        {
+                            _context.Vtex.Logger.Error("Discount", null, $"Count not verify discounts for order id '{taxRequest.OrderFormId}'", ex);
+                        }
+
                         // accountname+app+appversion+ 2021-04-23-4-20 + skuid+skuquantity+zipcode => turn this into a HASH
                         int cacheKey = $"{_context.Vtex.App.Version}{taxRequest.ShippingDestination.PostalCode}{total}".GetHashCode();
                         if(_taxjarRepository.TryGetCache(cacheKey, out vtexTaxResponse))

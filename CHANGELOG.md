@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Log when the tax hub request item discount amount does not match order discount
+- Query to retrive users
+
 ## [0.1.12] - 2021-10-29
 
 ### Changed
