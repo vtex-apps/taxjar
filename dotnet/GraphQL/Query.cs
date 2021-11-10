@@ -6,7 +6,6 @@ using GraphQL.Types;
 using System.Linq;
 using Taxjar.GraphQL.Types;
 using System.Collections.Generic;
-using System;
 
 namespace Taxjar.GraphQL
 {
@@ -49,6 +48,22 @@ namespace Taxjar.GraphQL
                     List<Category> categories  = categoriesAll.Categories.Where(c => c.Name.Contains(searchTerm)).ToList();
 
                     return categories;
+                }
+            );
+
+            FieldAsync<UserListType>(
+                "getListOfUsers",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "numItems", Description = "Number of Items" },
+                    new QueryArgument<IntGraphType> { Name = "pageNumber", Description = "Page Number" }
+                    ),
+                resolve: async context =>
+                {
+                    int numItems = context.GetArgument<int>("numItems");
+                    int pageNumber = context.GetArgument<int>("pageNumber");
+                    GetListOfUsers getListOfUsers = await vtexAPIService.GetListOfUsers(numItems, pageNumber);
+
+                    return getListOfUsers;
                 }
             );
         }
