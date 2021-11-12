@@ -621,7 +621,7 @@ const Admin: FC<any> = () => {
                     })
                   }
                 >
-                  TaxJar exemption created successfully
+                  <FormattedMessage id="admin/taxjar.exemption.success" />
                 </Alert>
               </div>
             )}
@@ -703,7 +703,7 @@ const Admin: FC<any> = () => {
                         })
                       }
                     >
-                      Email is not registered as a VTEX account
+                      <FormattedMessage id="admin/taxjar.settings.exemption.email.error" />
                     </Alert>
                   </div>
                 )}
