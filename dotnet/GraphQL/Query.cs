@@ -62,6 +62,17 @@ namespace Taxjar.GraphQL
                     int numItems = context.GetArgument<int>("numItems");
                     int pageNumber = context.GetArgument<int>("pageNumber");
                     GetListOfUsers getListOfUsers = await vtexAPIService.GetListOfUsers(numItems, pageNumber);
+                    List<UserItem> userItemsFiltered = new List<UserItem>();
+                    foreach(UserItem userItem in getListOfUsers.Items)
+                    {
+                        userItem.Id = vtexAPIService.GetShopperIdByEmail(userItem.Email).Result;
+                        if(!string.IsNullOrWhiteSpace(userItem.Id))
+                        {
+                            userItemsFiltered.Add(userItem);
+                        }
+                    }
+
+                    getListOfUsers.Items = userItemsFiltered;
 
                     return getListOfUsers;
                 }

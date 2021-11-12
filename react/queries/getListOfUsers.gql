@@ -1,0 +1,15 @@
+query GetListOfUsers ($numItems: Int, $pageNumber: Int){
+  getListOfUsers (numItems: $numItems, pageNumber: $pageNumber){
+    items {
+      id
+      email
+      name
+    }
+    paging {
+      page
+      perPage
+      total
+      pages
+    }
+  }
+}
