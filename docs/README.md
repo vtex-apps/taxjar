@@ -32,6 +32,11 @@ Using your terminal, log in to the desired VTEX account and run the following co
 3. Save Settings.
 4. Test Connection.
 
+### Step 4 - Adding customer exemptions
+
+1. Fill in all fields, making sure that the email used is a valid VTEX account.
+2. Currently, the application supports up to three exempt US states for a user.
+
 ### Notes
 
 - Pickup points are used to determine nexus addresses.  Must be tagged with 'TaxJar'

@@ -21,7 +21,7 @@ import {
   Alert,
 } from 'vtex.styleguide'
 import { useIntl, FormattedMessage } from 'react-intl'
-import { useQuery, useLazyQuery, useMutation } from 'react-apollo'
+import { useQuery, useLazyQuery, useMutation, useApolloClient } from 'react-apollo'
 import { Link } from 'vtex.render-runtime'
 
 import M_INIT_CONFIG from './mutations/InitConfiguration.gql'
@@ -32,6 +32,7 @@ import SaveAppSettings from './mutations/saveAppSettings.graphql'
 import GET_CUSTOMERS from './queries/ListCustomers.gql'
 import DELETE_CUSTOMER from './mutations/DeleteCustomer.gql'
 import CREATE_CUSTOMER from './mutations/CreateCustomer.gql'
+import GET_USERS from './queries/getListOfUsers.gql'
 import { countries, states, options } from './common/utils'
 
 const Admin: FC<any> = () => {
@@ -56,13 +57,16 @@ const Admin: FC<any> = () => {
     customerState3: '',
     customerCountry3: '',
     customerList: [],
+    customerCreationSuccess: false,
     customerCreationError: false,
+    userNotFoundAlert: false,
+    deleteCalled: false,
     showMoreTypes1: false,
     showMoreTypes2: false,
   })
 
   const { customerList } = settingsState
-
+  const client = useApolloClient()
   const [testAllowed, setTestAllowed] = useState(false)
   const [testComplete, setTestComplete] = useState(false)
   const [settingsLoading, setSettingsLoading] = useState(false)
@@ -153,12 +157,6 @@ const Admin: FC<any> = () => {
     getCustomers()
   }
 
-  if (customerData && !customerList?.length) {
-    const newList = customerData.listCustomers
-
-    setSettingsState({ ...settingsState, customerList: newList })
-  }
-
   if (!settingsState.currentTab) {
     setSettingsState({
       ...settingsState,
@@ -202,6 +200,67 @@ const Admin: FC<any> = () => {
       exemptRegions,
     }
 
+    // Check if email is registered to a VTEX account
+    const query = {
+      query: GET_USERS,
+      variables: {
+        numItems: 100,
+        pageNumber: 1
+      },
+    }
+
+    let queryRes
+    try {
+      queryRes = await client.query(query)
+    } catch (e) {
+      console.log(e)
+    }
+
+    const userData = queryRes.data.getListOfUsers 
+    let users = userData.items || []
+    const totalItems = userData.paging.total || 0
+    if (totalItems > 100) {
+      const numIterations = Math.ceil((totalItems - 100) / 100)
+
+      for (let i = 0; i < numIterations; i++) {
+        const pageNum = i + 2
+        const query = {
+          query: GET_USERS,
+          variables: {
+            numItems: 100,
+            pageNumber: pageNum
+          },
+        }
+    
+        let queryRes
+        try {
+          queryRes = await client.query(query)
+        } catch (e) {
+          console.log(e)
+        }
+        const newUsers = queryRes.data.getListOfUsers.items || []
+        users = [...users, ...newUsers]
+      }
+    }
+
+    let eligibleCustomerFlag = false
+
+    for (const user of users) {
+      if (user.email === customer.customerId) {
+        eligibleCustomerFlag = true
+      }
+    }
+
+    if (!eligibleCustomerFlag) {
+      setSettingsState({
+        ...settingsState,
+        userNotFoundAlert: true,
+      })
+
+      return
+    }
+
+    // Create exemption
     let res: any
 
     try {
@@ -221,6 +280,7 @@ const Admin: FC<any> = () => {
           customerList: newCustomerList,
           updateTableKey: random,
           isModalOpen: false,
+          customerCreationSuccess: true,
         })
       } else {
         setSettingsState({
@@ -232,7 +292,7 @@ const Admin: FC<any> = () => {
     }
   }
 
-  const handleCustomerDelete = (rowData: any) => {
+  const handleCustomerDelete = async (rowData: any) => {
     const random = Math.random().toString(36).substring(7)
     const customers = settingsState.customerList || []
     const newCustomerList: any = customers?.filter(
@@ -243,7 +303,15 @@ const Admin: FC<any> = () => {
       ...settingsState,
       customerList: newCustomerList,
       updateTableKey: random,
+      deleteCalled: true,
     })
+
+  }
+
+  if (customerData && customerList?.length && !settingsState.deleteCalled && customerData.listCustomers !== customerList) {
+    const newList = customerData.listCustomers
+
+    setSettingsState({ ...settingsState, customerList: newList })
   }
 
   const lineActions = [
@@ -257,15 +325,17 @@ const Admin: FC<any> = () => {
           variables: {
             customerId: rowData.customerId,
           },
+        }).then(() => {
+          getCustomers()
+        }).then(() => {
+          handleCustomerDelete(rowData)
+          alert(
+            formatMessage({
+              id: 'admin/taxjar.settings.exemption.line-action.alert',
+            })
+          )
         })
 
-        handleCustomerDelete(rowData)
-
-        alert(
-          formatMessage({
-            id: 'admin/taxjar.settings.exemption.line-action.alert',
-          })
-        )
       },
     },
   ]
@@ -325,6 +395,8 @@ const Admin: FC<any> = () => {
       </Layout>
     )
   }
+
+  console.log('state', settingsState)
 
   return (
     <Layout
@@ -537,6 +609,23 @@ const Admin: FC<any> = () => {
               setSettingsState({ ...settingsState, currentTab: 2 })
             }
           >
+
+            {settingsState.customerCreationSuccess && (
+              <div className="mt6">
+                <Alert
+                  type="success"
+                  onClose={() =>
+                    setSettingsState({
+                      ...settingsState,
+                      customerCreationSuccess: false,
+                    })
+                  }
+                >
+                  <FormattedMessage id="admin/taxjar.exemption.success" />
+                </Alert>
+              </div>
+            )}
+
             <div className="mt8">
               <ButtonWithIcon
                 onClick={() => handleModalToggle()}
@@ -602,6 +691,22 @@ const Admin: FC<any> = () => {
                     }
                   />
                 </div>
+
+                {settingsState.userNotFoundAlert && (
+                  <div className="mt6">
+                    <Alert
+                      type="error"
+                      onClose={() =>
+                        setSettingsState({
+                          ...settingsState,
+                          userNotFoundAlert: false,
+                        })
+                      }
+                    >
+                      <FormattedMessage id="admin/taxjar.settings.exemption.email.error" />
+                    </Alert>
+                  </div>
+                )}
 
                 <div className="mt5">
                   <Dropdown
@@ -770,7 +875,6 @@ const Admin: FC<any> = () => {
                   <Button
                     onClick={() => {
                       handleCustomerCreate()
-                      handleModalToggle()
                     }}
                   >
                     <FormattedMessage id="admin/taxjar.settings.exemption-modal.submit" />

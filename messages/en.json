@@ -31,5 +31,7 @@
   "admin/taxjar.settings.exemption-modal.state": "State",
   "admin/taxjar.settings.exemption-modal.country": "Country",
   "admin/taxjar.settings.exemption.customer.error": "Error Creating Customer Exemption",
-  "admin/taxjar.settings.exemption.add-location": "Add More Locations"
+  "admin/taxjar.settings.exemption.add-location": "Add More Locations",
+  "admin/taxjar.exemption.success": "TaxJar exemption created successfully",
+  "admin/taxjar.settings.exemption.email.error": "Email is not registered as a VTEX account"
 }
