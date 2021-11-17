@@ -103,7 +103,7 @@
                         }
 
                         // accountname+app+appversion+ 2021-04-23-4-20 + skuid+skuquantity+zipcode => turn this into a HASH
-                        int cacheKey = $"{_context.Vtex.App.Version}{taxRequest.ShippingDestination.PostalCode}{total}".GetHashCode();
+                        int cacheKey = $"{_context.Vtex.App.Version}{taxRequest.ShippingDestination.PostalCode}{totalItems}{total}".GetHashCode();
                         if(_taxjarRepository.TryGetCache(cacheKey, out vtexTaxResponse))
                         {
                             fromCache = true;
