@@ -118,11 +118,51 @@ namespace Taxjar.Services
             }
 
             //Console.WriteLine($"Dock {dockId} # items = {vtexTaxRequest.Items.Length}");
+            VtexOrderForm vtexOrderForm = null;
+            try
+            {
+                vtexOrderForm = await GetOrderFormInformation(vtexTaxRequest.OrderFormId);
+            }
+            catch(Exception ex)
+            {
+                _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Error loading orderform {vtexTaxRequest.OrderFormId}", ex);
+            }
+
             for (int i = 0; i < vtexTaxRequest.Items.Length; i++)
             {
+                float discount = (float)Math.Abs(vtexTaxRequest.Items[i].DiscountPrice);
+                if(vtexOrderForm != null)
+                {
+                    try
+                    {
+                        string sku = vtexTaxRequest.Items[i].Sku;
+                        OrderformItem orderformItem = vtexOrderForm.Items.Where(i => i.Id.Equals(sku)).FirstOrDefault();
+                        if (orderformItem != null)
+                        {
+                            long discountInCents = orderformItem.ListPrice - orderformItem.SellingPrice;
+                            discountInCents = discountInCents * vtexTaxRequest.Items[i].Quantity;
+                            float discountFromOrderform = (float)discountInCents / 100;
+                            if (discount != discountFromOrderform)
+                            {
+                                Console.WriteLine($"Resetting discount for sku {sku} from {discount} to {discountFromOrderform}");
+                                _context.Vtex.Logger.Warn("VtexRequestToTaxjarRequest", "Discount", $"Resetting discount for sku {sku} from {discount} to {discountFromOrderform} for order {vtexTaxRequest.OrderFormId}");
+                                discount = discountFromOrderform;
+                            }
+                        }
+                        else
+                        {
+                            _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", "Discount", $"No match for sku {sku} in orderform {vtexTaxRequest.OrderFormId}");
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", "Discount", $"Error getting discounts from orderform {vtexTaxRequest.OrderFormId}", ex);
+                    }
+                }
+
                 string taxCode = null;
                 GetSkuContextResponse skuContextResponse = await this.GetSku(vtexTaxRequest.Items[i].Sku);
-                if(skuContextResponse != null)
+                if (skuContextResponse != null)
                 {
                     taxCode = skuContextResponse.TaxCode;
                 }
@@ -133,7 +173,7 @@ namespace Taxjar.Services
 
                 taxForOrder.LineItems[i] = new TaxForOrderLineItem
                 {
-                    Discount = (float)Math.Abs(vtexTaxRequest.Items[i].DiscountPrice),
+                    Discount = discount,
                     Id = vtexTaxRequest.Items[i].Id,
                     ProductTaxCode = taxCode,
                     Quantity = vtexTaxRequest.Items[i].Quantity,
@@ -637,6 +677,50 @@ namespace Taxjar.Services
                 if (response.IsSuccessStatusCode)
                 {
                     vtexOrder = JsonConvert.DeserializeObject<VtexOrder>(responseContent);
+                }
+                else
+                {
+                    _context.Vtex.Logger.Info("GetOrderInformation", null, $"Order# {orderId} [{response.StatusCode}] '{responseContent}'");
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.Vtex.Logger.Error("GetOrderInformation", null, $"Order# {orderId} Error", ex);
+            }
+
+            return vtexOrder;
+        }
+
+        public async Task<VtexOrderForm> GetOrderFormInformation(string orderId)
+        {
+            VtexOrderForm vtexOrder = null;
+
+            try
+            {
+                var request = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Get,
+                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.VTEX_ACCOUNT_HEADER_NAME]}.{TaxjarConstants.ENVIRONMENT}.com.br/api/checkout/pub/orderForm/{orderId}?disableAutoCompletion=true")
+                };
+
+                request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
+                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
+                if (authToken != null)
+                {
+                    request.Headers.Add(TaxjarConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                    request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
+                    request.Headers.Add(TaxjarConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
+                }
+
+                //StringBuilder sb = new StringBuilder();
+
+                var client = _clientFactory.CreateClient();
+                var response = await client.SendAsync(request);
+                string responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    vtexOrder = JsonConvert.DeserializeObject<VtexOrderForm>(responseContent);
                 }
                 else
                 {

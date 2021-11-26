@@ -20,6 +20,7 @@ namespace Taxjar.Services
         Task<NexusRegionsResponse> NexusRegions();
         Task<CreateTaxjarOrder> VtexPackageToTaxjarRefund(VtexOrder vtexOrder, Package package);
         Task<GetListOfUsers> GetListOfUsers(int numItems, int pageNumber);
+        Task<VtexOrderForm> GetOrderFormInformation(string orderId);
 
         string GetCountryCode(string country);
     }
