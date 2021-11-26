@@ -118,29 +118,45 @@ namespace Taxjar.Services
             }
 
             //Console.WriteLine($"Dock {dockId} # items = {vtexTaxRequest.Items.Length}");
-            VtexOrderForm vtexOrderForm = await GetOrderFormInformation(vtexTaxRequest.OrderFormId);
+            VtexOrderForm vtexOrderForm = null;
+            try
+            {
+                vtexOrderForm = await GetOrderFormInformation(vtexTaxRequest.OrderFormId);
+            }
+            catch(Exception ex)
+            {
+                _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Error loading orderform {vtexTaxRequest.OrderFormId}", ex);
+            }
+
             for (int i = 0; i < vtexTaxRequest.Items.Length; i++)
             {
                 float discount = (float)Math.Abs(vtexTaxRequest.Items[i].DiscountPrice);
                 if(vtexOrderForm != null)
                 {
-                    string sku = vtexTaxRequest.Items[i].Sku;
-                    OrderformItem orderformItem = vtexOrderForm.Items.Where(i => i.Id.Equals(sku)).FirstOrDefault();
-                    if (orderformItem != null)
+                    try
                     {
-                        long discountInCents = orderformItem.ListPrice - orderformItem.SellingPrice;
-                        discountInCents = discountInCents * vtexTaxRequest.Items[i].Quantity;
-                        float discountFromOrderform = (float)discountInCents / 100;
-                        if(discount != discountFromOrderform)
+                        string sku = vtexTaxRequest.Items[i].Sku;
+                        OrderformItem orderformItem = vtexOrderForm.Items.Where(i => i.Id.Equals(sku)).FirstOrDefault();
+                        if (orderformItem != null)
                         {
-                            Console.WriteLine($"Resetting discount for sku {sku} from {discount} to {discountFromOrderform}");
-                            _context.Vtex.Logger.Warn("VtexRequestToTaxjarRequest", "Discount", $"Resetting discount for sku {sku} from {discount} to {discountFromOrderform} for order {vtexTaxRequest.OrderFormId}");
-                            discount = discountFromOrderform;
+                            long discountInCents = orderformItem.ListPrice - orderformItem.SellingPrice;
+                            discountInCents = discountInCents * vtexTaxRequest.Items[i].Quantity;
+                            float discountFromOrderform = (float)discountInCents / 100;
+                            if (discount != discountFromOrderform)
+                            {
+                                Console.WriteLine($"Resetting discount for sku {sku} from {discount} to {discountFromOrderform}");
+                                _context.Vtex.Logger.Warn("VtexRequestToTaxjarRequest", "Discount", $"Resetting discount for sku {sku} from {discount} to {discountFromOrderform} for order {vtexTaxRequest.OrderFormId}");
+                                discount = discountFromOrderform;
+                            }
+                        }
+                        else
+                        {
+                            _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", "Discount", $"No match for sku {sku} in orderform {vtexTaxRequest.OrderFormId}");
                         }
                     }
-                    else
+                    catch(Exception ex)
                     {
-                        _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", "Discount", $"No match for sku {sku} in orderform {vtexTaxRequest.OrderFormId}");
+                        _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", "Discount", $"Error getting discounts from orderform {vtexTaxRequest.OrderFormId}", ex);
                     }
                 }
 
