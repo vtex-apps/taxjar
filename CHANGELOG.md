@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+ - Only get the discount from the orderform when there is a mismatch in the tax request
+
 ## [0.4.0] - 2021-11-26
 
 ### Changed
