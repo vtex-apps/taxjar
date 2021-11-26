@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Load discount amount from orderform
+
 ## [0.3.1] - 2021-11-17
 
 ### Changed
