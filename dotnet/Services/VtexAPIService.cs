@@ -47,7 +47,7 @@ namespace Taxjar.Services
                 $"{this._environmentVariableProvider.ApplicationVendor}.{this._environmentVariableProvider.ApplicationName}";
         }
 
-        public async Task<TaxForOrder> VtexRequestToTaxjarRequest(VtexTaxRequest vtexTaxRequest)
+        public async Task<TaxForOrder> VtexRequestToTaxjarRequest(VtexTaxRequest vtexTaxRequest, bool getDiscountFromOrderform)
         {
             VtexDockResponse[] vtexDocks = await this.ListVtexDocks();
             PickupPoints pickupPoints = await this.ListPickupPoints();
@@ -119,19 +119,22 @@ namespace Taxjar.Services
 
             //Console.WriteLine($"Dock {dockId} # items = {vtexTaxRequest.Items.Length}");
             VtexOrderForm vtexOrderForm = null;
-            try
+            if (getDiscountFromOrderform)
             {
-                vtexOrderForm = await GetOrderFormInformation(vtexTaxRequest.OrderFormId);
-            }
-            catch(Exception ex)
-            {
-                _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Error loading orderform {vtexTaxRequest.OrderFormId}", ex);
+                try
+                {
+                    vtexOrderForm = await GetOrderFormInformation(vtexTaxRequest.OrderFormId);
+                }
+                catch (Exception ex)
+                {
+                    _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Error loading orderform {vtexTaxRequest.OrderFormId}", ex);
+                }
             }
 
             for (int i = 0; i < vtexTaxRequest.Items.Length; i++)
             {
                 float discount = (float)Math.Abs(vtexTaxRequest.Items[i].DiscountPrice);
-                if(vtexOrderForm != null)
+                if(getDiscountFromOrderform && vtexOrderForm != null)
                 {
                     try
                     {

@@ -88,6 +88,7 @@
                             return Json(vtexTaxResponse);
                         }
 
+                        bool getDiscountFromOrderform = false;
                         try
                         {
                             decimal totalOrderDiscount = Math.Abs(taxRequest.Totals.Where(t => t.Id.Equals("Discounts")).Sum(t => t.Value));
@@ -95,6 +96,7 @@
                             if (totalOrderDiscount != totalItemDiscount)
                             {
                                 _context.Vtex.Logger.Error("Discount", null, $"Order Discount {totalOrderDiscount} does not match Item Discount {totalItemDiscount} for order id '{taxRequest.OrderFormId}'");
+                                getDiscountFromOrderform = true;
                             }
                         }
                         catch(Exception ex)
@@ -190,7 +192,7 @@
                                             }
                                             };
 
-                                            TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequestThisDock);
+                                            TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequestThisDock, getDiscountFromOrderform);
                                             if (taxForOrder != null)
                                             {
                                                 TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
@@ -272,7 +274,7 @@
                                 {
                                     try
                                     {
-                                        TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequest);
+                                        TaxForOrder taxForOrder = await _vtexAPIService.VtexRequestToTaxjarRequest(taxRequest, getDiscountFromOrderform);
                                         if (taxForOrder != null)
                                         {
                                             TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
