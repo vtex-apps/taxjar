@@ -71,6 +71,27 @@ namespace Taxjar.Services
                 customerId = await this.GetShopperIdByEmail(vtexTaxRequest.ClientData.Email);
             }
 
+            // Combine skus
+            Dictionary<string, Item> itemDictionary = new Dictionary<string, Item>();
+            foreach(Item requestItem in vtexTaxRequest.Items)
+            {
+                if(itemDictionary.ContainsKey(requestItem.Sku))
+                {
+                    itemDictionary[requestItem.Sku].DiscountPrice += requestItem.DiscountPrice;
+                    itemDictionary[requestItem.Sku].ItemPrice += requestItem.ItemPrice;
+                    itemDictionary[requestItem.Sku].Quantity += requestItem.Quantity;
+                    itemDictionary[requestItem.Sku].TargetPrice += requestItem.TargetPrice;
+                    itemDictionary[requestItem.Sku].UnitMultiplier += requestItem.UnitMultiplier;
+                }
+                else
+                {
+                    itemDictionary.Add(requestItem.Sku, requestItem);
+                }
+            }
+
+            //vtexTaxRequest.Items = new Item[itemDictionary.Count];
+            vtexTaxRequest.Items = itemDictionary.Values.ToArray();
+
             TaxForOrder taxForOrder = new TaxForOrder
             {
                 //Amount = (float)vtexTaxRequest.Totals.Sum(t => t.Value) / 100,
@@ -227,7 +248,7 @@ namespace Taxjar.Services
             return taxForOrder;
         }
 
-        public async Task<VtexTaxResponse> TaxjarResponseToVtexResponse(TaxResponse taxResponse)
+        public async Task<VtexTaxResponse> TaxjarResponseToVtexResponse(TaxResponse taxResponse, VtexTaxRequest taxRequest)
         {
             if(taxResponse == null)
             {
@@ -468,6 +489,54 @@ namespace Taxjar.Services
                 itemTaxResponse.Taxes = vtexTaxes.ToArray();
                 vtexTaxResponse.ItemTaxResponse[i] = itemTaxResponse;
             };
+
+            // Split out skus to match request
+            if (taxResponse.Tax.Breakdown.LineItems.Count != taxRequest.Items.Length)
+            {
+                ItemTaxResponse[] itemTaxResponses = new ItemTaxResponse[taxRequest.Items.Length];
+                Dictionary<string, Item> itemDictionary = new Dictionary<string, Item>();
+                foreach (Item requestItem in taxRequest.Items)
+                {
+                    if (itemDictionary.ContainsKey(requestItem.Sku))
+                    {
+                        itemDictionary[requestItem.Sku].DiscountPrice += requestItem.DiscountPrice;
+                        itemDictionary[requestItem.Sku].ItemPrice += requestItem.ItemPrice;
+                        itemDictionary[requestItem.Sku].Quantity += requestItem.Quantity;
+                        itemDictionary[requestItem.Sku].TargetPrice += requestItem.TargetPrice;
+                        itemDictionary[requestItem.Sku].UnitMultiplier += requestItem.UnitMultiplier;
+                    }
+                    else
+                    {
+                        itemDictionary.Add(requestItem.Sku, requestItem);
+                    }
+                }
+
+                int responseId = 0;
+                int taxResponseIndex = 0;
+                foreach (Item requestItem in taxRequest.Items)
+                {
+                    taxResponseIndex = int.Parse(itemDictionary[requestItem.Sku].Id);
+                    if (requestItem.Quantity == itemDictionary[requestItem.Sku].Quantity)
+                    {
+                        itemTaxResponses[responseId] = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
+                    }
+                    else
+                    {
+                        decimal percentOfTotal = (decimal)requestItem.Quantity / (decimal)itemDictionary[requestItem.Sku].Quantity;
+                        ItemTaxResponse itemTaxResponse = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
+                        foreach(VtexTax taxObj in itemTaxResponse.Taxes)
+                        {
+                            taxObj.Value = Math.Round(taxObj.Value * percentOfTotal, 2, MidpointRounding.ToEven);
+                        }
+
+                        itemTaxResponses[responseId] = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
+                    }
+
+                    responseId++;
+                }
+
+                vtexTaxResponse.ItemTaxResponse = itemTaxResponses;
+            }
 
             decimal totalOrderTax = (decimal)taxResponse.Tax.AmountToCollect;
             decimal totalResponseTax = vtexTaxResponse.ItemTaxResponse.SelectMany(t => t.Taxes).Sum(i => i.Value);
