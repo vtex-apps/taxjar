@@ -198,7 +198,7 @@
                                                 TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
                                                 if (taxResponse != null)
                                                 {
-                                                    VtexTaxResponse vtexTaxResponseThisDock = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
+                                                    VtexTaxResponse vtexTaxResponseThisDock = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse, taxRequest);
                                                     _context.Vtex.Logger.Info("TaxjarOrderTaxHandler", null, $"Taxes for '{dockId}'\n{JsonConvert.SerializeObject(vtexTaxResponseThisDock)}");
                                                     if (vtexTaxResponseThisDock != null)
                                                     {
@@ -280,7 +280,7 @@
                                             TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
                                             if (taxResponse != null)
                                             {
-                                                vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
+                                                vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse, taxRequest);
                                                 if (vtexTaxResponse != null)
                                                 {
                                                     await _taxjarRepository.SetCache(cacheKey, vtexTaxResponse);
@@ -572,7 +572,7 @@
                 if (!string.IsNullOrEmpty(bodyAsText))
                 {
                     TaxResponse taxResponse = JsonConvert.DeserializeObject<TaxResponse>(bodyAsText);
-                    vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse);
+                    vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse, null);
                 }
             }
 

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+ - Combine / Split like skus
+
 ## [0.4.1] - 2021-11-26
 
 ### Changed

@@ -6,7 +6,7 @@ namespace Taxjar.Services
     public interface IVtexAPIService
     {
         Task<TaxForOrder> VtexRequestToTaxjarRequest(VtexTaxRequest vtexTaxRequest, bool getDiscountFromOrderform);
-        Task<VtexTaxResponse> TaxjarResponseToVtexResponse(TaxResponse taxResponse);
+        Task<VtexTaxResponse> TaxjarResponseToVtexResponse(TaxResponse taxResponse, VtexTaxRequest taxRequest);
         Task<VtexOrder> GetOrderInformation(string orderId);
         Task<string> InitConfiguration();
         Task<string> RemoveConfiguration();
