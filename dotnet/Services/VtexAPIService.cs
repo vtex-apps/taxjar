@@ -148,6 +148,7 @@ namespace Taxjar.Services
                 }
                 catch (Exception ex)
                 {
+                    //Console.WriteLine($"Error loading orderform {vtexTaxRequest.OrderFormId} {ex.Message}");
                     _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Error loading orderform {vtexTaxRequest.OrderFormId}", ex);
                 }
             }
@@ -166,12 +167,22 @@ namespace Taxjar.Services
                             float discountFromOrderform = 0f;
                             foreach (OrderformItem orderformItem in orderformItems)
                             {
-                                long discountInCents = orderformItem.ListPrice - orderformItem.SellingPrice;
-                                discountInCents = discountInCents * orderformItem.Quantity;
-                                discountFromOrderform += (float)discountInCents / 100;
-                                //Console.WriteLine($"Line [{i}] {sku} : {orderformItem.ListPrice} - {orderformItem.SellingPrice} * {orderformItem.Quantity} = {discountFromOrderform}");
-                                _context.Vtex.Logger.Debug("VtexRequestToTaxjarRequest", "Discount", $"Line [{i}] {sku} : {orderformItem.ListPrice} - {orderformItem.SellingPrice} * {orderformItem.Quantity} = {discountFromOrderform}");
+                                //if (orderformItem.PriceTags.Any(p => p.Name.Contains("DISCOUNT@GIFT", StringComparison.InvariantCultureIgnoreCase)))
+                                if(orderformItem.IsGift)
+                                {
+                                    _context.Vtex.Logger.Debug("VtexRequestToTaxjarRequest", "Discount", $"Line [{i}] {sku} is GIFT");
+                                }
+                                else
+                                {
+                                    long discountInCents = orderformItem.Price - orderformItem.SellingPrice;
+                                    discountInCents = discountInCents * orderformItem.Quantity;
+                                    discountFromOrderform += (float)discountInCents / 100f;
+                                    //Console.WriteLine($"Line [{i}] {sku} : {orderformItem.ListPrice} - {orderformItem.SellingPrice} * {orderformItem.Quantity} = {discountFromOrderform}");
+                                    _context.Vtex.Logger.Debug("VtexRequestToTaxjarRequest", "Discount", $"Line [{i}] {sku} : {orderformItem.ListPrice} - {orderformItem.SellingPrice} * {orderformItem.Quantity} = {discountFromOrderform}");
+                                }
                             }
+
+                            discountFromOrderform = (float)Math.Round(discountFromOrderform, 2, MidpointRounding.ToEven);
 
                             if (discount != discountFromOrderform)
                             {
@@ -188,7 +199,7 @@ namespace Taxjar.Services
                     }
                     catch(Exception ex)
                     {
-                        Console.WriteLine($"Error getting discounts from orderform {vtexTaxRequest.OrderFormId}");
+                        //Console.WriteLine($"Error getting discounts from orderform {vtexTaxRequest.OrderFormId}");
                         _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", "Discount", $"Error getting discounts from orderform {vtexTaxRequest.OrderFormId}", ex);
                     }
                 }
