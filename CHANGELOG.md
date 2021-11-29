@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.4.6] - 2021-11-29
+
 ### Changed
 
  - Use price instead of listprice for discount
