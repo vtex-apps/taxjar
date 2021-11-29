@@ -160,12 +160,17 @@ namespace Taxjar.Services
                     try
                     {
                         string sku = vtexTaxRequest.Items[i].Sku;
-                        OrderformItem orderformItem = vtexOrderForm.Items.Where(i => i.Id.Equals(sku)).FirstOrDefault();
-                        if (orderformItem != null)
+                        List<OrderformItem> orderformItems = vtexOrderForm.Items.Where(i => i.Id.Equals(sku)).ToList();
+                        if (orderformItems != null)
                         {
-                            long discountInCents = orderformItem.ListPrice - orderformItem.SellingPrice;
-                            discountInCents = discountInCents * vtexTaxRequest.Items[i].Quantity;
-                            float discountFromOrderform = (float)discountInCents / 100;
+                            float discountFromOrderform = 0f;
+                            foreach (OrderformItem orderformItem in orderformItems)
+                            {
+                                long discountInCents = orderformItem.ListPrice - orderformItem.SellingPrice;
+                                discountInCents = discountInCents * orderformItem.Quantity;
+                                discountFromOrderform += (float)discountInCents / 100;
+                            }
+
                             if (discount != discountFromOrderform)
                             {
                                 Console.WriteLine($"Resetting discount for sku {sku} from {discount} to {discountFromOrderform}");
