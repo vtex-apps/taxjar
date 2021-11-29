@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- Json deserialization error
+
+### Changed
+
+ - Changed log level for Discount Mismatch from Error to Warn
+
 ## [0.4.2] - 2021-11-27
 
 ### Changed

@@ -95,7 +95,7 @@
                             decimal totalItemDiscount = Math.Abs(taxRequest.Items.Sum(i => i.DiscountPrice) * 100);
                             if (totalOrderDiscount != totalItemDiscount)
                             {
-                                _context.Vtex.Logger.Error("Discount", null, $"Order Discount {totalOrderDiscount} does not match Item Discount {totalItemDiscount} for order id '{taxRequest.OrderFormId}'");
+                                _context.Vtex.Logger.Warn("Discount", null, $"Order Discount {totalOrderDiscount} does not match Item Discount {totalItemDiscount} for order id '{taxRequest.OrderFormId}'");
                                 getDiscountFromOrderform = true;
                             }
                         }
