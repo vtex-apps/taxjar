@@ -513,6 +513,7 @@ namespace Taxjar.Services
             // Split out skus to match request
             if (taxResponse.Tax.Breakdown.LineItems.Count != taxRequest.Items.Length)
             {
+                _context.Vtex.Logger.Debug("TaxjarResponseToVtexResponse", "Splitting", $"Tax Response Lineitems: {taxResponse.Tax.Breakdown.LineItems.Count}\nTax Request Lineitems {taxRequest.Items.Length}");
                 ItemTaxResponse[] itemTaxResponses = new ItemTaxResponse[taxRequest.Items.Length];
                 Dictionary<string, Item> itemDictionary = new Dictionary<string, Item>();
                 foreach (Item requestItem in taxRequest.Items)

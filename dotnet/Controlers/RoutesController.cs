@@ -106,13 +106,13 @@
 
                         // accountname+app+appversion+ 2021-04-23-4-20 + skuid+skuquantity+zipcode => turn this into a HASH
                         int cacheKey = $"{_context.Vtex.App.Version}{taxRequest.ShippingDestination.PostalCode}{totalItems}{total}".GetHashCode();
-                        if(_taxjarRepository.TryGetCache(cacheKey, out vtexTaxResponse))
-                        {
-                            fromCache = true;
-                            Console.WriteLine($"'{cacheKey}' fromCache = {fromCache} ");
-                            _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(vtexTaxResponse)}");
-                        }
-                        else
+                        //if (_taxjarRepository.TryGetCache(cacheKey, out vtexTaxResponse))
+                        //{
+                        //    fromCache = true;
+                        //    Console.WriteLine($"'{cacheKey}' fromCache = {fromCache} ");
+                        //    _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(taxRequest)}\n\n{JsonConvert.SerializeObject(vtexTaxResponse)}");
+                        //}
+                        //else
                         {
                             bool inNexus = await this.InNexus(taxRequest.ShippingDestination.State, taxRequest.ShippingDestination.Country);
 
