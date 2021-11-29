@@ -32,7 +32,7 @@ namespace Taxjar.Models
         public bool CanEditData { get; set; }
 
         [JsonProperty("userProfileId")]
-        public Guid UserProfileId { get; set; }
+        public string UserProfileId { get; set; }
 
         [JsonProperty("userType")]
         public string UserType { get; set; }
