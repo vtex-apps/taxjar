@@ -520,7 +520,12 @@ namespace Taxjar.Services
                         }
                         else
                         {
-                            decimal percentOfTotal = (decimal)requestItem.Quantity / (decimal)trItem.Quantity;
+                            decimal percentOfTotal = 1m;
+                            if (trItem.ItemPrice + trItem.DiscountPrice > 0)
+                            {
+                                percentOfTotal = (decimal)(requestItem.ItemPrice + requestItem.DiscountPrice) / (decimal)(trItem.ItemPrice + trItem.DiscountPrice);
+                            }
+
                             ItemTaxResponse itemTaxResponse = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
                             ItemTaxResponse itemTaxResponseSplit = new ItemTaxResponse
                             {
