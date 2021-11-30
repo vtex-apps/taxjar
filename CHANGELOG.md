@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+ - Splitting line items
+
 ## [0.4.7] - 2021-11-29
 
 ### Changed
