@@ -80,8 +80,6 @@ namespace Taxjar.Services
                     itemDictionary[requestItem.Sku].DiscountPrice += requestItem.DiscountPrice;
                     itemDictionary[requestItem.Sku].ItemPrice += requestItem.ItemPrice;
                     itemDictionary[requestItem.Sku].Quantity += requestItem.Quantity;
-                    itemDictionary[requestItem.Sku].TargetPrice += requestItem.TargetPrice;
-                    itemDictionary[requestItem.Sku].UnitMultiplier += requestItem.UnitMultiplier;
                 }
                 else
                 {
@@ -268,7 +266,7 @@ namespace Taxjar.Services
             return taxForOrder;
         }
 
-        public async Task<VtexTaxResponse> TaxjarResponseToVtexResponse(TaxResponse taxResponse, VtexTaxRequest taxRequest)
+        public async Task<VtexTaxResponse> TaxjarResponseToVtexResponse(TaxResponse taxResponse, VtexTaxRequest taxRequest, VtexTaxRequest taxRequestOrginal)
         {
             if(taxResponse == null)
             {
@@ -513,46 +511,68 @@ namespace Taxjar.Services
             try
             {
                 // Split out skus to match request
-                if (taxResponse.Tax.Breakdown.LineItems.Count != taxRequest.Items.Length)
+                if (taxResponse.Tax.Breakdown.LineItems.Count != taxRequestOrginal.Items.Length)
                 {
-                    _context.Vtex.Logger.Debug("TaxjarResponseToVtexResponse", "Splitting", $"Tax Response Lineitems: {taxResponse.Tax.Breakdown.LineItems.Count}\nTax Request Lineitems {taxRequest.Items.Length}");
-                    ItemTaxResponse[] itemTaxResponses = new ItemTaxResponse[taxRequest.Items.Length];
-                    Dictionary<string, Item> itemDictionary = new Dictionary<string, Item>();
-                    foreach (Item requestItem in taxRequest.Items)
-                    {
-                        if (itemDictionary.ContainsKey(requestItem.Sku))
-                        {
-                            itemDictionary[requestItem.Sku].DiscountPrice += requestItem.DiscountPrice;
-                            itemDictionary[requestItem.Sku].ItemPrice += requestItem.ItemPrice;
-                            itemDictionary[requestItem.Sku].Quantity += requestItem.Quantity;
-                            itemDictionary[requestItem.Sku].TargetPrice += requestItem.TargetPrice;
-                            itemDictionary[requestItem.Sku].UnitMultiplier += requestItem.UnitMultiplier;
-                        }
-                        else
-                        {
-                            itemDictionary.Add(requestItem.Sku, requestItem);
-                        }
-                    }
-
+                    //Console.WriteLine($"{taxResponse.Tax.Breakdown.LineItems.Count} != {taxRequestOrginal.Items.Length}");
+                    _context.Vtex.Logger.Debug("TaxjarResponseToVtexResponse", "Splitting", $"Tax Response Lineitems: {taxResponse.Tax.Breakdown.LineItems.Count}\nTax Request Lineitems {taxRequestOrginal.Items.Length}");
+                    ItemTaxResponse[] itemTaxResponses = new ItemTaxResponse[taxRequestOrginal.Items.Length];
                     int responseId = 0;
                     int taxResponseIndex = 0;
-                    foreach (Item requestItem in taxRequest.Items)
+                    Dictionary<string, long> qntyAllocatedPerSku = new Dictionary<string, long>();
+                    foreach (Item requestItem in taxRequestOrginal.Items)
                     {
-                        taxResponseIndex = int.Parse(itemDictionary[requestItem.Sku].Id);
-                        if (requestItem.Quantity == itemDictionary[requestItem.Sku].Quantity)
+                        Item trItem = taxRequest.Items.Where(i => i.Sku.Equals(requestItem.Sku)).FirstOrDefault();
+                        //taxResponseIndex = int.Parse(trItem.Id);
+                        if (requestItem.Quantity == trItem.Quantity)
                         {
+                            //Console.WriteLine($"{responseId} {taxResponseIndex} Sku {requestItem.Sku} Quantity Matches");
+                            //Console.WriteLine($"Adding index {responseId}");
                             itemTaxResponses[responseId] = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
+                            taxResponseIndex++;
                         }
                         else
                         {
-                            decimal percentOfTotal = (decimal)requestItem.Quantity / (decimal)itemDictionary[requestItem.Sku].Quantity;
+                            //Console.WriteLine($"{responseId} {taxResponseIndex} Sku {requestItem.Sku} Quantity Does not match {requestItem.Quantity} vs {trItem.Quantity}");
+                            decimal percentOfTotal = (decimal)requestItem.Quantity / (decimal)trItem.Quantity;
                             ItemTaxResponse itemTaxResponse = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
+                            //Console.WriteLine($"Creating new ItemTaxResponse");
+                            ItemTaxResponse itemTaxResponseSplit = new ItemTaxResponse
+                            {
+                                Id = responseId.ToString(),
+                                Taxes = new VtexTax[itemTaxResponse.Taxes.Length]
+                            };
+
+                            //Console.WriteLine($"itemTaxResponse.Taxes.Length = {itemTaxResponse.Taxes.Length} ");
+
+                            long taxObjIndex = 0;
                             foreach (VtexTax taxObj in itemTaxResponse.Taxes)
                             {
-                                taxObj.Value = Math.Round(taxObj.Value * percentOfTotal, 2, MidpointRounding.ToEven);
+                                itemTaxResponseSplit.Taxes[taxObjIndex] = new VtexTax
+                                {
+                                    Description = taxObj.Description,
+                                    Name = taxObj.Name,
+                                    Value = Math.Round(taxObj.Value * percentOfTotal, 2, MidpointRounding.ToEven)
+                                };
+                                
+                                taxObjIndex++;
                             }
 
-                            itemTaxResponses[responseId] = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
+                            //Console.WriteLine($"Adding index {responseId} {percentOfTotal}% ");
+                            itemTaxResponses[responseId] = itemTaxResponseSplit;
+
+                            if(qntyAllocatedPerSku.ContainsKey(requestItem.Sku))
+                            {
+                                qntyAllocatedPerSku[requestItem.Sku] += requestItem.Quantity;
+                            }
+                            else
+                            {
+                                qntyAllocatedPerSku.Add(requestItem.Sku, requestItem.Quantity);
+                            }
+
+                            if(qntyAllocatedPerSku[requestItem.Sku] == trItem.Quantity)
+                            {
+                                taxResponseIndex++;
+                            }
                         }
 
                         responseId++;
@@ -563,6 +583,7 @@ namespace Taxjar.Services
             }
             catch(Exception ex)
             {
+                //Console.WriteLine($"Error splitting line items {ex.Message}");
                 _context.Vtex.Logger.Error("TaxjarResponseToVtexResponse", "Splitting", $"Error splitting line items", ex);
             }
 

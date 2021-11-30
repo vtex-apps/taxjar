@@ -75,8 +75,10 @@
                 if (!string.IsNullOrEmpty(bodyAsText))
                 {
                     VtexTaxRequest taxRequest = JsonConvert.DeserializeObject<VtexTaxRequest>(bodyAsText);
+                    VtexTaxRequest taxRequestOriginal = JsonConvert.DeserializeObject<VtexTaxRequest>(bodyAsText);
                     if (taxRequest != null && taxRequest.Items != null && taxRequest.Items.Length > 0)
                     {
+                        _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, bodyAsText);
                         orderFormId = taxRequest.OrderFormId;
                         totalItems = taxRequest.Items.Sum(i => i.Quantity);
                         decimal total = taxRequest.Totals.Sum(t => t.Value);
@@ -198,7 +200,7 @@
                                                 TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
                                                 if (taxResponse != null)
                                                 {
-                                                    VtexTaxResponse vtexTaxResponseThisDock = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse, taxRequest);
+                                                    VtexTaxResponse vtexTaxResponseThisDock = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse, taxRequest, taxRequestOriginal);
                                                     _context.Vtex.Logger.Info("TaxjarOrderTaxHandler", null, $"Taxes for '{dockId}'\n{JsonConvert.SerializeObject(vtexTaxResponseThisDock)}");
                                                     if (vtexTaxResponseThisDock != null)
                                                     {
@@ -280,7 +282,7 @@
                                             TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
                                             if (taxResponse != null)
                                             {
-                                                vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse, taxRequest);
+                                                vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse,taxRequest, taxRequestOriginal);
                                                 if (vtexTaxResponse != null)
                                                 {
                                                     await _taxjarRepository.SetCache(cacheKey, vtexTaxResponse);
@@ -572,7 +574,7 @@
                 if (!string.IsNullOrEmpty(bodyAsText))
                 {
                     TaxResponse taxResponse = JsonConvert.DeserializeObject<TaxResponse>(bodyAsText);
-                    vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse, null);
+                    vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse, null, null);
                 }
             }
 
