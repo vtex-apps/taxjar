@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+ - Tax allocation when splitting line items
+
 ## [0.4.8] - 2021-11-30
 
 ### Fixed
