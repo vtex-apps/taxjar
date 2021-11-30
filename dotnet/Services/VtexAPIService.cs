@@ -165,19 +165,11 @@ namespace Taxjar.Services
                             float discountFromOrderform = 0f;
                             foreach (OrderformItem orderformItem in orderformItems)
                             {
-                                //if (orderformItem.PriceTags.Any(p => p.Name.Contains("DISCOUNT@GIFT", StringComparison.InvariantCultureIgnoreCase)))
-                                if(orderformItem.IsGift)
-                                {
-                                    _context.Vtex.Logger.Debug("VtexRequestToTaxjarRequest", "Discount", $"Line [{i}] {sku} is GIFT");
-                                }
-                                else
-                                {
-                                    long discountInCents = orderformItem.Price - orderformItem.SellingPrice;
-                                    discountInCents = discountInCents * orderformItem.Quantity;
-                                    discountFromOrderform += (float)discountInCents / 100f;
-                                    //Console.WriteLine($"Line [{i}] {sku} : {orderformItem.ListPrice} - {orderformItem.SellingPrice} * {orderformItem.Quantity} = {discountFromOrderform}");
-                                    _context.Vtex.Logger.Debug("VtexRequestToTaxjarRequest", "Discount", $"Line [{i}] {sku} : {orderformItem.ListPrice} - {orderformItem.SellingPrice} * {orderformItem.Quantity} = {discountFromOrderform}");
-                                }
+                                long discountInCents = orderformItem.Price - orderformItem.SellingPrice;
+                                discountInCents = discountInCents * orderformItem.Quantity;
+                                discountFromOrderform += (float)discountInCents / 100f;
+                                //Console.WriteLine($"Line [{i}] {sku} : {orderformItem.ListPrice} - {orderformItem.SellingPrice} * {orderformItem.Quantity} = {discountFromOrderform}");
+                                _context.Vtex.Logger.Debug("VtexRequestToTaxjarRequest", "Discount", $"Line [{i}] {sku} : {orderformItem.ListPrice} - {orderformItem.SellingPrice} * {orderformItem.Quantity} = {discountFromOrderform}");
                             }
 
                             discountFromOrderform = (float)Math.Round(discountFromOrderform, 2, MidpointRounding.ToEven);
