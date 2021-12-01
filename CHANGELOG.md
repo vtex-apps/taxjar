@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.4.11] - 2021-12-01
+
 ### Fixed
 
  - Do not apply tax to free items
