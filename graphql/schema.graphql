@@ -2,6 +2,7 @@ type Query {
   listCustomers: [Customer]
   findProductCode(searchTerm: String): [Category]
   getListOfUsers(numItems: Int pageNumber:Int): UserList
+  verifyEmail(email: String): Boolean
 }
 
 type Mutation {

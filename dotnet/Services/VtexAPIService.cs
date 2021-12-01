@@ -1187,6 +1187,7 @@ namespace Taxjar.Services
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
                 string responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($" - GetShopperByEmail '{email}' - [{response.StatusCode}] - '{responseContent}' - ");
                 if (response.IsSuccessStatusCode)
                 {
                     vtexUser = JsonConvert.DeserializeObject<VtexUser[]>(responseContent);
@@ -1292,7 +1293,7 @@ namespace Taxjar.Services
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
-            //Console.WriteLine($" - GetListOfUsers - [{response.StatusCode}] - '{responseContent}' - ");
+            Console.WriteLine($" - GetListOfUsers - [{response.StatusCode}] - '{responseContent}' - ");
             if (response.IsSuccessStatusCode)
             {
                 getListOfUsers = JsonConvert.DeserializeObject<GetListOfUsers>(responseContent);

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+ - Added query to verify that an email address has an Id
+
 ## [0.4.11] - 2021-12-01
 
 ### Fixed
