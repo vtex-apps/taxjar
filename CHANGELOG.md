@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+ - Do not apply tax to free items
+
+### Changed
+
+ - Restored caching
+ - Do not add all tax categories if zero
+
 ## [0.4.10] - 2021-11-30
 
 ### Fixed
