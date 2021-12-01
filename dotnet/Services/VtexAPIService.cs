@@ -526,8 +526,6 @@ namespace Taxjar.Services
                                 percentOfTotal = (decimal)(requestItem.ItemPrice + requestItem.DiscountPrice) / (decimal)(trItem.ItemPrice + trItem.DiscountPrice);
                             }
 
-                            Console.WriteLine($"[{responseId}] {(decimal)(requestItem.ItemPrice + requestItem.DiscountPrice)} / {(decimal)(trItem.ItemPrice + trItem.DiscountPrice)} = {percentOfTotal}");
-
                             //decimal percentOfTotal = (decimal)requestItem.Quantity / (decimal)trItem.Quantity;
                             ItemTaxResponse itemTaxResponse = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
                             ItemTaxResponse itemTaxResponseSplit = new ItemTaxResponse
@@ -546,7 +544,6 @@ namespace Taxjar.Services
                                     Value = Math.Round(taxObj.Value * percentOfTotal, 2, MidpointRounding.ToEven)
                                 };
 
-                                Console.WriteLine($"[{taxResponseIndex}][{taxObjIndex}] {taxObj.Value} * {percentOfTotal} = {Math.Round(taxObj.Value * percentOfTotal, 2, MidpointRounding.ToEven)} {taxObj.Name} ");
                                 taxObjIndex++;
                             }
 
