@@ -32,7 +32,7 @@ import SaveAppSettings from './mutations/saveAppSettings.graphql'
 import GET_CUSTOMERS from './queries/ListCustomers.gql'
 import DELETE_CUSTOMER from './mutations/DeleteCustomer.gql'
 import CREATE_CUSTOMER from './mutations/CreateCustomer.gql'
-import GET_USERS from './queries/getListOfUsers.gql'
+import VERIFY_USER from './queries/verifyEmail.graphql'
 import { countries, states, options } from './common/utils'
 
 const Admin: FC<any> = () => {
@@ -202,10 +202,9 @@ const Admin: FC<any> = () => {
 
     // Check if email is registered to a VTEX account
     const query = {
-      query: GET_USERS,
+      query: VERIFY_USER,
       variables: {
-        numItems: 100,
-        pageNumber: 1
+        email: customer.customerId
       },
     }
 
@@ -216,42 +215,9 @@ const Admin: FC<any> = () => {
       console.log(e)
     }
 
-    const userData = queryRes.data.getListOfUsers 
-    let users = userData.items || []
-    const totalItems = userData.paging.total || 0
-    if (totalItems > 100) {
-      const numIterations = Math.ceil((totalItems - 100) / 100)
+    const userData = queryRes.data.verifyEmail 
 
-      for (let i = 0; i < numIterations; i++) {
-        const pageNum = i + 2
-        const query = {
-          query: GET_USERS,
-          variables: {
-            numItems: 100,
-            pageNumber: pageNum
-          },
-        }
-    
-        let queryRes
-        try {
-          queryRes = await client.query(query)
-        } catch (e) {
-          console.log(e)
-        }
-        const newUsers = queryRes.data.getListOfUsers.items || []
-        users = [...users, ...newUsers]
-      }
-    }
-
-    let eligibleCustomerFlag = false
-
-    for (const user of users) {
-      if (user.email === customer.customerId) {
-        eligibleCustomerFlag = true
-      }
-    }
-
-    if (!eligibleCustomerFlag) {
+    if (!userData) {
       setSettingsState({
         ...settingsState,
         userNotFoundAlert: true,
@@ -313,6 +279,9 @@ const Admin: FC<any> = () => {
 
     setSettingsState({ ...settingsState, customerList: newList })
   }
+
+  console.log('state', settingsState)
+  console.log('customers', customerData)
 
   const lineActions = [
     {
