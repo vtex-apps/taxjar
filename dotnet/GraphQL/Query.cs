@@ -77,6 +77,20 @@ namespace Taxjar.GraphQL
                     return getListOfUsers;
                 }
             );
+
+            FieldAsync<BooleanGraphType>(
+                "verifyEmail",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "email", Description = "Email" }
+                    ),
+                resolve: async context =>
+                {
+                    string email = context.GetArgument<string>("email");
+                    string userId = await vtexAPIService.GetShopperIdByEmail(email);
+
+                    return !string.IsNullOrEmpty(userId);
+                }
+            );
         }
     }
 }

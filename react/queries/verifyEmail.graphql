@@ -1,0 +1,3 @@
+query VerifyEmail ($email: String) {
+  verifyEmail (email: $email)
+}
