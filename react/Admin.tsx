@@ -280,9 +280,6 @@ const Admin: FC<any> = () => {
     setSettingsState({ ...settingsState, customerList: newList })
   }
 
-  console.log('state', settingsState)
-  console.log('customers', customerData)
-
   const lineActions = [
     {
       label: () => (
