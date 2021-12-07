@@ -157,6 +157,12 @@ const Admin: FC<any> = () => {
     getCustomers()
   }
 
+  if (customerCalled && customerData && customerData?.listCustomers !== customerList) {
+    const newList = customerData?.listCustomers
+
+    setSettingsState({ ...settingsState, customerList: newList })
+  }
+
   if (!settingsState.currentTab) {
     setSettingsState({
       ...settingsState,
@@ -235,6 +241,8 @@ const Admin: FC<any> = () => {
           customer,
         },
       })
+    } catch (e) {
+      console.log(e)
     } finally {
       if (res?.data.createCustomer) {
         const random = Math.random().toString(36).substring(7)
@@ -272,12 +280,6 @@ const Admin: FC<any> = () => {
       deleteCalled: true,
     })
 
-  }
-
-  if (customerData && customerList?.length && !settingsState.deleteCalled && customerData.listCustomers !== customerList) {
-    const newList = customerData.listCustomers
-
-    setSettingsState({ ...settingsState, customerList: newList })
   }
 
   const lineActions = [
@@ -361,8 +363,6 @@ const Admin: FC<any> = () => {
       </Layout>
     )
   }
-
-  console.log('state', settingsState)
 
   return (
     <Layout
@@ -856,6 +856,7 @@ const Admin: FC<any> = () => {
                 density="low"
                 schema={customerSchema}
                 lineActions={lineActions}
+                loading={!customerData}
               />
             </div>
           </Tab>
