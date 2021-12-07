@@ -180,21 +180,21 @@ const Admin: FC<any> = () => {
   const handleCustomerCreate = async () => {
     const exemptRegions: any = [
       {
-        state: settingsState.customerState1 || '',
+        state: settingsState.customerState1,
         country: settingsState.customerCountry1,
       },
     ]
 
     if (settingsState.customerState2) {
       exemptRegions.push({
-        state: settingsState.customerState2 || '',
+        state: settingsState.customerState2,
         country: settingsState.customerCountry2,
       })
     }
 
     if (settingsState.customerState3) {
       exemptRegions.push({
-        state: settingsState.customerState3 || '',
+        state: settingsState.customerState3,
         country: settingsState.customerCountry3,
       })
     }
