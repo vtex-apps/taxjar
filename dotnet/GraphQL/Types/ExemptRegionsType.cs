@@ -13,8 +13,8 @@ namespace Taxjar.GraphQL.Types
         public ExemptRegionsType()
         {
             Name = "ExemptRegions";
-            Field(r => r.Country);
-            Field(r => r.State);
+            Field(r => r.Country, nullable: true);
+            Field(r => r.State, nullable: true);
         }
     }
 }
