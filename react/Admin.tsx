@@ -96,8 +96,10 @@ const Admin: FC<any> = () => {
     },
   ] = useLazyQuery(ConnectionTest)
 
-  const [getCustomers, { data: customerData, called: customerCalled }] =
-    useLazyQuery(GET_CUSTOMERS)
+  const [
+    getCustomers,
+    { data: customerData, called: customerCalled },
+  ] = useLazyQuery(GET_CUSTOMERS)
 
   const [saveSettings] = useMutation(SaveAppSettings)
   const [initConfig] = useMutation(M_INIT_CONFIG)
@@ -478,8 +480,7 @@ const Admin: FC<any> = () => {
                 onChange={() => {
                   setSettingsState({
                     ...settingsState,
-                    enableTransactionPosting:
-                      !settingsState.enableTransactionPosting,
+                    enableTransactionPosting: !settingsState.enableTransactionPosting,
                   })
                 }}
                 helpText={formatMessage({
