@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/jsx-no-target-blank */
 /* eslint-disable react/display-name */
+/* eslint-disable no-console */
 import type { FC } from 'react'
 import React, { useState, useEffect } from 'react'
 import {
@@ -21,7 +22,12 @@ import {
   Alert,
 } from 'vtex.styleguide'
 import { useIntl, FormattedMessage } from 'react-intl'
-import { useQuery, useLazyQuery, useMutation, useApolloClient } from 'react-apollo'
+import {
+  useQuery,
+  useLazyQuery,
+  useMutation,
+  useApolloClient,
+} from 'react-apollo'
 import { Link } from 'vtex.render-runtime'
 
 import M_INIT_CONFIG from './mutations/InitConfiguration.gql'
@@ -157,7 +163,11 @@ const Admin: FC<any> = () => {
     getCustomers()
   }
 
-  if (customerCalled && customerData && customerData?.listCustomers !== customerList) {
+  if (
+    customerCalled &&
+    customerData &&
+    customerData?.listCustomers !== customerList
+  ) {
     const newList = customerData?.listCustomers
 
     setSettingsState({ ...settingsState, customerList: newList })
@@ -180,21 +190,21 @@ const Admin: FC<any> = () => {
   const handleCustomerCreate = async () => {
     const exemptRegions: any = [
       {
-        state: settingsState.customerState1,
+        state: settingsState.customerState1 || '',
         country: settingsState.customerCountry1,
       },
     ]
 
-    if (settingsState.customerState2) {
+    if (settingsState.customerCountry2) {
       exemptRegions.push({
-        state: settingsState.customerState2,
+        state: settingsState.customerState2 || '',
         country: settingsState.customerCountry2,
       })
     }
 
-    if (settingsState.customerState3) {
+    if (settingsState.customerCountry3) {
       exemptRegions.push({
-        state: settingsState.customerState3,
+        state: settingsState.customerState3 || '',
         country: settingsState.customerCountry3,
       })
     }
@@ -210,18 +220,19 @@ const Admin: FC<any> = () => {
     const query = {
       query: VERIFY_USER,
       variables: {
-        email: customer.customerId
+        email: customer.customerId,
       },
     }
 
     let queryRes
+
     try {
       queryRes = await client.query(query)
     } catch (e) {
       console.log(e)
     }
 
-    const userData = queryRes.data.verifyEmail 
+    const userData = queryRes.data.verifyEmail
 
     if (!userData) {
       setSettingsState({
@@ -279,7 +290,6 @@ const Admin: FC<any> = () => {
       updateTableKey: random,
       deleteCalled: true,
     })
-
   }
 
   const lineActions = [
@@ -293,17 +303,18 @@ const Admin: FC<any> = () => {
           variables: {
             customerId: rowData.customerId,
           },
-        }).then(() => {
-          getCustomers()
-        }).then(() => {
-          handleCustomerDelete(rowData)
-          alert(
-            formatMessage({
-              id: 'admin/taxjar.settings.exemption.line-action.alert',
-            })
-          )
         })
-
+          .then(() => {
+            getCustomers()
+          })
+          .then(() => {
+            handleCustomerDelete(rowData)
+            alert(
+              formatMessage({
+                id: 'admin/taxjar.settings.exemption.line-action.alert',
+              })
+            )
+          })
       },
     },
   ]
@@ -337,7 +348,7 @@ const Admin: FC<any> = () => {
                 return (
                   <div key={region.state}>
                     {region.state}
-                    {`, `}
+                    {region.state ? `, ` : null}
                     {region.country}
                   </div>
                 )
@@ -575,7 +586,6 @@ const Admin: FC<any> = () => {
               setSettingsState({ ...settingsState, currentTab: 2 })
             }
           >
-
             {settingsState.customerCreationSuccess && (
               <div className="mt6">
                 <Alert

@@ -4939,13 +4939,17 @@ verror@1.10.0:
   version "2.8.0"
   resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.apps-graphql@2.8.0/public/@types/vtex.apps-graphql#4fd47b1281c4d36e8abb1cfa4daea83bc739eca1"
 
-"vtex.render-runtime@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.render-runtime@8.132.0/public/@types/vtex.render-runtime":
-  version "8.132.0"
-  resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.render-runtime@8.132.0/public/@types/vtex.render-runtime#a8076ea34824dd20785fd26692484a446c4aa52b"
+"vtex.render-runtime@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.render-runtime@8.132.3/public/@types/vtex.render-runtime":
+  version "8.132.3"
+  resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.render-runtime@8.132.3/public/@types/vtex.render-runtime#c7dd142e384f38bd7a7c841543b73e9349fadc93"
 
-"vtex.styleguide@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.styleguide@9.145.0/public/@types/vtex.styleguide":
-  version "9.145.0"
-  resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.styleguide@9.145.0/public/@types/vtex.styleguide#41dfb32af8756eb5528dbd452e47003a8f67fe8c"
+"vtex.styleguide@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.styleguide@9.145.2/public/@types/vtex.styleguide":
+  version "9.145.2"
+  resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.styleguide@9.145.2/public/@types/vtex.styleguide#ca64bf8408ad3eb487b0822dd68f77565c986a56"
+
+"vtex.taxjar@https://aurora3--sandboxusdev.myvtex.com/_v/private/typings/linked/v1/vtex.taxjar@0.4.13+build1643847364/public/@types/vtex.taxjar":
+  version "0.4.13"
+  resolved "https://aurora3--sandboxusdev.myvtex.com/_v/private/typings/linked/v1/vtex.taxjar@0.4.13+build1643847364/public/@types/vtex.taxjar#69c4defddf5966f9831dedff75da74dcd47e8253"
 
 w3c-hr-time@^1.0.1:
   version "1.0.2"

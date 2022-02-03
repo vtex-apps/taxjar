@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### fixed
+
+- Allowed null values of the state field in customer exemptions
+
 ### Added
 
 - Quality engineering GitHub Actions

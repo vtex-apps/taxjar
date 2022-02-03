@@ -1,6 +1,6 @@
 {
   "admin.app.taxjar": {
-    "around": [ "layout" ],
+    "around": ["layout"],
     "path": "/admin/app/taxjar/"
   },
   "layout": {

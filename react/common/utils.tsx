@@ -39,221 +39,224 @@ export const countries = [
 ]
 
 export const states = [
-  { value: '', label: 'N/A' },
   {
-      label: "Alabama",
-      value: "AL"
+    label: 'N/A',
+    value: '',
   },
   {
-      label: "Alaska",
-      value: "AK"
+    label: 'Alabama',
+    value: 'AL',
   },
   {
-      label: "Arizona",
-      value: "AZ"
+    label: 'Alaska',
+    value: 'AK',
   },
   {
-      label: "Arkansas",
-      value: "AR"
+    label: 'Arizona',
+    value: 'AZ',
   },
   {
-      label: "California",
-      value: "CA"
+    label: 'Arkansas',
+    value: 'AR',
   },
   {
-      label: "Colorado",
-      value: "CO"
+    label: 'California',
+    value: 'CA',
   },
   {
-      label: "Connecticut",
-      value: "CT"
+    label: 'Colorado',
+    value: 'CO',
   },
   {
-      label: "Delaware",
-      value: "DE"
+    label: 'Connecticut',
+    value: 'CT',
   },
   {
-      label: "District Of Columbia",
-      value: "DC"
+    label: 'Delaware',
+    value: 'DE',
   },
   {
-      label: "Florida",
-      value: "FL"
+    label: 'District Of Columbia',
+    value: 'DC',
   },
   {
-      label: "Georgia",
-      value: "GA"
+    label: 'Florida',
+    value: 'FL',
   },
   {
-      label: "Hawaii",
-      value: "HI"
+    label: 'Georgia',
+    value: 'GA',
   },
   {
-      label: "Idaho",
-      value: "ID"
+    label: 'Hawaii',
+    value: 'HI',
   },
   {
-      label: "Illinois",
-      value: "IL"
+    label: 'Idaho',
+    value: 'ID',
   },
   {
-      label: "Indiana",
-      value: "IN"
+    label: 'Illinois',
+    value: 'IL',
   },
   {
-      label: "Iowa",
-      value: "IA"
+    label: 'Indiana',
+    value: 'IN',
   },
   {
-      label: "Kansas",
-      value: "KS"
+    label: 'Iowa',
+    value: 'IA',
   },
   {
-      label: "Kentucky",
-      value: "KY"
+    label: 'Kansas',
+    value: 'KS',
   },
   {
-      label: "Louisiana",
-      value: "LA"
+    label: 'Kentucky',
+    value: 'KY',
   },
   {
-      label: "Maine",
-      value: "ME"
+    label: 'Louisiana',
+    value: 'LA',
   },
   {
-      label: "Maryland",
-      value: "MD"
+    label: 'Maine',
+    value: 'ME',
   },
   {
-      label: "Massachusetts",
-      value: "MA"
+    label: 'Maryland',
+    value: 'MD',
   },
   {
-      label: "Michigan",
-      value: "MI"
+    label: 'Massachusetts',
+    value: 'MA',
   },
   {
-      label: "Minnesota",
-      value: "MN"
+    label: 'Michigan',
+    value: 'MI',
   },
   {
-      label: "Mississippi",
-      value: "MS"
+    label: 'Minnesota',
+    value: 'MN',
   },
   {
-      label: "Missouri",
-      value: "MO"
+    label: 'Mississippi',
+    value: 'MS',
   },
   {
-      label: "Montana",
-      value: "MT"
+    label: 'Missouri',
+    value: 'MO',
   },
   {
-      label: "Nebraska",
-      value: "NE"
+    label: 'Montana',
+    value: 'MT',
   },
   {
-      label: "Nevada",
-      value: "NV"
+    label: 'Nebraska',
+    value: 'NE',
   },
   {
-      label: "New Hampshire",
-      value: "NH"
+    label: 'Nevada',
+    value: 'NV',
   },
   {
-      label: "New Jersey",
-      value: "NJ"
+    label: 'New Hampshire',
+    value: 'NH',
   },
   {
-      label: "New Mexico",
-      value: "NM"
+    label: 'New Jersey',
+    value: 'NJ',
   },
   {
-      label: "New York",
-      value: "NY"
+    label: 'New Mexico',
+    value: 'NM',
   },
   {
-      label: "North Carolina",
-      value: "NC"
+    label: 'New York',
+    value: 'NY',
   },
   {
-      label: "North Dakota",
-      value: "ND"
+    label: 'North Carolina',
+    value: 'NC',
   },
   {
-      label: "Ohio",
-      value: "OH"
+    label: 'North Dakota',
+    value: 'ND',
   },
   {
-      label: "Oklahoma",
-      value: "OK"
+    label: 'Ohio',
+    value: 'OH',
   },
   {
-      label: "Oregon",
-      value: "OR"
+    label: 'Oklahoma',
+    value: 'OK',
   },
   {
-      label: "Palau",
-      value: "PW"
+    label: 'Oregon',
+    value: 'OR',
   },
   {
-      label: "Pennsylvania",
-      value: "PA"
+    label: 'Palau',
+    value: 'PW',
   },
   {
-      label: "Puerto Rico",
-      value: "PR"
+    label: 'Pennsylvania',
+    value: 'PA',
   },
   {
-      label: "Rhode Island",
-      value: "RI"
+    label: 'Puerto Rico',
+    value: 'PR',
   },
   {
-      label: "South Carolina",
-      value: "SC"
+    label: 'Rhode Island',
+    value: 'RI',
   },
   {
-      label: "South Dakota",
-      value: "SD"
+    label: 'South Carolina',
+    value: 'SC',
   },
   {
-      label: "Tennessee",
-      value: "TN"
+    label: 'South Dakota',
+    value: 'SD',
   },
   {
-      label: "Texas",
-      value: "TX"
+    label: 'Tennessee',
+    value: 'TN',
   },
   {
-      label: "Utah",
-      value: "UT"
+    label: 'Texas',
+    value: 'TX',
   },
   {
-      label: "Vermont",
-      value: "VT"
+    label: 'Utah',
+    value: 'UT',
   },
   {
-      label: "Virgin Islands",
-      value: "VI"
+    label: 'Vermont',
+    value: 'VT',
   },
   {
-      label: "Virginia",
-      value: "VA"
+    label: 'Virgin Islands',
+    value: 'VI',
   },
   {
-      label: "Washington",
-      value: "WA"
+    label: 'Virginia',
+    value: 'VA',
   },
   {
-      label: "West Virginia",
-      value: "WV"
+    label: 'Washington',
+    value: 'WA',
   },
   {
-      label: "Wisconsin",
-      value: "WI"
+    label: 'West Virginia',
+    value: 'WV',
   },
   {
-      label: "Wyoming",
-      value: "WY"
-  }
+    label: 'Wisconsin',
+    value: 'WI',
+  },
+  {
+    label: 'Wyoming',
+    value: 'WY',
+  },
 ]
