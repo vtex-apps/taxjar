@@ -6,9 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- (TAXJAR-46) Fixed spliting taxes by sku
+
 ## [0.4.14] - 2022-02-03
 
-### fixed
+### Fixed
 
 - Allowed null values of the state field in customer exemptions
 

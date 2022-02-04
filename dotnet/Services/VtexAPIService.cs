@@ -13,7 +13,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Taxjar.Services
 {
-    public class VtexAPIService : IVtexAPIService
+    public class VtexApiService : IVtexApiService
     {
         private readonly IIOServiceContext _context;
         private readonly IVtexEnvironmentVariableProvider _environmentVariableProvider;
@@ -23,7 +23,7 @@ namespace Taxjar.Services
         private readonly ITaxjarService _taxjarService;
         private readonly string _applicationName;
 
-        public VtexAPIService(IIOServiceContext context, IVtexEnvironmentVariableProvider environmentVariableProvider, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, ITaxjarRepository taxjarRepository, ITaxjarService taxjarService)
+        public VtexApiService(IIOServiceContext context, IVtexEnvironmentVariableProvider environmentVariableProvider, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, ITaxjarRepository taxjarRepository, ITaxjarService taxjarService)
         {
             this._context = context ??
                             throw new ArgumentNullException(nameof(context));
@@ -54,12 +54,10 @@ namespace Taxjar.Services
             if(vtexDocks == null)
             {
                 _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, "Could not load docks.");
-                //return null;
             }
 
             string dockId = vtexTaxRequest.Items.Select(i => i.DockId).FirstOrDefault();
-            //VtexDockResponse vtexDock = await this.ListDockById(dockId);
-            VtexDockResponse vtexDock = vtexDocks.Where(d => d.Id.Equals(dockId)).FirstOrDefault();
+            VtexDockResponse vtexDock = vtexDocks.FirstOrDefault(d => d.Id.Equals(dockId));
             if(vtexDock == null)
             {
                 _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Dock '{dockId}' not found.");
@@ -87,7 +85,6 @@ namespace Taxjar.Services
                 }
             }
 
-            //vtexTaxRequest.Items = new Item[itemDictionary.Count];
             vtexTaxRequest.Items = itemDictionary.Values.ToArray();
 
             TaxForOrder taxForOrder = new TaxForOrder
@@ -136,7 +133,6 @@ namespace Taxjar.Services
                 _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Missing address for Dock {dockId}");
             }
 
-            //Console.WriteLine($"Dock {dockId} # items = {vtexTaxRequest.Items.Length}");
             VtexOrderForm vtexOrderForm = null;
             if (getDiscountFromOrderform)
             {
@@ -146,7 +142,6 @@ namespace Taxjar.Services
                 }
                 catch (Exception ex)
                 {
-                    //Console.WriteLine($"Error loading orderform {vtexTaxRequest.OrderFormId} {ex.Message}");
                     _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", null, $"Error loading orderform {vtexTaxRequest.OrderFormId}", ex);
                 }
             }
@@ -168,7 +163,6 @@ namespace Taxjar.Services
                                 long discountInCents = orderformItem.Price - orderformItem.SellingPrice;
                                 discountInCents = discountInCents * orderformItem.Quantity;
                                 discountFromOrderform += (float)discountInCents / 100f;
-                                //Console.WriteLine($"Line [{i}] {sku} : {orderformItem.ListPrice} - {orderformItem.SellingPrice} * {orderformItem.Quantity} = {discountFromOrderform}");
                                 _context.Vtex.Logger.Debug("VtexRequestToTaxjarRequest", "Discount", $"Line [{i}] {sku} : {orderformItem.ListPrice} - {orderformItem.SellingPrice} * {orderformItem.Quantity} = {discountFromOrderform}");
                             }
 
@@ -176,20 +170,17 @@ namespace Taxjar.Services
 
                             if (discount != discountFromOrderform)
                             {
-                                //Console.WriteLine($"Line [{i}] Resetting discount for sku {sku} from {discount} to {discountFromOrderform}");
                                 _context.Vtex.Logger.Warn("VtexRequestToTaxjarRequest", "Discount", $"Resetting discount for sku {sku} from {discount} to {discountFromOrderform} for order {vtexTaxRequest.OrderFormId}");
                                 discount = discountFromOrderform;
                             }
                         }
                         else
                         {
-                            //Console.WriteLine($"No match for sku {sku} in orderform {vtexTaxRequest.OrderFormId}");
                             _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", "Discount", $"No match for sku {sku} in orderform {vtexTaxRequest.OrderFormId}");
                         }
                     }
                     catch(Exception ex)
                     {
-                        //Console.WriteLine($"Error getting discounts from orderform {vtexTaxRequest.OrderFormId}");
                         _context.Vtex.Logger.Error("VtexRequestToTaxjarRequest", "Discount", $"Error getting discounts from orderform {vtexTaxRequest.OrderFormId}", ex);
                     }
                 }
@@ -213,8 +204,6 @@ namespace Taxjar.Services
                     Quantity = vtexTaxRequest.Items[i].Quantity,
                     UnitPrice = (float)(vtexTaxRequest.Items[i].ItemPrice / vtexTaxRequest.Items[i].Quantity)
                 };
-
-                //Console.WriteLine($"[{taxForOrder.LineItems[i].Id}] x{taxForOrder.LineItems[i].Quantity} {taxForOrder.LineItems[i].UnitPrice} - {taxForOrder.LineItems[i].Discount}");
             }
 
             List<TaxForOrderNexusAddress> nexuses = new List<TaxForOrderNexusAddress>();
@@ -225,9 +214,9 @@ namespace Taxjar.Services
             }
             else
             {
-                foreach(PickupPointItem pickupPoint in pickupPoints.Items)
-                {
-                    if (pickupPoint.TagsLabel.Any(t => t.Contains(TaxjarConstants.PICKUP_TAG, StringComparison.OrdinalIgnoreCase)))
+                foreach (var pickupPoint in from PickupPointItem pickupPoint in pickupPoints.Items
+                                            where pickupPoint.TagsLabel.Any(t => t.Contains(TaxjarConstants.PICKUP_TAG, StringComparison.OrdinalIgnoreCase))
+                                            select pickupPoint)
                     {
                         if(pickupPoint.Address != null)
                         {
@@ -249,7 +238,6 @@ namespace Taxjar.Services
                         }
                     }
                 }
-            }
 
             taxForOrder.NexusAddresses = nexuses.ToArray();
 
@@ -328,7 +316,6 @@ namespace Taxjar.Services
                 };
 
                 List<VtexTax> vtexTaxes = new List<VtexTax>();
-                //if (lineItem.StateAmount > 0)
                 {
                     vtexTaxes.Add(
                         new VtexTax
@@ -498,7 +485,7 @@ namespace Taxjar.Services
 
                 itemTaxResponse.Taxes = vtexTaxes.ToArray();
                 vtexTaxResponse.ItemTaxResponse[i] = itemTaxResponse;
-            };
+            }
 
             try
             {
@@ -512,21 +499,20 @@ namespace Taxjar.Services
                     Dictionary<string, long> qntyAllocatedPerSku = new Dictionary<string, long>();
                     foreach (Item requestItem in taxRequestOriginal.Items)
                     {
-                        Item trItem = taxRequest.Items.Where(i => i.Sku.Equals(requestItem.Sku)).FirstOrDefault();
+                        Item trItem = taxRequest.Items.FirstOrDefault(i => i.Sku.Equals(requestItem.Sku));
+                        taxResponseIndex = int.Parse(trItem.Id);
                         if (requestItem.Quantity == trItem.Quantity)
                         {
                             itemTaxResponses[responseId] = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
-                            taxResponseIndex++;
                         }
                         else
                         {
                             decimal percentOfTotal = 0m;
                             if (trItem.ItemPrice + trItem.DiscountPrice > 0)
                             {
-                                percentOfTotal = (decimal)(requestItem.ItemPrice + requestItem.DiscountPrice) / (decimal)(trItem.ItemPrice + trItem.DiscountPrice);
+                                percentOfTotal = (requestItem.ItemPrice + requestItem.DiscountPrice) / (trItem.ItemPrice + trItem.DiscountPrice);
                             }
 
-                            //decimal percentOfTotal = (decimal)requestItem.Quantity / (decimal)trItem.Quantity;
                             ItemTaxResponse itemTaxResponse = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
                             ItemTaxResponse itemTaxResponseSplit = new ItemTaxResponse
                             {
@@ -569,7 +555,6 @@ namespace Taxjar.Services
                                     _context.Vtex.Logger.Warn("TaxjarResponseToVtexResponse", null, $"Applying adjustment to id [{taxResponseIndex}]: {totalTaxToAllocate} - {totalSplitAllocatedTax} = {adjustmentAmount}");
                                 }
 
-                                taxResponseIndex++;
                                 totalSplitAllocatedTax = 0m;
                             }
                         }
@@ -585,7 +570,7 @@ namespace Taxjar.Services
                 _context.Vtex.Logger.Error("TaxjarResponseToVtexResponse", "Splitting", $"Error splitting line items", ex);
             }
 
-            decimal totalOrderTax = (decimal)taxResponse.Tax.AmountToCollect;
+            decimal totalOrderTax = taxResponse.Tax.AmountToCollect;
             decimal totalResponseTax = vtexTaxResponse.ItemTaxResponse.SelectMany(t => t.Taxes).Sum(i => i.Value);
             if(!totalOrderTax.Equals(totalResponseTax))
             {
@@ -593,7 +578,6 @@ namespace Taxjar.Services
                 {
                     decimal adjustmentAmount = Math.Round((totalOrderTax - totalResponseTax), 2, MidpointRounding.ToEven);
                     _context.Vtex.Logger.Warn("TaxjarResponseToVtexResponse", null, $"Applying adjustment: {totalOrderTax} - {totalResponseTax} = {adjustmentAmount}");
-                    //Console.WriteLine($"Applying adjustment: {totalOrderTax} - {totalResponseTax} = {adjustmentAmount}");
                     for (int lastItemIndex = vtexTaxResponse.ItemTaxResponse.Length - 1; lastItemIndex >= 0; lastItemIndex--)
                     {
                         if (vtexTaxResponse.ItemTaxResponse[lastItemIndex] != null && vtexTaxResponse.ItemTaxResponse[lastItemIndex].Taxes != null)
@@ -648,12 +632,9 @@ namespace Taxjar.Services
             };
 
             LogisticsInfo logisticsInfo = vtexOrder.ShippingData.LogisticsInfo.FirstOrDefault();
-            if (logisticsInfo != null)
+            if (logisticsInfo != null && logisticsInfo.DeliveryIds != null)
             {
-                DeliveryId deliveryId = new DeliveryId();
-                if (logisticsInfo.DeliveryIds != null)
-                {
-                    deliveryId = logisticsInfo.DeliveryIds.FirstOrDefault();
+                DeliveryId deliveryId = logisticsInfo.DeliveryIds.FirstOrDefault();
                     VtexDockResponse vtexDock = await this.ListDockById(deliveryId.DockId);
                     if (vtexDock != null && vtexDock.PickupStoreInfo != null && vtexDock.PickupStoreInfo.Address != null)
                     {
@@ -664,7 +645,6 @@ namespace Taxjar.Services
                         taxjarOrder.FromStreet = vtexDock.PickupStoreInfo.Address.Street;
                     }
                 }
-            }
 
             foreach (VtexOrderItem vtexOrderItem in vtexOrder.Items)
             {
@@ -683,7 +663,6 @@ namespace Taxjar.Services
                 };
 
                 taxjarOrder.LineItems.Add(taxForOrderLineItem);
-                //Console.WriteLine($"[{taxForOrderLineItem.Id}] x{taxForOrderLineItem.Quantity} {taxForOrderLineItem.UnitPrice} - {taxForOrderLineItem.Discount}");
             }
 
             return taxjarOrder;
@@ -691,17 +670,14 @@ namespace Taxjar.Services
 
         public async Task<CreateTaxjarOrder> VtexPackageToTaxjarRefund(VtexOrder vtexOrder, Package package)
         {
-            //var refunds = vtexOrder.PackageAttachment.Packages.Where(p => p.Type.Equals("Input"));
-
             long totalRefundAmout = package.Restitutions.Refund.Value;
-            //long totalItemAmount = package.Restitutions.Refund.Items.Sum(r => r.Price * r.Quantity);
             long totalItemAmount = 0;
             long totalTaxAmount = 0;
             long totalShippingAmount = 0;
             List<LineItem> taxJarItems = new List<LineItem>();
             foreach(RefundItem refundItem in package.Restitutions.Refund.Items)
             {
-                VtexOrderItem orderItem = vtexOrder.Items.Where(i => i.Id.Equals(refundItem.Id)).FirstOrDefault();
+                VtexOrderItem orderItem = vtexOrder.Items.FirstOrDefault(i => i.Id.Equals(refundItem.Id));
                 totalItemAmount += refundItem.Price * refundItem.Quantity;
                 long taxForReturnedItems = (orderItem.PriceTags.Where(t => t.Name.Contains("TAX")).Sum(t => t.Value) / orderItem.Quantity) * refundItem.Quantity;
                 totalTaxAmount += taxForReturnedItems;
@@ -715,7 +691,6 @@ namespace Taxjar.Services
                     Description = orderItem.Name,
                     ProductTaxCode = contextResponse.TaxCode,
                     UnitPrice = (decimal)refundItem.Price * -1 / 100,
-                    //Discount = Math.Abs((decimal)orderItem.PriceTags.Where(p => p.Name.Contains("DISCOUNT@")).Sum(p => p.Value) / 100),
                     SalesTax = (decimal)taxForReturnedItems * -1 / 100
                 };
 
@@ -739,18 +714,14 @@ namespace Taxjar.Services
                 Shipping = (decimal)totalShippingAmount * -1 / 100, // Total amount of shipping for the refunded order in dollars.
                 SalesTax = (decimal)totalTaxAmount * -1 / 100, // Total amount of sales tax collected for the refunded order in dollars.
                 CustomerId = await this.GetShopperIdByEmail(vtexOrder.ClientProfileData.Email),
-                //ExemptionType = TaxjarConstants.ExemptionType.NON_EXEMPT,
                 LineItems = taxJarItems,
                 PlugIn = TaxjarConstants.PLUGIN
             };
 
             LogisticsInfo logisticsInfo = vtexOrder.ShippingData.LogisticsInfo.FirstOrDefault();
-            if (logisticsInfo != null)
-            {
-                DeliveryId deliveryId = new DeliveryId();
-                if (logisticsInfo.DeliveryIds != null)
+            if (logisticsInfo != null && logisticsInfo.DeliveryIds != null)
                 {
-                    deliveryId = logisticsInfo.DeliveryIds.FirstOrDefault();
+                DeliveryId deliveryId = logisticsInfo.DeliveryIds.FirstOrDefault();
                     VtexDockResponse vtexDock = await this.ListDockById(deliveryId.DockId);
                     if (vtexDock != null && vtexDock.PickupStoreInfo != null && vtexDock.PickupStoreInfo.Address != null)
                     {
@@ -761,7 +732,6 @@ namespace Taxjar.Services
                         taxjarOrder.FromStreet = vtexDock.PickupStoreInfo.Address.Street;
                     }
                 }
-            }
 
             return taxjarOrder;
         }
@@ -786,8 +756,6 @@ namespace Taxjar.Services
                     request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
                     request.Headers.Add(TaxjarConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
                 }
-
-                //StringBuilder sb = new StringBuilder();
 
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
@@ -830,8 +798,6 @@ namespace Taxjar.Services
                     request.Headers.Add(TaxjarConstants.VTEX_ID_HEADER_NAME, authToken);
                     request.Headers.Add(TaxjarConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
                 }
-
-                //StringBuilder sb = new StringBuilder();
 
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
@@ -930,10 +896,6 @@ namespace Taxjar.Services
                 request.Headers.Add(TaxjarConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
             }
 
-            //MerchantSettings merchantSettings = await _shipStationRepository.GetMerchantSettings();
-            //request.Headers.Add(TaxjarConstants.APP_KEY, merchantSettings.AppKey);
-            //request.Headers.Add(TaxjarConstants.APP_TOKEN, merchantSettings.AppToken);
-
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
@@ -991,11 +953,9 @@ namespace Taxjar.Services
         public async Task<string> InitConfiguration()
         {
             string retval = string.Empty;
-            MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
             string jsonSerializedOrderConfig = await this._taxjarRepository.GetOrderConfiguration();
             if (string.IsNullOrEmpty(jsonSerializedOrderConfig))
             {
-                //Console.WriteLine("------------ Could not load Order Configuration. ----------------------");
                 retval = "Could not load Order Configuration.";
             }
             else
@@ -1021,7 +981,6 @@ namespace Taxjar.Services
         public async Task<string> RemoveConfiguration()
         {
             string retval = string.Empty;
-            MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
             string jsonSerializedOrderConfig = await this._taxjarRepository.GetOrderConfiguration();
             if (string.IsNullOrEmpty(jsonSerializedOrderConfig))
             {
@@ -1093,7 +1052,6 @@ namespace Taxjar.Services
         public async Task<bool> ProcessNotification(AllStatesNotification allStatesNotification)
         {
             bool success = true;
-            VtexOrder vtexOrder = null;
 
             switch (allStatesNotification.Domain)
             {
@@ -1103,9 +1061,7 @@ namespace Taxjar.Services
                         case TaxjarConstants.VtexOrderStatus.Invoiced:
                             success = await this.ProcessInvoice(allStatesNotification.OrderId);
                             break;
-                        break;
                         default:
-                            //_context.Vtex.Logger.Info("ProcessNotification", null, $"State {hookNotification.State} not implemeted.");
                             break;
                     }
                     break;
@@ -1113,12 +1069,10 @@ namespace Taxjar.Services
                     switch (allStatesNotification.CurrentState)
                     {
                         default:
-                            //_context.Vtex.Logger.Info("ProcessNotification", null, $"State {hookNotification.State} not implemeted.");
                             break;
                     }
                     break;
                 default:
-                    //_context.Vtex.Logger.Info("ProcessNotification", null, $"Domain {hookNotification.Domain} not implemeted.");
                     break;
             }
 
@@ -1187,7 +1141,6 @@ namespace Taxjar.Services
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
                 string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($" - GetShopperByEmail '{email}' - [{response.StatusCode}] - '{responseContent}' - ");
                 if (response.IsSuccessStatusCode)
                 {
                     vtexUser = JsonConvert.DeserializeObject<VtexUser[]>(responseContent);
@@ -1281,7 +1234,6 @@ namespace Taxjar.Services
             };
 
             request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
-            //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
             string authToken = _context.Vtex.AdminUserAuthToken;
             if (authToken != null)
             {
@@ -1293,7 +1245,6 @@ namespace Taxjar.Services
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($" - GetListOfUsers - [{response.StatusCode}] - '{responseContent}' - ");
             if (response.IsSuccessStatusCode)
             {
                 getListOfUsers = JsonConvert.DeserializeObject<GetListOfUsers>(responseContent);
@@ -1304,7 +1255,6 @@ namespace Taxjar.Services
 
         public async Task<NexusRegionsResponse> NexusRegions()
         {
-            //Response.Headers.Add("Cache-Control", "private");
             NexusRegionsResponse nexusRegionsResponse = null;
             NexusRegionsStorage nexusRegionsStorage = await _taxjarRepository.GetNexusRegions();
             if(nexusRegionsStorage != null)
@@ -1326,7 +1276,6 @@ namespace Taxjar.Services
                 }
                 else
                 {
-                    //Console.WriteLine("Loaded Nexus from Storage");
                     nexusRegionsResponse = nexusRegionsStorage.NexusRegionsResponse;
                 }
             }
