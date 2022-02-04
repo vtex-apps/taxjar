@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
-- (TAXJAR-46) Fixed spliting taxes by sku
+- (TAXJAR-46) Fixed splitting taxes by sku
 
 ## [0.4.14] - 2022-02-03
 
