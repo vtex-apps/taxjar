@@ -4947,10 +4947,6 @@ verror@1.10.0:
   version "9.145.2"
   resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.styleguide@9.145.2/public/@types/vtex.styleguide#ca64bf8408ad3eb487b0822dd68f77565c986a56"
 
-"vtex.taxjar@https://aurora3--sandboxusdev.myvtex.com/_v/private/typings/linked/v1/vtex.taxjar@0.4.13+build1643847364/public/@types/vtex.taxjar":
-  version "0.4.13"
-  resolved "https://aurora3--sandboxusdev.myvtex.com/_v/private/typings/linked/v1/vtex.taxjar@0.4.13+build1643847364/public/@types/vtex.taxjar#69c4defddf5966f9831dedff75da74dcd47e8253"
-
 w3c-hr-time@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/w3c-hr-time/-/w3c-hr-time-1.0.2.tgz#0a89cdf5cc15822df9c360543676963e0cc308cd"

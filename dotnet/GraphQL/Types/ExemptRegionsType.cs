@@ -1,8 +1,5 @@
 ﻿using GraphQL;
 using GraphQL.Types;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Taxjar.Models;
 
 namespace Taxjar.GraphQL.Types

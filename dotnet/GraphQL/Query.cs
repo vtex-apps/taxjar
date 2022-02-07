@@ -12,7 +12,7 @@ namespace Taxjar.GraphQL
     [GraphQLMetadata("Query")]
     public class Query : ObjectGraphType<object>
     {
-        public Query(ITaxjarService taxjarService, ITaxjarRepository taxjarRepository, IVtexAPIService vtexAPIService)
+        public Query(ITaxjarService taxjarService, ITaxjarRepository taxjarRepository, IVtexApiService vtexAPIService)
         {
             Name = "Query";
 

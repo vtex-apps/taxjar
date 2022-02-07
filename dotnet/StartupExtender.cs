@@ -21,7 +21,7 @@ namespace Vtex
         {
             services.AddTransient<ITaxjarService, TaxjarService>();
             services.AddTransient<ITaxjarRepository, TaxjarRepository>();
-            services.AddTransient<IVtexAPIService, VtexAPIService>();
+            services.AddTransient<IVtexApiService, VtexApiService>();
             services.AddSingleton<IVtexEnvironmentVariableProvider, VtexEnvironmentVariableProvider>();
             services.AddHttpContextAccessor();
             services.AddHttpClient();

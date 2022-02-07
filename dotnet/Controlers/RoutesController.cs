@@ -10,10 +10,8 @@
     using System.Net.Http;
     using System.Threading.Tasks;
     using Vtex.Api.Context;
-    using System.Web;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
     using System.Diagnostics;
     using Microsoft.Extensions.Caching.Memory;
 
@@ -24,10 +22,10 @@
         private readonly IHttpClientFactory _clientFactory;
         private readonly ITaxjarService _taxjarService;
         private readonly ITaxjarRepository _taxjarRepository;
-        private readonly IVtexAPIService _vtexAPIService;
+        private readonly IVtexApiService _vtexAPIService;
         private readonly IMemoryCache _memoryCache;
 
-        public RoutesController(IIOServiceContext context, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, ITaxjarService taxjarService, ITaxjarRepository taxjarRepository, IVtexAPIService vtexAPIService, IMemoryCache memoryCache)
+        public RoutesController(IIOServiceContext context, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, ITaxjarService taxjarService, ITaxjarRepository taxjarRepository, IVtexApiService vtexAPIService, IMemoryCache memoryCache)
         {
             this._context = context ?? throw new ArgumentNullException(nameof(context));
             this._httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
@@ -78,7 +76,7 @@
                     VtexTaxRequest taxRequestOriginal = JsonConvert.DeserializeObject<VtexTaxRequest>(bodyAsText);
                     if (taxRequest != null && taxRequest.Items != null && taxRequest.Items.Length > 0)
                     {
-                        _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, bodyAsText);
+                        //_context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, bodyAsText);
                         orderFormId = taxRequest.OrderFormId;
                         totalItems = taxRequest.Items.Sum(i => i.Quantity);
                         decimal total = taxRequest.Totals.Sum(t => t.Value);
@@ -111,7 +109,6 @@
                         if (_taxjarRepository.TryGetCache(cacheKey, out vtexTaxResponse))
                         {
                             fromCache = true;
-                            Console.WriteLine($"'{cacheKey}' fromCache = {fromCache} ");
                             _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Taxes for '{cacheKey}' fetched from cache. {JsonConvert.SerializeObject(taxRequest)}\n\n{JsonConvert.SerializeObject(vtexTaxResponse)}");
                         }
                         else
@@ -135,9 +132,7 @@
                                     try
                                     {
                                         List<VtexTaxResponse> taxResponses = new List<VtexTaxResponse>();
-                                        decimal itemsTotal = taxRequest.Totals.Where(t => t.Id.Equals("Items")).Select(t => t.Value).FirstOrDefault();
-                                        decimal shippingTotal = taxRequest.Totals.Where(t => t.Id.Equals("Items")).Select(t => t.Value).FirstOrDefault();
-                                        long itemQuantity = taxRequest.Items.Sum(i => i.Quantity);
+                                        decimal itemQuantity = taxRequest.Items.Sum(i => i.Quantity);
                                         foreach (string dockId in dockIds)
                                         {
                                             List<Item> items = taxRequest.Items.Where(i => i.DockId.Equals(dockId)).ToList();
@@ -363,7 +358,7 @@
 
                                                 if (fallbackResponse.TaxShippingAlone || fallbackResponse.TaxShippingAndHandlingTogether)
                                                 {
-                                                    decimal shippingTotal = (decimal)taxRequest.Totals.Where(t => t.Id.Contains("Shipping")).Sum(t => t.Value) / 100;
+                                                    decimal shippingTotal = taxRequest.Totals.Where(t => t.Id.Contains("Shipping")).Sum(t => t.Value) / 100;
                                                     vtexTaxes.Add(
                                                     new VtexTax
                                                     {
@@ -385,10 +380,6 @@
                                     }
                                 }
                             }
-                            else
-                            {
-                                //_context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Order '{taxRequest.OrderFormId}' Destination state '{taxRequest.ShippingDestination.State}' is NOT in nexus");
-                            }
                         }
                     }
                 }
@@ -396,15 +387,6 @@
 
             timer.Stop();
             _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", null, $"Elapsed Time = '{timer.Elapsed.TotalMilliseconds}' '{orderFormId}' {totalItems} items.  From cache? {fromCache}");
-            //Console.WriteLine($"Elapsed Time = '{timer.Elapsed.TotalMilliseconds}' '{orderFormId}' {totalItems} items.  From cache? {fromCache}");
-            //var taxes = vtexTaxResponse.ItemTaxResponse.Select(t => t.Taxes).ToList();
-            //foreach(var taxValues in taxes)
-            //{
-            //    foreach (var taxValue in taxValues)
-            //    {
-            //        Console.WriteLine($"TAX = {taxValue.Name} = {taxValue.Value}");
-            //    }
-            //}
             
             return Json(vtexTaxResponse);
         }
@@ -477,7 +459,6 @@
                 }
             }
 
-            //return Json("Order taxes were committed");
             return BadRequest();
         }
 
@@ -583,7 +564,6 @@
 
         public async Task<IActionResult> SummaryRates()
         {
-            //Response.Headers.Add("Cache-Control", "private");
             SummaryRatesResponse summaryRatesResponse = null;
             SummaryRatesStorage summaryRatesStorage = await _taxjarRepository.GetSummaryRates();
             if(summaryRatesStorage != null)
@@ -640,31 +620,26 @@
                     {
                         foreach (NexusRegion nexusRegion in nexusRegionsResponse.Regions)
                         {
-                            if (nexusRegion != null && !string.IsNullOrEmpty(nexusRegion.CountryCode) && !string.IsNullOrEmpty(nexusRegion.RegionCode))
-                            {
-                                if (nexusRegion.RegionCode.Equals(state) && nexusRegion.CountryCode.Equals(country))
+                            if (nexusRegion != null && !string.IsNullOrEmpty(nexusRegion.CountryCode) && !string.IsNullOrEmpty(nexusRegion.RegionCode) &&
+                                nexusRegion.RegionCode.Equals(state) && nexusRegion.CountryCode.Equals(country))
                                 {
                                     inNexus = true;
                                     break;
                                 }
                             }
                         }
-                    }
                     else
                     {
-                        //Console.WriteLine("Could not load nexus list from TaxJar.");
                         _context.Vtex.Logger.Warn("InNexus", null, "Could not load nexus list from TaxJar.");
                     }
                 }
                 else
                 {
                     PickupPoints pickupPoints = await _vtexAPIService.ListPickupPoints();
-                    List<string> nexusStates = new List<string>();
                     foreach (PickupPointItem pickupPoint in pickupPoints.Items)
                     {
-                        if (pickupPoint != null && pickupPoint.Address != null && pickupPoint.Address.State != null && pickupPoint.Address.Country != null)
-                        {
-                            if (pickupPoint.Address.State.Equals(state) && _vtexAPIService.GetCountryCode(pickupPoint.Address.Country.Acronym).Equals(country))
+                        if (pickupPoint != null && pickupPoint.Address != null && pickupPoint.Address.State != null && pickupPoint.Address.Country != null &&
+                            pickupPoint.Address.State.Equals(state) && _vtexAPIService.GetCountryCode(pickupPoint.Address.Country.Acronym).Equals(country))
                             {
                                 inNexus = true;
                                 break;
@@ -672,12 +647,11 @@
                         }
                     }
                 }
-            }
             catch(Exception ex)
             {
                 // if there is an error, try to collect tax
                 inNexus = true;
-                //Console.WriteLine($"ERROR: {ex.Message}");
+                _context.Vtex.Logger.Error("InNexus", null, "Could not load nexus list from TaxJar.", ex);
             }
             
             return inNexus;

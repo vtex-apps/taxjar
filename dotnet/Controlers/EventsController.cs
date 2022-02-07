@@ -10,9 +10,9 @@ namespace service.Controllers
     public class EventsController : Controller
     {
         private readonly IIOServiceContext _context;
-        private readonly IVtexAPIService _vtexAPIService;
+        private readonly IVtexApiService _vtexAPIService;
 
-        public EventsController(IIOServiceContext context, IVtexAPIService vtexAPIService)
+        public EventsController(IIOServiceContext context, IVtexApiService vtexAPIService)
         {
             this._context = context ?? throw new ArgumentNullException(nameof(context));
             this._vtexAPIService = vtexAPIService ?? throw new ArgumentNullException(nameof(vtexAPIService));

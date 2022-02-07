@@ -77,7 +77,6 @@
             };
 
             request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
-            //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
             string authToken = _context.Vtex.AdminUserAuthToken;
             if (authToken != null)
             {
@@ -110,7 +109,6 @@
             };
 
             request.Headers.Add(TaxjarConstants.USE_HTTPS_HEADER_NAME, "true");
-            //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[TaxjarConstants.HEADER_VTEX_CREDENTIAL];
             string authToken = _context.Vtex.AdminUserAuthToken;
             if (authToken != null)
             {
@@ -145,7 +143,6 @@
 
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
-            string responseContent = await response.Content.ReadAsStringAsync();
 
             return response.IsSuccessStatusCode;
         }
@@ -292,7 +289,6 @@
 
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
-            string responseContent = await response.Content.ReadAsStringAsync();
 
             return response.IsSuccessStatusCode;
         }

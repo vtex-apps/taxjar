@@ -4,14 +4,13 @@ using Taxjar.Data;
 using Taxjar.Services;
 using Taxjar.Models;
 using Taxjar.GraphQL.Types;
-using System;
 
 namespace Taxjar.GraphQL
 {
     [GraphQLMetadata("Mutation")]
     public class Mutation : ObjectGraphType<object>
     {
-        public Mutation(ITaxjarService taxjarService, ITaxjarRepository taxjarRepository, IVtexAPIService vtexAPIService)
+        public Mutation(ITaxjarService taxjarService, ITaxjarRepository taxjarRepository, IVtexApiService vtexAPIService)
         {
             Name = "Mutation";
 
