@@ -117,6 +117,7 @@
 
                             if (inNexus)
                             {
+                                _context.Vtex.Logger.Debug("TaxjarOrderTaxHandler", "RawRequest", bodyAsText);
                                 List<string> dockIds = new List<string>();
                                 try
                                 {
