@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.4.17] - 2022-03-16
+
 ### Fixed
 
 - Fixed response index error
