@@ -278,7 +278,7 @@
                                             TaxResponse taxResponse = await _taxjarService.TaxForOrder(taxForOrder);
                                             if (taxResponse != null)
                                             {
-                                                vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse,taxRequest, taxRequestOriginal);
+                                                vtexTaxResponse = await _vtexAPIService.TaxjarResponseToVtexResponse(taxResponse, taxRequest, taxRequestOriginal);
                                                 if (vtexTaxResponse != null)
                                                 {
                                                     await _taxjarRepository.SetCache(cacheKey, vtexTaxResponse);

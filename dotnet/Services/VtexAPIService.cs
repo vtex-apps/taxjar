@@ -296,7 +296,6 @@ namespace Taxjar.Services
             }
 
             double totalItemTax = (double)taxResponse.Tax.Breakdown.LineItems.Sum(i => i.TaxCollectable);
-
             for (int i = 0; i < taxResponse.Tax.Breakdown.LineItems.Count; i++)
             {
                 TaxBreakdownLineItem lineItem = taxResponse.Tax.Breakdown.LineItems[i];
@@ -501,9 +500,10 @@ namespace Taxjar.Services
                     {
                         Item trItem = taxRequest.Items.FirstOrDefault(i => i.Sku.Equals(requestItem.Sku));
                         taxResponseIndex = int.Parse(trItem.Id);
+                        string taxResponseIndexId = trItem.Id;
                         if (requestItem.Quantity == trItem.Quantity)
                         {
-                            itemTaxResponses[responseId] = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
+                            itemTaxResponses[responseId] = vtexTaxResponse.ItemTaxResponse.FirstOrDefault(t => t.Id.Equals(taxResponseIndexId));
                         }
                         else
                         {
@@ -513,7 +513,7 @@ namespace Taxjar.Services
                                 percentOfTotal = (requestItem.ItemPrice + requestItem.DiscountPrice) / (trItem.ItemPrice + trItem.DiscountPrice);
                             }
 
-                            ItemTaxResponse itemTaxResponse = vtexTaxResponse.ItemTaxResponse[taxResponseIndex];
+                            ItemTaxResponse itemTaxResponse = vtexTaxResponse.ItemTaxResponse.FirstOrDefault(t => t.Id.Equals(taxResponseIndexId));
                             ItemTaxResponse itemTaxResponseSplit = new ItemTaxResponse
                             {
                                 Id = responseId.ToString(),
