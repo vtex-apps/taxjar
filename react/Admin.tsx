@@ -490,7 +490,7 @@ const Admin: FC<any> = () => {
               />
             </section>
             {settingsState.enableTransactionPosting && (
-            <section className="pv4">
+              <section className="pv4">
                 <Toggle
                   semantic
                   label={formatMessage({
@@ -508,7 +508,7 @@ const Admin: FC<any> = () => {
                     id: 'admin/taxjar.settings.postSellerOrders.helpText',
                   })}
                 />
-            </section>
+              </section>
             )}
             <section className="pv4">
               <Toggle
