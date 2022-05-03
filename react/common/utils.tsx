@@ -260,3 +260,8 @@ export const states = [
     value: 'WY',
   },
 ]
+
+export const postingTypes = [
+  { value: 'Fulfillment', label: 'Fulfillment' },
+  { value: 'Marketplace', label: 'Marketplace' },
+]
