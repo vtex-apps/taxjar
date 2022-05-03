@@ -493,19 +493,19 @@ const Admin: FC<any> = () => {
               <section className="pv4">
                 <FormattedMessage id="admin/taxjar.settings.transactionPostingType.helpText" />
                 <Dropdown
-                    label={formatMessage({
-                      id: 'admin/taxjar.settings.transactionPostingType.label',
-                    })}
-                    options={postingTypes}
-                    value={settingsState.transactionPostingType}
-                    size="small"
-                    onChange={(_: any, v: string) =>
-                      setSettingsState({
-                        ...settingsState,
-                        transactionPostingType: v,
-                      })
-                    }
-                  />
+                  label={formatMessage({
+                    id: 'admin/taxjar.settings.transactionPostingType.label',
+                  })}
+                  options={postingTypes}
+                  value={settingsState.transactionPostingType}
+                  size="small"
+                  onChange={(_: any, v: string) =>
+                    setSettingsState({
+                      ...settingsState,
+                      transactionPostingType: v,
+                    })
+                  }
+                />
               </section>
             )}
             <section className="pv4">
