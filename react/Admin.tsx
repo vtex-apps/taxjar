@@ -48,6 +48,7 @@ const Admin: FC<any> = () => {
     isLive: false,
     enableTaxCalculation: false,
     enableTransactionPosting: false,
+    postSellerOrders: false,
     useTaxJarNexus: true,
     salesChannelExclude: '',
     currentTab: 1,
@@ -487,7 +488,28 @@ const Admin: FC<any> = () => {
                   id: 'admin/taxjar.settings.enableTransactionPosting.helpText',
                 })}
               />
+              </section>
+              {settingsState.enableTransactionPosting && (
+              <section className="pv4">
+                <Toggle
+                  semantic
+                  label={formatMessage({
+                    id: 'admin/taxjar.settings.postSellerOrders.label',
+                  })}
+                  size="large"
+                  checked={settingsState.postSellerOrders}
+                  onChange={() => {
+                    setSettingsState({
+                      ...settingsState,
+                      postSellerOrders: !settingsState.postSellerOrders,
+                    })
+                  }}
+                  helpText={formatMessage({
+                    id: 'admin/taxjar.settings.postSellerOrders.helpText',
+                  })}
+                />
             </section>
+              )}
             <section className="pv4">
               <Toggle
                 semantic

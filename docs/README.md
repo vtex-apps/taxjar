@@ -29,6 +29,7 @@ Using your terminal, log in to the desired VTEX account and run the following co
 - **Production Mode** - The entered API Token is a Live token.
 - **Enable TaxJar inb checkout** - Request tax calculations.
 - **Post completed transactions to TaxJar** - Record invoiced orders in TaxJar
+- **Post marketplace transactions to TaxJar** - Record invoiced marketplace orders in TaxJar
 3. Save Settings.
 4. Test Connection.
 

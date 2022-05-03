@@ -12,6 +12,8 @@
   "admin/taxjar.settings.enableTaxCalculation.helpText": "WARNING: Changing this setting may break your checkout. Make sure to test.",
   "admin/taxjar.settings.enableTransactionPosting.label": "Post completed transactions to TaxJar",
   "admin/taxjar.settings.enableTransactionPosting.helpText": "If this toggle is enabled, any invoiced orders where this account acts as the seller will be posted to TaxJar.",
+  "admin/taxjar.settings.postSellerOrders.label": "Post marketplace transactions to TaxJar",
+  "admin/taxjar.settings.postSellerOrders.helpText": "If this toggle is enabled, any invoiced marketplace orders will be posted to TaxJar.",
   "admin/taxjar.saveSettings.buttonText": "Save settings",
   "admin/taxjar.testConnection.buttonText": "Test connection",
   "admin/taxjar.testConnection.success": "Connected successfully",

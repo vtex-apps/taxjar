@@ -1052,14 +1052,18 @@ namespace Taxjar.Services
         public async Task<bool> ProcessNotification(AllStatesNotification allStatesNotification)
         {
             bool success = true;
-
+            MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
             switch (allStatesNotification.Domain)
             {
                 case TaxjarConstants.Domain.Fulfillment:
                     switch (allStatesNotification.CurrentState)
                     {
                         case TaxjarConstants.VtexOrderStatus.Invoiced:
-                            success = await this.ProcessInvoice(allStatesNotification.OrderId);
+                            if (merchantSettings.EnableTransactionPosting && !merchantSettings.PostSellerOrders)
+                            {
+                                success = await this.ProcessInvoice(allStatesNotification.OrderId);
+                            }
+
                             break;
                         default:
                             break;
@@ -1068,6 +1072,13 @@ namespace Taxjar.Services
                 case TaxjarConstants.Domain.Marketplace:
                     switch (allStatesNotification.CurrentState)
                     {
+                        case TaxjarConstants.VtexOrderStatus.Invoiced:
+                            if (merchantSettings.EnableTransactionPosting && merchantSettings.PostSellerOrders)
+                            {
+                                success = await this.ProcessInvoice(allStatesNotification.OrderId);
+                            }
+
+                            break;
                         default:
                             break;
                     }

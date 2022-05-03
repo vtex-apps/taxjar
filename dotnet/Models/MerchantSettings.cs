@@ -8,8 +8,8 @@ namespace Taxjar.Models
     {
         public string ApiToken { get; set; }
         public bool IsLive { get; set; }
-        //public bool EnableTaxCalculations { get; set; }
         public bool EnableTransactionPosting { get; set; }
+        public bool PostSellerOrders { get; set; }
         public bool UseTaxJarNexus { get; set; }
         public string  SalesChannelExclude { get; set; }
     }
