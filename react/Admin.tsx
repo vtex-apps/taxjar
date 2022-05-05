@@ -39,7 +39,7 @@ import GET_CUSTOMERS from './queries/ListCustomers.gql'
 import DELETE_CUSTOMER from './mutations/DeleteCustomer.gql'
 import CREATE_CUSTOMER from './mutations/CreateCustomer.gql'
 import VERIFY_USER from './queries/verifyEmail.graphql'
-import { countries, states, options } from './common/utils'
+import { countries, states, options, postingTypes } from './common/utils'
 
 const Admin: FC<any> = () => {
   const { formatMessage } = useIntl()
@@ -48,6 +48,7 @@ const Admin: FC<any> = () => {
     isLive: false,
     enableTaxCalculation: false,
     enableTransactionPosting: false,
+    transactionPostingType: '',
     useTaxJarNexus: true,
     salesChannelExclude: '',
     currentTab: 1,
@@ -488,6 +489,25 @@ const Admin: FC<any> = () => {
                 })}
               />
             </section>
+            {settingsState.enableTransactionPosting && (
+              <section className="pv4">
+                <FormattedMessage id="admin/taxjar.settings.transactionPostingType.helpText" />
+                <Dropdown
+                  label={formatMessage({
+                    id: 'admin/taxjar.settings.transactionPostingType.label',
+                  })}
+                  options={postingTypes}
+                  value={settingsState.transactionPostingType}
+                  size="small"
+                  onChange={(_: any, v: string) =>
+                    setSettingsState({
+                      ...settingsState,
+                      transactionPostingType: v,
+                    })
+                  }
+                />
+              </section>
+            )}
             <section className="pv4">
               <Toggle
                 semantic

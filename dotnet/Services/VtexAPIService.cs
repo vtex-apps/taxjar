@@ -1052,28 +1052,39 @@ namespace Taxjar.Services
         public async Task<bool> ProcessNotification(AllStatesNotification allStatesNotification)
         {
             bool success = true;
-
-            switch (allStatesNotification.Domain)
+            MerchantSettings merchantSettings = await _taxjarRepository.GetMerchantSettings();
+            if(string.IsNullOrEmpty(merchantSettings.TransactionPostingType))
             {
-                case TaxjarConstants.Domain.Fulfillment:
-                    switch (allStatesNotification.CurrentState)
-                    {
-                        case TaxjarConstants.VtexOrderStatus.Invoiced:
-                            success = await this.ProcessInvoice(allStatesNotification.OrderId);
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                case TaxjarConstants.Domain.Marketplace:
-                    switch (allStatesNotification.CurrentState)
-                    {
-                        default:
-                            break;
-                    }
-                    break;
-                default:
-                    break;
+                merchantSettings.TransactionPostingType = TaxjarConstants.Domain.Fulfillment;
+            }
+
+            if (merchantSettings.EnableTransactionPosting && merchantSettings.TransactionPostingType.Equals(allStatesNotification.Domain))
+            {
+                switch (allStatesNotification.Domain)
+                {
+                    case TaxjarConstants.Domain.Fulfillment:
+                        switch (allStatesNotification.CurrentState)
+                        {
+                            case TaxjarConstants.VtexOrderStatus.Invoiced:
+                                success = await this.ProcessInvoice(allStatesNotification.OrderId);
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case TaxjarConstants.Domain.Marketplace:
+                        switch (allStatesNotification.CurrentState)
+                        {
+                            case TaxjarConstants.VtexOrderStatus.Invoiced:
+                                success = await this.ProcessInvoice(allStatesNotification.OrderId);
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
 
             return success;
