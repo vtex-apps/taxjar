@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+- (TAXJAR-49) When setting exemption state, changed label for all regions from 'N/A' to 'All'
+
 ## [0.5.0] - 2022-05-05
 
 ### Added
