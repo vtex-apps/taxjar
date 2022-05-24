@@ -40,7 +40,7 @@ export const countries = [
 
 export const states = [
   {
-    label: 'N/A',
+    label: 'All',
     value: '',
   },
   {
