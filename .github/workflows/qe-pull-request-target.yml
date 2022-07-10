@@ -13,11 +13,15 @@ jobs:
     name: QE
     uses: vtex-apps/usqa/.github/workflows/quality-engineering.yml@v1.0.0
     with:
+      danger: true
+      dangerRequireChangelog: false
       nodeLint: true
       nodeTest: false
+      reactTest: false
       nodeSonar: true
       nodeSonarProjectKey: vtex-apps_taxjar-ts
       nodeSonarOrganization: vtex-apps
+      dotnetLint: true
       dotnetSonar: true
       dotnetSonarProjectKey: vtex-apps_taxjar-dotnet
       dotnetSonarOrganization: vtex-apps
